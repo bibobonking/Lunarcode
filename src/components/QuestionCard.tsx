@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useMemo, useRef } from 'react'
 import { Check, CircleHelp, ChevronLeft, ChevronRight } from 'lucide-react'
 import type { ToolMessage } from '../types'
 import { answerIsComplete, emptyAnswer, normalizeQuestions, readResult, type AskAnswer, type AskQuestion } from '../lib/ask-question'
@@ -57,11 +57,8 @@ export function QuestionCard({ message }: { message: ToolMessage }) {
   const questions = useMemo(() => normalizeQuestions(message.call.args), [message.call.args])
   const waiting = useQuestions((state) => Boolean(state.waiting[callId]))
   const draft = useQuestions((state) => state.drafts[callId])
-  const setDraft = useQuestions((state) => state.setDraft)
+  const patchDraft = useQuestions((state) => state.patchDraft)
   const root = useRef<HTMLDivElement>(null)
-  const advance = useRef<number | undefined>(undefined)
-
-  useEffect(() => () => window.clearTimeout(advance.current), [])
 
   if (questions.length === 0 || !waiting || !draft) return <Summary message={message} questions={questions} />
 
@@ -73,27 +70,28 @@ export function QuestionCard({ message }: { message: ToolMessage }) {
   const allAnswered = answered.every(Boolean)
   const answeredCount = answered.filter(Boolean).length
 
-  const update = (patch: Partial<AskAnswer>, nextStep = step) => {
-    const answers = draft.answers.map((item, index) => (index === step ? { ...item, ...patch } : item))
-    setDraft(callId, { step: nextStep, answers })
-  }
-  const go = (target: number) => setDraft(callId, { ...draft, step: Math.max(0, Math.min(questions.length - 1, target)) })
+  // Always patch the newest draft from the store. Closing over `draft` here is what used to wipe answers.
+  const update = (patch: Partial<AskAnswer>) =>
+    patchDraft(callId, (current) => ({
+      ...current,
+      answers: current.answers.map((item, index) => (index === step ? { ...item, ...patch } : item)),
+    }))
+  const go = (target: number) =>
+    patchDraft(callId, (current) => ({ ...current, step: Math.max(0, Math.min(questions.length - 1, target)) }))
 
   const choose = (label: string) => {
-    window.clearTimeout(advance.current)
     if (question.multiSelect) {
       const selected = answer.selected.includes(label) ? answer.selected.filter((item) => item !== label) : [...answer.selected, label]
       update({ selected })
       return
     }
-    // One answer per question: a preset replaces whatever was typed. Single questions move on by themselves.
+    // One answer per question: a preset replaces whatever was typed. Picking the same one again clears it.
+    // It never jumps to another question; the person moves with Next, Back or the tabs.
     const same = answer.selected[0] === label && !answer.custom
     update({ selected: same ? [] : [label], custom: '' })
-    if (!same && !last) advance.current = window.setTimeout(() => go(step + 1), 170)
   }
 
   const type = (custom: string) => {
-    window.clearTimeout(advance.current)
     update(question.multiSelect ? { custom } : { custom, selected: custom.trim() ? [] : answer.selected })
   }
 

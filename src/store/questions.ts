@@ -12,12 +12,19 @@ interface QuestionsState {
   waiting: Record<string, boolean>
   drafts: Record<string, QuestionDraft>
   setDraft: (callId: string, draft: QuestionDraft) => void
+  /** Reads the latest draft inside the store, so a delayed or batched caller can never overwrite newer answers. */
+  patchDraft: (callId: string, patch: (draft: QuestionDraft) => QuestionDraft) => void
 }
 
 export const useQuestions = create<QuestionsState>()((set) => ({
   waiting: {},
   drafts: {},
   setDraft: (callId, draft) => set((state) => ({ drafts: { ...state.drafts, [callId]: draft } })),
+  patchDraft: (callId, patch) =>
+    set((state) => {
+      const current = state.drafts[callId]
+      return current ? { drafts: { ...state.drafts, [callId]: patch(current) } } : state
+    }),
 }))
 
 const resolvers = new Map<string, (result: AskResult) => void>()

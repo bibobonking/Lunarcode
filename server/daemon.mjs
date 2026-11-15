@@ -1,4 +1,6 @@
-import { describeShell } from './lib/shell.mjs'
+import { describeShell, repairProcessEnv } from './lib/shell.mjs'
+
+repairProcessEnv()
 import { randomBytes } from 'node:crypto'
 import { mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises'
 import http from 'node:http'

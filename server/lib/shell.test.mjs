@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { resolveShell, planShellAllowed, describeShell } from './shell.mjs'
+import { resolveShell, planShellAllowed, describeShell, mergePathLists, parseProbedPath, fallbackToolDirs } from './shell.mjs'
 
 const has = (...files) => (file) => files.includes(file)
 
@@ -69,4 +69,29 @@ test('plan mode allows only read-only PowerShell/cmd commands', () => {
   assert.equal(planShellAllowed('Invoke-Expression foo', ps), false)
   assert.equal(planShellAllowed('type a.txt > b.txt', ps), false)
   assert.equal(planShellAllowed('Get-Content a | Out-File b', ps), false)
+})
+
+test('linux honours the user zsh so rc-file tooling is found', () => {
+  const shell = resolveShell({ platform: 'linux', env: { SHELL: '/usr/bin/zsh' }, exists: has('/usr/bin/zsh', '/bin/bash') })
+  assert.equal(shell.file, '/usr/bin/zsh')
+  assert.equal(shell.id, 'zsh')
+})
+
+test('mergePathLists keeps order and drops blanks and duplicates', () => {
+  assert.equal(mergePathLists(['/a:/b', '/b::/c', ['/d', '/a']]), '/a:/b:/c:/d')
+})
+
+test('parseProbedPath ignores banner noise around the markers', () => {
+  assert.equal(parseProbedPath('Welcome!\n__OPENSOL_PATH__/x/bin:/y/bin__OPENSOL_PATH__\n'), '/x/bin:/y/bin')
+  assert.equal(parseProbedPath('no markers'), '')
+})
+
+test('fallbackToolDirs finds the newest nvm node', () => {
+  const dirs = fallbackToolDirs({
+    env: { HOME: '/home/u' },
+    exists: () => true,
+    list: () => ['v18.20.0', 'v22.3.0', 'v9.0.0', 'notes'],
+  })
+  assert.ok(dirs.includes('/home/u/.nvm/versions/node/v22.3.0/bin'))
+  assert.ok(!dirs.some((dir) => dir.includes('v18.20.0')))
 })

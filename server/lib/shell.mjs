@@ -1,10 +1,10 @@
 // Cross-platform shell resolution for the `shell` tool and deploy builds.
 // Pure helpers (resolveShell, planShellAllowed, describeShell) take injected platform/env so
 // Windows and macOS behaviour is unit-tested from any OS.
-import { existsSync } from 'node:fs'
+import { existsSync, readdirSync } from 'node:fs'
 import path from 'node:path'
 import os from 'node:os'
-import { spawn } from 'node:child_process'
+import { spawn, spawnSync } from 'node:child_process'
 
 const PS_PROLOGUE = '[Console]::OutputEncoding=[System.Text.Encoding]::UTF8;$ErrorActionPreference="Continue";'
 // Keeps the exit code of the last native command; PowerShell otherwise reports 0.
@@ -84,6 +84,9 @@ export function resolveShell({ platform = process.platform, env = process.env, e
     return posixShell('sh', '/bin/sh')
   }
 
+  const userShell = String(env.SHELL ?? '')
+  const userBase = path.posix.basename(userShell)
+  if ((userBase === 'zsh' || userBase === 'bash') && userShell && exists(userShell)) return posixShell(userBase, userShell)
   for (const [id, file] of [['bash', '/bin/bash'], ['bash', '/usr/bin/bash'], ['bash', '/usr/local/bin/bash']]) {
     if (exists(file)) return posixShell(id, file)
   }
@@ -96,6 +99,101 @@ let cached
 export function currentShell() {
   cached ??= resolveShell()
   return cached
+}
+
+// ---- PATH repair -------------------------------------------------------------------------------
+// A daemon started from the desktop app, a launcher or a service inherits a bare PATH, and `bash -lc`
+// never reads ~/.bashrc / ~/.zshrc, which is where nvm, fnm, volta and friends are set up. The result:
+// `node -v` works in the user's terminal but "command not found" for the agent.
+
+const PATH_MARK = '__OPENSOL_PATH__'
+
+/** Joins PATH lists, keeping first-seen order and dropping blanks and duplicates. */
+export function mergePathLists(lists, sep = ':') {
+  const seen = new Set()
+  const out = []
+  for (const list of lists) {
+    const parts = Array.isArray(list) ? list : String(list ?? '').split(sep)
+    for (const part of parts) {
+      const dir = part.trim()
+      if (!dir || seen.has(dir)) continue
+      seen.add(dir)
+      out.push(dir)
+    }
+  }
+  return out.join(sep)
+}
+
+/** Well-known install locations for version managers and package managers (POSIX only). */
+export function fallbackToolDirs({ env = process.env, exists = existsSync, list = (dir) => readdirSync(dir) } = {}) {
+  const home = String(env.HOME ?? '')
+  const dirs = ['/opt/homebrew/bin', '/opt/homebrew/sbin', '/usr/local/bin', '/usr/local/sbin']
+  if (home) {
+    dirs.push(`${home}/.local/bin`, `${home}/.volta/bin`, `${home}/.bun/bin`, `${home}/.cargo/bin`, `${home}/.deno/bin`)
+    dirs.push(`${env.FNM_DIR || `${home}/.local/share/fnm`}/aliases/default/bin`)
+    const nvm = env.NVM_DIR || `${home}/.nvm`
+    try {
+      const versions = list(`${nvm}/versions/node`)
+        .filter((name) => /^v\d/.test(name))
+        .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+      if (versions.length > 0) dirs.push(`${nvm}/versions/node/${versions[versions.length - 1]}/bin`)
+    } catch {
+      // nvm is not installed.
+    }
+  }
+  return dirs.filter((dir) => exists(dir))
+}
+
+/** Pulls the PATH out of probe output, ignoring any banner or prompt noise around the markers. */
+export function parseProbedPath(output) {
+  const text = String(output ?? '')
+  const start = text.indexOf(PATH_MARK)
+  if (start < 0) return ''
+  const end = text.indexOf(PATH_MARK, start + PATH_MARK.length)
+  return end < 0 ? '' : text.slice(start + PATH_MARK.length, end).trim()
+}
+
+function probeUserPath(shell, env) {
+  if (shell.family !== 'posix' || !['bash', 'zsh'].includes(shell.id)) return ''
+  // Interactive login covers profile files; bash also needs a plain interactive run because terminal
+  // emulators on Linux start non-login shells that read ~/.bashrc, which a login shell skips.
+  const modes = shell.id === 'bash' ? ['-ilc', '-ic'] : ['-ilc']
+  const found = []
+  for (const mode of modes) {
+    try {
+      const result = spawnSync(shell.file, [mode, `printf '%s' "${PATH_MARK}${'${PATH}'}${PATH_MARK}"`], {
+        env: { ...env, TERM: env.TERM || 'dumb' },
+        encoding: 'utf8',
+        timeout: 6000,
+        stdio: ['ignore', 'pipe', 'ignore'],
+        windowsHide: true,
+      })
+      found.push(parseProbedPath(result.stdout))
+    } catch {
+      // Try the next mode.
+    }
+  }
+  return mergePathLists(found)
+}
+
+let repairedPath
+/** The PATH commands should run with: user's real shell PATH first, then the inherited one, then known tool dirs. */
+export function userPath({ platform = process.platform, env = process.env } = {}) {
+  if (platform === 'win32') return String(env.PATH ?? env.Path ?? '')
+  if (repairedPath === undefined) {
+    repairedPath = mergePathLists([probeUserPath(currentShell(), env), env.PATH, fallbackToolDirs({ env })])
+  }
+  return repairedPath
+}
+
+/** Call once at daemon start so every child process (shell tool, git, deploy, MCP) sees the repaired PATH. */
+export function repairProcessEnv() {
+  if (process.platform !== 'win32') {
+    const fixed = userPath()
+    if (fixed) process.env.PATH = fixed
+  }
+  // Set by the desktop app to run this daemon on Electron's Node; it must not leak into user commands.
+  delete process.env.ELECTRON_RUN_AS_NODE
 }
 
 export function describeShell(shell = currentShell(), { platform = process.platform, arch = os.arch() } = {}) {
