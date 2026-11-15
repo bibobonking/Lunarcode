@@ -93,7 +93,7 @@ import { mcp, sanitizeServerConfig } from './lib/mcp.mjs'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const DIST = path.resolve(HERE, '..', 'dist')
-const VERSION = '3.2.3'
+const VERSION = '3.2.4'
 const SESSION_COOKIE = 'maxcode_session'
 const CSRF_HEADER = 'x-maxcode-csrf'
 const SESSION_TTL = 14 * 24 * 60 * 60 * 1000

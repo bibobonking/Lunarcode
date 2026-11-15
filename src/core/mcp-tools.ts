@@ -47,7 +47,7 @@ export function mcpDefinition(name: ToolName): ToolDefinition | undefined {
         useMcp.getState().applyServer(toolsChanged.server)
         text += `\n\n${toolsChangedNote(server.name, toolsChanged.added, toolsChanged.removed)}`
       }
-      return { output: text, isError: result.isError }
+      return { output: text, isError: result.isError, ...(result.media?.length ? { media: result.media } : {}) }
     },
   }
 }

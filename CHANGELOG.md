@@ -1,5 +1,25 @@
 # Changelog
 
+## 3.2.4 (hotfix)
+
+**MCP: results are no longer text-only**
+- **Fixed: images were dropped.** The daemon flattened every MCP result to text, so an `image` block (for example a Blockbench `capture_screenshot`) became an empty `[image … omitted]` placeholder and the model never saw it. Binary content is now kept as base64 and handed to the model.
+- **All MCP content types.** `text`, `image`, `audio`, embedded `resource` (text or `blob`) and `resource_link` are handled. A `blob` that is an image, audio or PDF becomes media; any other binary blob stays a short text note. A `resource_link` is read through `resources/read` (up to 3 links, 10 s each) so the model gets the data instead of a bare URI; a link that cannot be read stays a link. Limits: 8 media items per result, about 8 MB of base64 each.
+- **Sent per provider.** Anthropic: `image` and `document` blocks inside `tool_result`. OpenAI Responses: `input_image` / `input_file` in `function_call_output`. OpenAI Chat: tool messages are text only, so media follows in a user message right after the tool block. Gemini: `inlineData` for image, audio and PDF. A type a provider cannot read (audio on all but Gemini) is left out and the model is told so, instead of being told it was attached.
+- **Context stays small.** Only the 4 newest tool results keep their media in the request; older ones fall back to text.
+- **Tool card shows it.** Images are displayed in the card, audio gets a player, PDFs open from a button.
+- Still text-only: `structuredContent` is used only when `content` is empty, and `annotations` (`audience`, `priority`) are ignored.
+
+**Desktop (Electron)**
+- **A `data:` link can no longer take over the window.** `data:` URLs are no longer treated as local, so a link to one opens nothing inside the app (blob URLs made by the app, such as the new image/PDF viewer, still work).
+- **Quit stops the whole daemon tree on Windows.** `kill()` is a hard kill there and left MCP servers and running shell commands behind; the app now runs `taskkill /T /F`.
+- **A daemon that dies while the window is open is restarted** (at most 3 times a minute, then a clear error) instead of leaving a dead page.
+- **One daemon start at a time.** Activate, a second launch and a crash restart could race and start two daemons; starts are now serialized.
+- Launching OpenSol again when its window is gone (macOS) opens a new window instead of doing nothing.
+
+**Other**
+- Version 3.2.4 everywhere (package, daemon, desktop, MCP client info, About).
+
 ## 3.2.3
 
 **MCP: tools that follow the server**

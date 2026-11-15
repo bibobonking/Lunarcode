@@ -230,12 +230,22 @@ export interface FileDiff {
   column?: number
 }
 
+/** Binary content returned by a tool (MCP image, audio or embedded PDF resource), kept as raw base64. */
+export interface ToolMedia {
+  kind: 'image' | 'audio' | 'document'
+  mimeType: string
+  data: string
+  name?: string
+}
+
 export interface ToolMessage {
   id: string
   role: 'tool'
   call: ToolCall
   status: ToolRunStatus
   result?: string
+  /** Media the tool returned (MCP image / audio / PDF resource); sent to the model where supported and shown in the card. */
+  media?: ToolMedia[]
   durationMs?: number
   diff?: FileDiff
   /** Structured output of a tool (answers of ask_question); shown by its own card. */

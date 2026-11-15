@@ -330,6 +330,7 @@ export class AgentLoopService extends Service {
               durationMs: Date.now() - toolStarted,
               diff: output.diff,
               data: output.data,
+              ...(output.media?.length ? { media: output.media } : {}),
             }
             this.ctx.sessions.updateMessage(sessionId, toolMessageId, finalToolMessage)
             return { message: finalToolMessage, stopped: false }

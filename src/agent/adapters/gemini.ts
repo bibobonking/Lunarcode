@@ -7,6 +7,8 @@ import {
   imageAttachments,
   toolResultText,
   userText,
+  splitToolMedia,
+  visibleToolMedia,
   type AdapterRequest,
   type AdapterResult,
 } from './shared'
@@ -25,7 +27,17 @@ function buildContents(history: Message[]): GeminiContent[] {
     else contents.push({ role, parts })
   }
 
+  const toolMedia = visibleToolMedia(history)
+  // Images follow the whole block of functionResponse parts, in the same user turn.
+  let pendingImages: Array<Record<string, unknown>> = []
+  const flushImages = () => {
+    if (pendingImages.length === 0) return
+    push('user', [{ text: '[Media returned by the tool call(s) above]' }, ...pendingImages])
+    pendingImages = []
+  }
+
   for (const message of history) {
+    if (message.role !== 'tool') flushImages()
     if (message.role === 'user') {
       const parts: Array<Record<string, unknown>> = []
       for (const image of imageAttachments(message)) {
@@ -54,18 +66,23 @@ function buildContents(history: Message[]): GeminiContent[] {
       continue
     }
 
+    const { sent, note } = splitToolMedia(toolMedia.get(message.id), ['image', 'audio', 'document'])
     push('user', [
       {
         functionResponse: {
           name: message.call.name,
           response: {
-            result: toolResultText(message.result, message.status),
+            result: toolResultText(message.result, message.status) + note,
             ...(message.status === 'error' || message.status === 'denied' ? { isError: true } : {}),
           },
         },
       },
     ])
+    for (const item of sent) {
+      pendingImages.push({ inlineData: { mimeType: item.mimeType, data: item.data } })
+    }
   }
+  flushImages()
 
   return contents
 }

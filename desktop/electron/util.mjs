@@ -6,7 +6,7 @@ export function parseListeningPort(line) {
   return match ? Number(match[1]) : null
 }
 
-/** True for the loading page and for URLs served by the local daemon. */
+/** True for the loading page, blob URLs made by the app and URLs served by the local daemon. `data:` is not trusted: a link to one must not replace the app. */
 export function isLocalUrl(raw) {
   let url
   try {
@@ -14,7 +14,7 @@ export function isLocalUrl(raw) {
   } catch {
     return false
   }
-  if (['file:', 'about:', 'blob:', 'data:'].includes(url.protocol)) return true
+  if (['file:', 'about:', 'blob:'].includes(url.protocol)) return true
   if (url.protocol !== 'http:' && url.protocol !== 'https:') return false
   return LOCAL_HOSTS.has(url.hostname)
 }

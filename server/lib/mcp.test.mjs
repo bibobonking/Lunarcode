@@ -227,3 +227,43 @@ readline.createInterface({ input: process.stdin }).on('line', (line) => {
   assert.deepEqual(view.tools, [])
   await manager.shutdown()
 })
+
+test('extractMedia keeps image, audio and media blobs; skips junk', async () => {
+  const { extractMedia } = await import('./mcp.mjs')
+  const media = extractMedia({
+    content: [
+      { type: 'text', text: 'hi' },
+      { type: 'image', data: 'QUJD', mimeType: 'image/png' },
+      { type: 'image', data: 'data:image/jpeg;base64,REVG', mimeType: 'image/jpeg' },
+      { type: 'image', data: '' },
+      { type: 'audio', data: 'AAAA', mimeType: 'audio/mpeg' },
+      { type: 'resource', resource: { uri: 'file:///a/b/report.pdf', mimeType: 'application/pdf', blob: 'JVBE' } },
+      { type: 'resource', resource: { uri: 'file:///x.zip', mimeType: 'application/zip', blob: 'UEs=' } },
+      { type: 'resource', resource: { uri: 'file:///t.txt', mimeType: 'text/plain', text: 'plain' } },
+    ],
+  })
+  assert.deepEqual(media, [
+    { kind: 'image', mimeType: 'image/png', data: 'QUJD' },
+    { kind: 'image', mimeType: 'image/jpeg', data: 'REVG' },
+    { kind: 'audio', mimeType: 'audio/mpeg', data: 'AAAA' },
+    { kind: 'document', mimeType: 'application/pdf', data: 'JVBE', name: 'report.pdf' },
+  ])
+})
+
+test('expandResourceLinks reads linked resources and keeps unreadable links', async () => {
+  const { expandResourceLinks } = await import('./mcp.mjs')
+  const calls = []
+  const request = async (method, params) => {
+    calls.push([method, params.uri])
+    if (params.uri === 'file:///ok.png') return { contents: [{ uri: params.uri, mimeType: 'image/png', blob: 'QUJD' }] }
+    throw new Error('nope')
+  }
+  const result = await expandResourceLinks(
+    { content: [{ type: 'text', text: 'x' }, { type: 'resource_link', uri: 'file:///ok.png' }, { type: 'resource_link', uri: 'file:///bad' }] },
+    request,
+  )
+  assert.equal(result.content[1].type, 'resource')
+  assert.equal(result.content[1].resource.blob, 'QUJD')
+  assert.equal(result.content[2].type, 'resource_link')
+  assert.equal(calls.length, 2)
+})

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ArrowRight } from 'lucide-react'
-import type { FileDiff, ToolMessage, ToolName } from '../types'
+import type { FileDiff, ToolMedia, ToolMessage, ToolName } from '../types'
 import { toolLabel, toolSummary } from '../lib/tool-meta'
 import { resolveApproval } from '../core/services/approval'
 import { useUi } from '../store/ui'
@@ -69,6 +69,50 @@ function approvalCopy(name: ToolName) {
 export function ToolCallCard({ message, compact = false }: { message: ToolMessage; compact?: boolean }) {
   if (message.call.name === 'ask_question') return <QuestionCard message={message} />
   return <GenericToolCard message={message} compact={compact} />
+}
+
+function mediaBlobUrl(item: ToolMedia): string {
+  const bytes = Uint8Array.from(atob(item.data), (char) => char.charCodeAt(0))
+  return URL.createObjectURL(new Blob([bytes], { type: item.mimeType }))
+}
+
+function ToolMediaView({ item, index }: { item: ToolMedia; index: number }) {
+  const src = `data:${item.mimeType};base64,${item.data}`
+  if (item.kind === 'image') {
+    return (
+      <button
+        type="button"
+        title="Open image"
+        onClick={() => {
+          try {
+            window.open(mediaBlobUrl(item), '_blank', 'noopener')
+          } catch {
+            /* ignore */
+          }
+        }}
+      >
+        <img src={src} alt={`Tool image ${index + 1}`} className="max-h-64 max-w-full rounded-md border border-line object-contain" />
+      </button>
+    )
+  }
+  if (item.kind === 'audio') {
+    return <audio controls src={src} className="h-9 max-w-full" aria-label={item.name || `Tool audio ${index + 1}`} />
+  }
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        try {
+          window.open(mediaBlobUrl(item), '_blank', 'noopener')
+        } catch {
+          /* ignore */
+        }
+      }}
+      className="rounded-md border border-line px-2.5 py-1.5 text-[11.5px] text-muted transition-colors hover:text-ink"
+    >
+      Open {item.name || 'document'} ({item.mimeType})
+    </button>
+  )
 }
 
 function GenericToolCard({ message, compact = false }: { message: ToolMessage; compact?: boolean }) {
@@ -205,6 +249,14 @@ function GenericToolCard({ message, compact = false }: { message: ToolMessage; c
               >
                 {message.result || '(no output)'}
               </pre>
+            </div>
+          )}
+
+          {message.media && message.media.length > 0 && (
+            <div className="flex flex-wrap items-start gap-2">
+              {message.media.map((item, index) => (
+                <ToolMediaView key={index} item={item} index={index} />
+              ))}
             </div>
           )}
 
