@@ -71,7 +71,15 @@ function spawnDaemon(appDir) {
     let settled = false
     let stderr = ''
     let stdout = ''
-    const timer = setTimeout(() => fail(new Error('The OpenSol daemon did not start within 25 seconds.')), START_TIMEOUT_MS)
+    const timer = setTimeout(
+      () =>
+        fail(
+          new Error(
+            `The OpenSol daemon did not start within ${START_TIMEOUT_MS / 1000} seconds.${stderr.trim() ? ` ${stderr.trim()}` : ''}`,
+          ),
+        ),
+      START_TIMEOUT_MS,
+    )
 
     function fail(error) {
       if (settled) return

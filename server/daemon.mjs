@@ -1,6 +1,4 @@
 import { describeShell, repairProcessEnv } from './lib/shell.mjs'
-
-repairProcessEnv()
 import { randomBytes } from 'node:crypto'
 import { mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises'
 import http from 'node:http'
@@ -1211,8 +1209,6 @@ export async function startServer({ port: requested = 4174, open = false } = {})
       await saveSecrets({ ...secrets, mcpOAuth: rest })
     },
   }
-  await mcp.setConfigs(await getMcpServers())
-  void mcp.connectAll().catch(() => undefined)
   port = requested === 0 ? await findPort(4174) : requested
   const server = http.createServer((req, res) => {
     handler(req, res)
@@ -1246,6 +1242,10 @@ export async function startServer({ port: requested = 4174, open = false } = {})
   console.log(`[opensol] daemon listening on ${url}`)
   console.log(`[opensol] data: ${DATA_DIR}`)
   console.log(`[opensol] dist: ${DIST}`)
+  // Probe the user's shell only after the port is printed: a slow or hanging shell profile must never keep the app from loading.
+  await repairProcessEnv()
+  await mcp.setConfigs(await getMcpServers())
+  void mcp.connectAll().catch(() => undefined)
   if (open) {
     const { spawn } = await import('node:child_process')
     const opener = process.platform === 'darwin' ? 'open' : process.platform === 'win32' ? 'cmd' : 'xdg-open'

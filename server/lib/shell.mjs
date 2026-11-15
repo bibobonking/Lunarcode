@@ -4,7 +4,7 @@
 import { existsSync, readdirSync } from 'node:fs'
 import path from 'node:path'
 import os from 'node:os'
-import { spawn, spawnSync } from 'node:child_process'
+import { spawn } from 'node:child_process'
 
 const PS_PROLOGUE = '[Console]::OutputEncoding=[System.Text.Encoding]::UTF8;$ErrorActionPreference="Continue";'
 // Keeps the exit code of the last native command; PowerShell otherwise reports 0.
@@ -153,43 +153,89 @@ export function parseProbedPath(output) {
   return end < 0 ? '' : text.slice(start + PATH_MARK.length, end).trim()
 }
 
-function probeUserPath(shell, env) {
+const PROBE_TIMEOUT_MS = 3000
+
+// A login/interactive shell can leave a grandchild (ssh-agent, keychain, conda...) holding the stdout
+// pipe. `spawnSync` would then wait for EOF past its timeout, so probe asynchronously and resolve on
+// our own timer, killing the whole process group instead of waiting for the pipe to close.
+function runProbe(file, args, env) {
+  return new Promise((resolve) => {
+    let out = ''
+    let settled = false
+    let child
+    const doResolve = () => {
+      if (settled) return
+      settled = true
+      resolve(out)
+    }
+    const timer = setTimeout(() => {
+      clearTimeout(timer)
+      if (child?.pid) {
+        try {
+          process.kill(-child.pid, 'SIGKILL')
+        } catch {
+          try {
+            child.kill('SIGKILL')
+          } catch {
+            // Already gone.
+          }
+        }
+      }
+      doResolve()
+    }, PROBE_TIMEOUT_MS)
+    try {
+      child = spawn(file, args, {
+        env: { ...env, TERM: env.TERM || 'dumb' },
+        stdio: ['ignore', 'pipe', 'ignore'],
+        detached: true,
+        windowsHide: true,
+      })
+    } catch {
+      clearTimeout(timer)
+      doResolve()
+      return
+    }
+    child.stdout.setEncoding('utf8')
+    child.stdout.on('data', (chunk) => {
+      out += chunk
+    })
+    child.on('error', () => {
+      clearTimeout(timer)
+      doResolve()
+    })
+    child.on('close', () => {
+      clearTimeout(timer)
+      doResolve()
+    })
+  })
+}
+
+async function probeUserPath(shell, env) {
   if (shell.family !== 'posix' || !['bash', 'zsh'].includes(shell.id)) return ''
   // Interactive login covers profile files; bash also needs a plain interactive run because terminal
   // emulators on Linux start non-login shells that read ~/.bashrc, which a login shell skips.
   const modes = shell.id === 'bash' ? ['-ilc', '-ic'] : ['-ilc']
   const found = []
   for (const mode of modes) {
-    try {
-      const result = spawnSync(shell.file, [mode, `printf '%s' "${PATH_MARK}${'${PATH}'}${PATH_MARK}"`], {
-        env: { ...env, TERM: env.TERM || 'dumb' },
-        encoding: 'utf8',
-        timeout: 6000,
-        stdio: ['ignore', 'pipe', 'ignore'],
-        windowsHide: true,
-      })
-      found.push(parseProbedPath(result.stdout))
-    } catch {
-      // Try the next mode.
-    }
+    found.push(parseProbedPath(await runProbe(shell.file, [mode, `printf '%s' "${PATH_MARK}${'${PATH}'}${PATH_MARK}"`], env)))
   }
   return mergePathLists(found)
 }
 
 let repairedPath
 /** The PATH commands should run with: user's real shell PATH first, then the inherited one, then known tool dirs. */
-export function userPath({ platform = process.platform, env = process.env } = {}) {
+export async function userPath({ platform = process.platform, env = process.env } = {}) {
   if (platform === 'win32') return String(env.PATH ?? env.Path ?? '')
   if (repairedPath === undefined) {
-    repairedPath = mergePathLists([probeUserPath(currentShell(), env), env.PATH, fallbackToolDirs({ env })])
+    repairedPath = mergePathLists([await probeUserPath(currentShell(), env), env.PATH, fallbackToolDirs({ env })])
   }
   return repairedPath
 }
 
 /** Call once at daemon start so every child process (shell tool, git, deploy, MCP) sees the repaired PATH. */
-export function repairProcessEnv() {
+export async function repairProcessEnv() {
   if (process.platform !== 'win32') {
-    const fixed = userPath()
+    const fixed = await userPath()
     if (fixed) process.env.PATH = fixed
   }
   // Set by the desktop app to run this daemon on Electron's Node; it must not leak into user commands.
