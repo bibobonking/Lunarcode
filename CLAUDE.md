@@ -82,7 +82,7 @@ Plugin themes are registered at runtime as `plugin-<pluginId>:<themeId>` and sty
 
 ## Shell
 
-`server/lib/shell.mjs` picks the shell per OS (bash on Linux, login zsh/bash on macOS, pwsh → Windows PowerShell → cmd on Windows; `OPENSOL_SHELL` overrides), kills whole process trees (`taskkill /T` on Windows) and owns the Plan-mode read-only allowlist. The daemon reports `os` and `shell` in its snapshot and `SystemPromptService` turns them into an Environment section. Platform logic is tested with injected `platform`/`env` in `server/lib/shell.test.mjs`.
+`server/lib/shell.mjs` picks the shell per OS (user's `$SHELL` if bash/zsh else bash on Linux, login zsh/bash on macOS, pwsh → Windows PowerShell → cmd on Windows; `OPENSOL_SHELL` overrides), kills whole process trees (`taskkill /T` on Windows) and owns the Plan-mode read-only allowlist. The daemon reports `os` and `shell` in its snapshot and `SystemPromptService` turns them into an Environment section. `repairProcessEnv()` runs first thing in `daemon.mjs`: it probes the user's real shell (`-ilc`, plus `-ic` for bash so `~/.bashrc` counts) for its PATH, merges known nvm/volta/Homebrew dirs, and drops `ELECTRON_RUN_AS_NODE` — otherwise a daemon started from the desktop app can't find `node`. Platform logic is tested with injected `platform`/`env` in `server/lib/shell.test.mjs`.
 
 ## Traps
 
