@@ -5,26 +5,44 @@ import { cn } from '../lib/utils'
 
 const STATUS = ['Waking the local daemon', 'Unlocking your keys', 'Loading workspace', 'Almost there']
 
-const RAYS_PLUS = ['M32 7v8', 'M32 49v8', 'M7 32h8', 'M49 32h8']
-const RAYS_DIAG = ['M14.3 14.3l5.5 5.5', 'M44.2 44.2l5.5 5.5', 'M14.3 49.7l5.5-5.5', 'M44.2 19.8l5.5-5.5']
-
-function SunDraw({ size = 64 }: { size?: number }) {
+/**
+ * Intro build of the OpenSol mark: the tile pops in, the ring draws itself, the prompt chevron is
+ * written, then the sun lands in the opening with a shockwave. Pure SVG + CSS (see `.splash-logo`).
+ */
+function LogoBuild({ size = 104 }: { size?: number }) {
   return (
-    <div className="relative" style={{ width: size * 1.7, height: size * 1.7 }}>
-      <span className="absolute inset-0 m-auto animate-ping rounded-full bg-accent/20" style={{ width: size * 0.7, height: size * 0.7 }} />
+    <div className="splash-logo relative" style={{ width: size * 1.7, height: size * 1.7 }}>
       <span
-        className="absolute inset-0 m-auto rounded-full bg-accent/10 blur-2xl"
-        style={{ width: size * 1.4, height: size * 1.4 }}
+        className="absolute inset-0 m-auto rounded-full bg-accent/15 blur-3xl"
+        style={{ width: size * 1.5, height: size * 1.5 }}
+        aria-hidden="true"
       />
-      <svg viewBox="0 0 64 64" width={size} height={size} fill="none" className="splash-sun absolute inset-0 m-auto text-accent">
-        <circle className="core" cx="32" cy="32" r="12" fill="currentColor" />
-        <g className="rays" stroke="currentColor" strokeWidth="4.4" strokeLinecap="round">
-          {RAYS_PLUS.map((d, i) => (
-            <path key={d} d={d} className="ray" pathLength={8} style={{ animationDelay: `${0.35 + i * 0.07}s` }} />
-          ))}
-          {RAYS_DIAG.map((d, i) => (
-            <path key={d} d={d} className="ray" pathLength={8} opacity={0.55} style={{ animationDelay: `${0.65 + i * 0.07}s` }} />
-          ))}
+      <span className="sl-shock" style={{ width: size, height: size, animationDelay: '1s' }} aria-hidden="true" />
+      <span className="sl-shock" style={{ width: size, height: size, animationDelay: '1.25s' }} aria-hidden="true" />
+      <svg viewBox="0 0 64 64" width={size} height={size} fill="none" className="sl-svg absolute inset-0 m-auto" aria-hidden="true">
+        <defs>
+          <linearGradient id="sl-bg" x1="8" y1="4" x2="56" y2="60" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stopColor="#26211b" />
+            <stop offset="1" stopColor="#0f0d0b" />
+          </linearGradient>
+          <linearGradient id="sl-ring" x1="14" y1="12" x2="50" y2="52" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stopColor="#ffb347" />
+            <stop offset="1" stopColor="#f26b21" />
+          </linearGradient>
+          <radialGradient id="sl-sun" cx="46" cy="18" r="6" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stopColor="#fff2b8" />
+            <stop offset="1" stopColor="#ffc233" />
+          </radialGradient>
+        </defs>
+        <g className="sl-tile">
+          <rect width="64" height="64" rx="15" fill="url(#sl-bg)" />
+          <rect x=".75" y=".75" width="62.5" height="62.5" rx="14.25" stroke="#fff" strokeOpacity=".09" strokeWidth="1.5" />
+        </g>
+        <path className="sl-ring" d="M51.32 26.82A20 20 0 1 1 37.18 12.68" stroke="url(#sl-ring)" strokeWidth="5.6" strokeLinecap="round" pathLength={1} />
+        <circle className="sl-sun" cx="46.14" cy="17.86" r="5" fill="url(#sl-sun)" />
+        <g stroke="#fff4e0" strokeWidth="4.6" strokeLinecap="round" strokeLinejoin="round">
+          <path className="sl-chev" d="M25.2 25.6L34 32l-8.8 6.4" pathLength={1} />
+          <path className="sl-under" d="M37.6 39.2h6" />
         </g>
       </svg>
     </div>
@@ -53,15 +71,15 @@ export function Splash({
     <div className={cn('splash', leaving && 'is-leaving')} role="status" aria-live="polite">
       <div className="hero-wash pointer-events-none absolute inset-0" aria-hidden="true" />
       <div className="relative flex w-full max-w-[400px] flex-col items-center px-6 text-center">
-        <SunDraw />
-        <h1 className="splash-word -mt-1 text-[26px] font-semibold leading-none tracking-[-0.04em] text-ink" aria-label="OpenSol">
+        <LogoBuild />
+        <h1 className="splash-word -mt-2 text-[26px] font-semibold leading-none tracking-[-0.04em] text-ink" aria-label="OpenSol">
           {'OpenSol'.split('').map((char, index) => (
-            <span key={index} style={{ animationDelay: `${0.5 + index * 0.05}s` }} className={index >= 4 ? 'text-accent' : undefined}>
+            <span key={index} style={{ animationDelay: `${1.15 + index * 0.055}s` }} className={index >= 4 ? 'text-accent' : undefined}>
               {char}
             </span>
           ))}
         </h1>
-        <p className="mt-2 animate-fade text-[11px] font-medium uppercase tracking-[0.22em] text-faint [animation-delay:1s]">
+        <p className="mt-2 animate-fade text-[11px] font-medium uppercase tracking-[0.22em] text-faint [animation-delay:1.7s]">
           by OpenSoftX
         </p>
 
@@ -88,14 +106,14 @@ export function Splash({
             </p>
           </div>
         ) : (
-          <div className="mt-9 flex animate-fade flex-col items-center gap-3 [animation-delay:0.8s]">
+          <div className="mt-9 flex animate-fade flex-col items-center gap-3 [animation-delay:1.5s]">
             <div className="loading-bar h-[2px] w-32 rounded-full" />
             <p key={step} className="animate-rise text-[12px] text-muted">
               {STATUS[step]}…
             </p>
           </div>
         )}
-        <div className="mt-12 animate-fade [animation-delay:1.2s]">
+        <div className="mt-12 animate-fade [animation-delay:2s]">
           <BrandFooter />
         </div>
       </div>

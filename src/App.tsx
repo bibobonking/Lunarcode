@@ -16,7 +16,7 @@ import { resolveTheme, themeIsDark } from './lib/themes'
 import { listInstalledPlugins } from './lib/daemon'
 import { syncPlugins } from './plugins'
 
-const MIN_SPLASH_MS = 1600
+const MIN_SPLASH_MS = 2600
 
 export default function App() {
   const phase = useBoot((state) => state.phase)
