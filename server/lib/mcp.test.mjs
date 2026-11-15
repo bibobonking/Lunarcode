@@ -122,6 +122,175 @@ test('a reconnect keeps the last known tools callable', async () => {
   await manager.shutdown()
 })
 
+test('a manual reconnect keeps the last known tools too', async (t) => {
+  const { manager, config } = await startStdio(DYNAMIC(true))
+  t.after(() => manager.shutdown())
+  await manager.callTool(config.id, 'create_project', {})
+  const pending = manager.connect(config.id)
+  for (let i = 0; i < 200 && manager.list()[0].status !== 'connecting'; i += 1) await new Promise((resolve) => setTimeout(resolve, 5))
+  const during = manager.list()[0]
+  assert.equal(during.status, 'connecting')
+  assert.equal(during.tools.length, 3, 'the tool list must not disappear while reconnecting')
+  await pending
+  assert.equal(manager.list()[0].status, 'connected')
+  assert.equal(manager.list()[0].tools.length, 1, 'the fresh transport reports its real list')
+})
+
+test('concurrent connect calls share one handshake', async (t) => {
+  const { server, control } = staleHttpServer()
+  t.after(() => {
+    server.closeAllConnections?.()
+    server.close()
+  })
+  control.delay = 40
+  const url = await listen(server)
+  const manager = new McpManager()
+  t.after(() => manager.shutdown())
+  const config = sanitizeServerConfig({ name: 'Once', transport: 'http', url: `${url}/mcp` })
+  await manager.setConfigs([config])
+  const [first, second] = await Promise.all([manager.connect(config.id), manager.connect(config.id)])
+  assert.equal(first.status, 'connected', first.error)
+  assert.equal(second.status, 'connected', second.error)
+  assert.equal(control.initializes, 1, 'both callers must use the same transport')
+})
+
+test('a lost HTTP session is reinitialized without emptying the tool list', async (t) => {
+  const { server, control } = staleHttpServer()
+  t.after(() => {
+    server.closeAllConnections?.()
+    server.close()
+  })
+  const url = await listen(server)
+  const manager = new McpManager()
+  t.after(() => manager.shutdown())
+  const config = sanitizeServerConfig({ name: 'Stale', transport: 'http', url: `${url}/mcp` })
+  await manager.setConfigs([config])
+  assert.equal((await manager.connect(config.id)).status, 'connected')
+  const events = []
+  manager.subscribe((event) => events.push(event))
+  // The server forgot our session; it answers 404 until it is initialized again.
+  control.stale = true
+  const view = await manager.refresh(config.id)
+  assert.equal(view.status, 'connected', view.error)
+  assert.equal(view.tools.length, 1)
+  assert.equal(control.initializes, 2, 'the session was renewed, not rebuilt from scratch')
+  assert.equal(
+    events.some((event) => event.type === 'server' && event.server.tools.length === 0),
+    false,
+    'a session renewal must never publish an empty tool list',
+  )
+  assert.equal((await manager.callTool(config.id, 'ping', {})).text, 'pong')
+})
+
+test('a call that loses the session reconnects and keeps the tools', async (t) => {
+  const { server, control } = staleHttpServer()
+  t.after(() => {
+    server.closeAllConnections?.()
+    server.close()
+  })
+  const url = await listen(server)
+  const manager = new McpManager()
+  t.after(() => manager.shutdown())
+  const config = sanitizeServerConfig({ name: 'Down', transport: 'http', url: `${url}/mcp` })
+  await manager.setConfigs([config])
+  assert.equal((await manager.connect(config.id)).status, 'connected')
+  const events = []
+  manager.subscribe((event) => events.push(event))
+
+  control.down = true
+  await assert.rejects(manager.callTool(config.id, 'ping', {}), /reconnecting automatically/)
+  const after = manager.list()[0]
+  assert.equal(after.status, 'error')
+  assert.equal(after.tools.length, 1, 'the tool list survives the failed call')
+  assert.ok(events.some((event) => event.type === 'server' && event.server.status === 'error'))
+
+  // The next call skips the back-off and just works once the server is back.
+  control.down = false
+  assert.equal((await manager.callTool(config.id, 'ping', {})).text, 'pong')
+  assert.equal(manager.list()[0].status, 'connected')
+})
+
+test('a server that ran out of retries keeps its tool list', async (t) => {
+  const { server, control } = staleHttpServer()
+  t.after(() => {
+    server.closeAllConnections?.()
+    server.close()
+  })
+  const url = await listen(server)
+  const manager = new McpManager()
+  t.after(() => manager.shutdown())
+  const config = sanitizeServerConfig({ name: 'Gone', transport: 'http', url: `${url}/mcp` })
+  await manager.setConfigs([config])
+  assert.equal((await manager.connect(config.id)).status, 'connected')
+  // Pretend every timed retry has already been used up.
+  manager.runtime.get(config.id).attempts = 10_000
+  control.down = true
+  await assert.rejects(manager.callTool(config.id, 'ping', {}), /reconnecting automatically/)
+  const state = manager.list()[0]
+  assert.equal(state.status, 'error')
+  assert.equal(state.reconnecting, false)
+  assert.equal(state.tools.length, 1, 'the list must survive even when timed retries stop')
+})
+
+/**
+ * A Streamable HTTP server that never hands out a session id (so the transport cannot assume one)
+ * and can forget everything, answering 404 until the client initializes again.
+ */
+function staleHttpServer() {
+  const control = { stale: false, down: false, initializes: 0, delay: 0 }
+  const server = http.createServer((req, res) => {
+    if (req.method !== 'POST') {
+      res.writeHead(405).end()
+      return
+    }
+    let body = ''
+    req.on('data', (chunk) => (body += chunk))
+    req.on('end', () => {
+      const m = JSON.parse(body)
+      if (m.id === undefined) {
+        res.writeHead(202).end()
+        return
+      }
+      const reply = (status, payload) => {
+        res.writeHead(status, { 'Content-Type': 'application/json' })
+        res.end(JSON.stringify(payload))
+      }
+      if (control.down) {
+        reply(503, { jsonrpc: '2.0', error: { code: -32000, message: 'down' }, id: null })
+        return
+      }
+      if (m.method === 'initialize') {
+        control.initializes += 1
+        control.stale = false
+        setTimeout(
+          () =>
+            reply(200, {
+              jsonrpc: '2.0',
+              id: m.id,
+              result: {
+                protocolVersion: '2025-03-26',
+                capabilities: { tools: {} },
+                serverInfo: { name: 'stale', version: '1' },
+              },
+            }),
+          control.delay,
+        )
+        return
+      }
+      if (control.stale) {
+        reply(404, { jsonrpc: '2.0', error: { code: -32001, message: 'Session not found. Please reinitialize.' }, id: null })
+        return
+      }
+      const result =
+        m.method === 'tools/list'
+          ? { tools: [{ name: 'ping', description: 'p', inputSchema: { type: 'object', properties: {} } }] }
+          : { content: [{ type: 'text', text: 'pong' }] }
+      reply(200, { jsonrpc: '2.0', id: m.id, result })
+    })
+  })
+  return { server, control }
+}
+
 function legacySseServer() {
   const clients = new Set()
   return http.createServer((req, res) => {

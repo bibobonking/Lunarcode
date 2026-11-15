@@ -10,6 +10,13 @@
 - **Tool card shows it.** Images are displayed in the card, audio gets a player, PDFs open from a button.
 - Still text-only: `structuredContent` is used only when `content` is empty, and `annotations` (`audience`, `priority`) are ignored.
 
+**MCP: connected tools stop disappearing**
+- **Fixed: “The model requested a tool that is not enabled” after a blip.** A manual reconnect, a failed tool refresh, or a server that forgot its session used to empty the tool list for a moment. That moment removed the tools from the model's schema, so the next tool call was refused until OpenSol restarted. The last known list now stays visible and callable through every reconnect, and is only cleared by an explicit disconnect, a disabled server, a config change, sign-out, or an expired authorization.
+- **One connection attempt at a time.** Startup, the MCP panel and a tool call can ask for the same server together; they now share the attempt instead of tearing down each other's transport.
+- **A 404 session is renewed even without a session id.** Some servers never send `Mcp-Session-Id`; the next request after a restart still reinitializes and retries instead of falling back to a full reconnect.
+- **A call that finds a dead session reconnects.** A 404 or 5xx rebuilds the transport in the background (the call itself is not retried) instead of leaving the server stuck until OpenSol restarts.
+- **Reconnecting states stay dispatchable.** A server that is `connecting` or in `error` with a known tool list keeps those tools in the schema (the daemon waits for the reconnect), matching the 3.2.3 reconnect design.
+
 **Desktop (Electron)**
 - **A `data:` link can no longer take over the window.** `data:` URLs are no longer treated as local, so a link to one opens nothing inside the app (blob URLs made by the app, such as the new image/PDF viewer, still work).
 - **Quit stops the whole daemon tree on Windows.** `kill()` is a hard kill there and left MCP servers and running shell commands behind; the app now runs `taskkill /T /F`.

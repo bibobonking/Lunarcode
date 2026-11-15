@@ -154,7 +154,9 @@ export function isMcpToolName(name: string): name is McpToolName {
 export function mcpServerUsable(server: McpServer): boolean {
   if (!server.enabled) return false
   if (server.status === 'connected') return true
-  return server.reconnecting === true && server.tools.length > 0
+  // A server that worked before keeps its tool list while it is reconnecting, so the list stays in
+  // the model's schema instead of disappearing mid-conversation.
+  return (server.status === 'connecting' || server.status === 'error') && server.tools.length > 0
 }
 
 try {

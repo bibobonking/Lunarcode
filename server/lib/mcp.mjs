@@ -380,7 +380,8 @@ class HttpTransport {
       const session = response.headers.get('mcp-session-id')
       if (session) this.sessionId = session
       // The server forgot our session (restart, expiry): open a new one and repeat the request once.
-      if (response.status === 404 && this.sessionId && method !== 'initialize' && !retried && this.reinit) {
+      // Some servers never hand out a session id, so an empty one must not skip the recovery.
+      if (response.status === 404 && method !== 'initialize' && !retried && this.reinit) {
         await response.body?.cancel().catch(() => undefined)
         clearTimeout(timer)
         await this.reinit()
@@ -826,6 +827,7 @@ export class McpManager {
     this.getCwd = async () => os.homedir()
     this.pendingAuth = new PendingAuthorizations()
     this.refreshing = new Map()
+    this.connecting = new Map()
     this.listeners = new Set()
     // OAuth client + tokens per server. The daemon swaps in the encrypted secrets file.
     const memory = new Map()
@@ -952,6 +954,8 @@ export class McpManager {
       if (!config || JSON.stringify(config) !== JSON.stringify(previous)) stale.push(id)
     }
     await Promise.all(stale.map((id) => this.#teardown(id)))
+    // A connect for the old config must not be mistaken for the new one's attempt.
+    for (const id of stale) this.connecting.delete(id)
     this.configs = next
     for (const id of [...this.runtime.keys()]) if (!next.has(id)) this.runtime.delete(id)
     for (const id of stale) {
@@ -1042,14 +1046,32 @@ export class McpManager {
   }
 
   /**
-   * Connects (or reconnects). `auto` marks a background reconnect: the last known tools stay
-   * visible and callable while it runs, so the agent never has to stop for a blip.
+   * Connects (or reconnects). Concurrent callers share one attempt instead of tearing down each
+   * other's transport. `auto` marks a background reconnect: the last known tools stay visible and
+   * callable while it runs, so the agent never has to stop for a blip.
    */
-  async connect(id, { auto = false, attempts = 0 } = {}) {
+  async connect(id, options = {}) {
     const config = this.configs.get(id)
     if (!config) throw new HttpError(404, 'Unknown MCP server.', 'mcp_missing')
+    const running = this.connecting.get(id)
+    if (running) {
+      await running
+      return this.view(config)
+    }
+    const task = this.#connect(id, config, options)
+    this.connecting.set(id, task)
+    try {
+      await task
+    } finally {
+      if (this.connecting.get(id) === task) this.connecting.delete(id)
+    }
+    return this.view(config)
+  }
+
+  async #connect(id, config, { auto = false, attempts = 0 } = {}) {
     const previous = this.runtime.get(id)
-    const keep = auto ? previous?.tools ?? [] : []
+    // A reconnect never drops a tool list that already worked: the model may still call those tools.
+    const keep = previous?.tools ?? []
     await this.#teardown(id)
     const state = {
       status: 'connecting',
@@ -1057,9 +1079,9 @@ export class McpManager {
       tools: keep,
       auto,
       attempts: auto ? attempts : 0,
-      reconnecting: auto,
-      wasConnected: auto ? previous?.wasConnected === true : false,
-      toolsHash: auto ? previous?.toolsHash ?? '' : '',
+      reconnecting: auto || keep.length > 0,
+      wasConnected: previous?.wasConnected === true,
+      toolsHash: previous?.toolsHash ?? '',
     }
     this.runtime.set(id, state)
     this.#emitServer(id)
@@ -1067,7 +1089,6 @@ export class McpManager {
       state.connectPromise = null
     })
     await state.connectPromise
-    return this.view(config)
   }
 
   async #establish(id, config, state) {
@@ -1264,8 +1285,12 @@ export class McpManager {
           state.refreshDirty = false
           await this.#syncTools(id, state)
         }
-      } catch {
-        // Keep the previous list; the next notification or tool call tries again.
+      } catch (error) {
+        // Keep the previous list. A session that cannot be renewed will not heal by re-reading it,
+        // so rebuild the transport in the background instead.
+        if (error instanceof HttpStatusError && (error.status === 404 || error.status >= 500)) {
+          this.#onTransportLost(id, state, error)
+        }
       } finally {
         state.refreshing = null
       }
@@ -1277,12 +1302,13 @@ export class McpManager {
     const config = this.configs.get(id)
     const state = this.runtime.get(id)
     if (!config) throw new HttpError(404, 'Unknown MCP server.', 'mcp_missing')
-    if (!state?.transport || state.status !== 'connected') return this.connect(id)
+    if (!state?.transport || state.status !== 'connected') return this.connect(id, { auto: true })
     try {
       await this.#syncTools(id, state)
     } catch (error) {
-      // The connection may have died quietly: rebuild it instead of reporting a stale list.
-      if (!(error instanceof RpcError)) return this.connect(id)
+      // The connection may have died quietly: rebuild it as a background reconnect so the last
+      // known tools stay callable instead of vanishing from the next model request.
+      if (!(error instanceof RpcError)) return this.connect(id, { auto: true })
       throw error
     }
     return this.view(config)
@@ -1328,8 +1354,9 @@ export class McpManager {
     if (!state || !config?.enabled || state.reconnectTimer) return
     const attempt = state.attempts ?? 0
     if (attempt >= RECONNECT_DELAYS_MS.length) {
+      // Stop retrying on a timer, but keep the last known tools: a later call reconnects on demand,
+      // and the model must never see the list vanish (which reads as "tool not enabled").
       state.reconnecting = false
-      state.tools = []
       this.#emitServer(id)
       return
     }
@@ -1377,6 +1404,7 @@ export class McpManager {
   }
 
   async disconnect(id) {
+    this.connecting.delete(id)
     await this.#teardown(id)
     const config = this.configs.get(id)
     this.runtime.set(id, { status: config?.enabled === false ? 'disabled' : 'disconnected', error: '', tools: [] })
@@ -1428,6 +1456,16 @@ export class McpManager {
         throw new HttpError(
           502,
           `${config.name} disconnected during the call and is reconnecting automatically. Run the tool again in a moment.`,
+          'mcp_lost',
+        )
+      }
+      // A session that cannot be renewed, or a server-side failure, means the transport is not
+      // usable even though the socket is still open. Rebuild it; the call itself is not retried.
+      if (error instanceof HttpStatusError && (error.status === 404 || error.status >= 500)) {
+        this.#onTransportLost(id, state, error)
+        throw new HttpError(
+          502,
+          `${config.name} lost its connection and is reconnecting automatically. Run the tool again in a moment.`,
           'mcp_lost',
         )
       }
