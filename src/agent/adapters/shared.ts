@@ -6,6 +6,7 @@ import type {
   ModelInfo,
   StreamHandlers,
   ToolCall,
+  ToolMedia,
   Usage,
 } from '../../types'
 import type { ToolSchema } from '../../core/types'
@@ -76,6 +77,41 @@ export function toolResultText(result: string | undefined, status: string): stri
   if (status === 'error') return `Tool error: ${result ?? 'unknown error'}`
   if (status === 'awaiting') return 'The tool call was interrupted before approval.'
   return result ?? '(no output)'
+}
+
+/** Only the newest tool messages keep their media in the request; older ones fall back to text. */
+const MEDIA_TOOL_RESULTS_KEPT = 4
+
+export function visibleToolMedia(history: Message[]): Map<string, ToolMedia[]> {
+  const out = new Map<string, ToolMedia[]>()
+  for (let i = history.length - 1; i >= 0 && out.size < MEDIA_TOOL_RESULTS_KEPT; i--) {
+    const message = history[i]
+    if (message.role === 'tool' && message.status === 'done' && message.media?.length) {
+      out.set(message.id, message.media)
+    }
+  }
+  return out
+}
+
+/** Splits a tool's media into what this provider can read and a note about what it cannot. */
+export function splitToolMedia(
+  media: ToolMedia[] | undefined,
+  supported: ReadonlyArray<ToolMedia['kind']>,
+): { sent: ToolMedia[]; note: string } {
+  const sent: ToolMedia[] = []
+  const skipped: string[] = []
+  for (const item of media ?? []) {
+    if (supported.includes(item.kind)) sent.push(item)
+    else skipped.push(`${item.kind} ${item.mimeType}${item.name ? ` (${item.name})` : ''}`)
+  }
+  const note = skipped.length
+    ? `\n[Not shown to you: ${skipped.join(', ')} — this provider cannot read that content type.]`
+    : ''
+  return { sent, note }
+}
+
+export function mediaDataUrl(item: ToolMedia): string {
+  return `data:${item.mimeType};base64,${item.data}`
 }
 
 export function collectToolCalls(

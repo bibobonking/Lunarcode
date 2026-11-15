@@ -8,6 +8,8 @@ import {
   parseToolArgs,
   toolResultText,
   userText,
+  splitToolMedia,
+  visibleToolMedia,
   type AdapterRequest,
   type AdapterResult,
 } from './shared'
@@ -24,6 +26,7 @@ function buildMessages(history: Message[]): AnthropicMessage[] {
     else messages.push({ role, content: blocks })
   }
 
+  const toolMedia = visibleToolMedia(history)
   for (const message of history) {
     if (message.role === 'user') {
       const blocks: AnthropicBlock[] = []
@@ -58,11 +61,22 @@ function buildMessages(history: Message[]): AnthropicMessage[] {
       continue
     }
 
+    const { sent, note } = splitToolMedia(toolMedia.get(message.id), ['image', 'document'])
+    const resultText = toolResultText(message.result, message.status) + note
     push('user', [
       {
         type: 'tool_result',
         tool_use_id: message.call.id,
-        content: toolResultText(message.result, message.status),
+        content:
+          sent.length > 0
+            ? [
+                { type: 'text', text: resultText },
+                ...sent.map((item) => ({
+                  type: item.kind === 'document' ? 'document' : 'image',
+                  source: { type: 'base64', media_type: item.mimeType, data: item.data },
+                })),
+              ]
+            : resultText,
         is_error: message.status === 'error' || message.status === 'denied',
       },
     ])

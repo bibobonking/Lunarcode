@@ -2,7 +2,7 @@
 // Electron window. The daemon runs on Electron's own Node runtime, so no
 // separate Node binary is shipped.
 import { app, BrowserWindow, Menu, shell } from 'electron'
-import { spawn } from 'node:child_process'
+import { spawn, spawnSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -17,6 +17,9 @@ const OAUTH_WINDOW = 'opensol-mcp-oauth'
 let mainWindow = null
 let daemonChild = null
 let daemonUrl = null
+let ensuring = null
+let quitting = false
+let restarts = []
 
 function openExternal(url) {
   if (/^(https?:|mailto:)/i.test(url)) void shell.openExternal(url)
@@ -117,7 +120,15 @@ async function waitForHealth(port, version) {
   return false
 }
 
-async function ensureDaemon() {
+/** One start at a time: activate, second-instance and a crash restart can race, and two daemons would fight over the data folder. */
+function ensureDaemon() {
+  ensuring ??= startDaemonOnce().finally(() => {
+    ensuring = null
+  })
+  return ensuring
+}
+
+async function startDaemonOnce() {
   const appDir = resolveAppDir()
   if (!appDir) {
     throw new Error('OpenSol’s app files were not found. Run “npm run build” before starting the desktop app.')
@@ -128,8 +139,9 @@ async function ensureDaemon() {
     const port = Number(new URL(daemonUrl).port)
     if (await healthy(port, version)) return daemonUrl
     daemonUrl = null
-    if (daemonChild?.exitCode === null) daemonChild.kill()
+    const stale = daemonChild
     daemonChild = null
+    if (stale) killTree(stale)
   }
 
   if (await healthy(DEFAULT_PORT, version)) {
@@ -139,18 +151,46 @@ async function ensureDaemon() {
 
   const { child, port } = await spawnDaemon(appDir)
   daemonChild = child
+  child.on('exit', () => onDaemonExit(child))
   if (!(await waitForHealth(port, version))) {
-    child.kill()
     daemonChild = null
+    killTree(child)
     throw new Error('The OpenSol daemon started but is not answering.')
   }
   daemonUrl = `http://127.0.0.1:${port}/`
   return daemonUrl
 }
 
+/** Kills the daemon with its children: on Windows `kill()` is a hard kill that would orphan MCP servers and shell commands. */
+function killTree(child) {
+  if (child.exitCode !== null) return
+  if (process.platform === 'win32' && child.pid) {
+    spawnSync('taskkill', ['/pid', String(child.pid), '/T', '/F'], { windowsHide: true })
+    return
+  }
+  child.kill()
+}
+
 function stopDaemon() {
-  if (daemonChild && daemonChild.exitCode === null) daemonChild.kill()
+  quitting = true
+  if (daemonChild) killTree(daemonChild)
   daemonChild = null
+}
+
+/** The daemon the app started died while the window was open: start it again (at most 3 times a minute). */
+function onDaemonExit(child) {
+  if (daemonChild !== child) return
+  daemonChild = null
+  daemonUrl = null
+  if (quitting || !mainWindow || mainWindow.isDestroyed()) return
+  const now = Date.now()
+  restarts = restarts.filter((time) => now - time < 60_000)
+  if (restarts.length >= 3) {
+    void showError(mainWindow, 'The OpenSol daemon keeps stopping. Close and reopen OpenSol; check ~/.opensol for logs.')
+    return
+  }
+  restarts.push(now)
+  void loadApp(mainWindow)
 }
 
 function loadingPage() {
@@ -227,13 +267,16 @@ if (!gotLock) {
   app.quit()
 } else {
   app.on('second-instance', () => {
-    if (!mainWindow) return
+    if (!mainWindow) {
+      if (app.isReady()) void loadApp(createWindow())
+      return
+    }
     if (mainWindow.isMinimized()) mainWindow.restore()
     mainWindow.focus()
   })
 
   app.on('web-contents-created', (_event, contents) => {
-    contents.setWindowOpenHandler(({ url, frameName, features }) => {
+    contents.setWindowOpenHandler(({ url, frameName }) => {
       if (frameName === OAUTH_WINDOW) {
         return {
           action: 'allow',
@@ -247,7 +290,7 @@ if (!gotLock) {
         }
       }
       if (isLocalUrl(url)) return { action: 'allow' }
-      if (features || !isLocalUrl(url)) openExternal(url)
+      openExternal(url)
       return { action: 'deny' }
     })
     contents.on('will-attach-webview', (event) => event.preventDefault())

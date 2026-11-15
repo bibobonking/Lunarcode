@@ -34,9 +34,9 @@ const REFRESH_DEBOUNCE_MS = 30
 const CLIENT_VERSION = (() => {
   try {
     const raw = readFileSync(new URL('../../package.json', import.meta.url), 'utf8')
-    return String(JSON.parse(raw).version || '3.2.3')
+    return String(JSON.parse(raw).version || '3.2.4')
   } catch {
-    return '3.2.3'
+    return '3.2.4'
   }
 })()
 const REQUEST_TIMEOUT_MS = 120_000
@@ -637,23 +637,115 @@ export function functionName(serverId, toolName) {
   return `${prefix}${tool}`.slice(0, 64)
 }
 
+/** What a model can be shown from a binary payload, by mime type; null when nothing can display it. */
+export function mediaKind(mimeType) {
+  const mime = String(mimeType ?? '').toLowerCase()
+  if (mime.startsWith('image/')) return 'image'
+  if (mime.startsWith('audio/')) return 'audio'
+  if (mime === 'application/pdf') return 'document'
+  return null
+}
+
+function cleanBase64(value) {
+  return typeof value === 'string' ? value.replace(/^data:[^,]*,/, '').replace(/\s+/g, '') : ''
+}
+
+function validMime(value, fallback) {
+  return typeof value === 'string' && /^[a-z0-9.+-]+\/[a-z0-9.+-]+$/i.test(value) ? value.toLowerCase() : fallback
+}
+
+function describeResource(part) {
+  const res = part.resource ?? {}
+  const uri = res.uri ?? ''
+  if (typeof res.text === 'string') return res.text
+  if (typeof res.blob === 'string') {
+    const mime = validMime(res.mimeType, 'application/octet-stream')
+    return mediaKind(mime) ? `[resource ${uri} (${mime}) attached]` : `[resource ${uri} (${mime}, binary content not shown)]`
+  }
+  return `[resource ${uri}]`
+}
+
 function flattenContent(result) {
   const parts = Array.isArray(result?.content) ? result.content : []
   const lines = []
   for (const part of parts) {
     if (!part || typeof part !== 'object') continue
     if (part.type === 'text' && typeof part.text === 'string') lines.push(part.text)
-    else if (part.type === 'image') lines.push(`[image ${part.mimeType ?? ''} omitted]`)
-    else if (part.type === 'audio') lines.push(`[audio ${part.mimeType ?? ''} omitted]`)
-    else if (part.type === 'resource' && part.resource) {
-      lines.push(typeof part.resource.text === 'string' ? part.resource.text : `[resource ${part.resource.uri ?? ''}]`)
-    } else if (part.type === 'resource_link') lines.push(`[resource ${part.uri ?? ''}]`)
+    else if (part.type === 'image') lines.push(`[image ${part.mimeType ?? ''} attached]`)
+    else if (part.type === 'audio') lines.push(`[audio ${part.mimeType ?? ''} attached]`)
+    else if (part.type === 'resource' && part.resource) lines.push(describeResource(part))
+    else if (part.type === 'resource_link') lines.push(`[resource ${part.uri ?? ''}${part.name ? ` — ${part.name}` : ''}]`)
   }
   if (lines.length === 0 && result?.structuredContent !== undefined) {
     lines.push(JSON.stringify(result.structuredContent, null, 2))
   }
   const text = lines.join('\n')
   return text.length > MAX_RESULT_CHARS ? `${text.slice(0, MAX_RESULT_CHARS)}\n… truncated` : text
+}
+
+const MAX_MEDIA = 8
+const MAX_MEDIA_BASE64 = 8_000_000
+
+/**
+ * Binary content of an MCP result as base64 media: `image` and `audio` blocks, and embedded resources whose
+ * blob is an image, audio or PDF. Each item is { kind: 'image'|'audio'|'document', mimeType, data, name? }.
+ */
+export function extractMedia(result) {
+  const parts = Array.isArray(result?.content) ? result.content : []
+  const media = []
+  const add = (kind, mimeType, raw, name) => {
+    const data = cleanBase64(raw)
+    if (!kind || !data || data.length > MAX_MEDIA_BASE64 || media.length >= MAX_MEDIA) return
+    media.push({ kind, mimeType, data, ...(name ? { name } : {}) })
+  }
+  for (const part of parts) {
+    if (!part || typeof part !== 'object') continue
+    if (part.type === 'image') add('image', validMime(part.mimeType, 'image/png'), part.data)
+    else if (part.type === 'audio') add('audio', validMime(part.mimeType, 'audio/wav'), part.data)
+    else if (part.type === 'resource' && typeof part.resource?.blob === 'string') {
+      const mime = validMime(part.resource.mimeType, 'application/octet-stream')
+      const uri = String(part.resource.uri ?? '')
+      add(mediaKind(mime), mime, part.resource.blob, uri.split('/').pop()?.slice(0, 80) || undefined)
+    }
+  }
+  return media
+}
+
+/**
+ * Replaces `resource_link` blocks with the linked resource's contents (resources/read), so the model gets the
+ * data instead of a bare URI. Best effort: a link that cannot be read stays a link.
+ */
+export async function expandResourceLinks(result, request, { max = 3, timeoutMs = 10_000 } = {}) {
+  const parts = Array.isArray(result?.content) ? result.content : []
+  if (!parts.some((part) => part?.type === 'resource_link' && typeof part.uri === 'string')) return result
+  let budget = max
+  const content = []
+  for (const part of parts) {
+    if (part?.type !== 'resource_link' || typeof part.uri !== 'string' || budget <= 0) {
+      content.push(part)
+      continue
+    }
+    budget -= 1
+    let timer
+    try {
+      const read = await Promise.race([
+        request('resources/read', { uri: part.uri }),
+        new Promise((_, reject) => {
+          timer = setTimeout(() => reject(new Error('timeout')), timeoutMs)
+        }),
+      ])
+      const contents = Array.isArray(read?.contents) ? read.contents.slice(0, 4) : []
+      if (contents.length === 0) throw new Error('empty')
+      for (const item of contents) {
+        content.push({ type: 'resource', resource: { ...item, uri: item.uri ?? part.uri, mimeType: item.mimeType ?? part.mimeType } })
+      }
+    } catch {
+      content.push(part)
+    } finally {
+      clearTimeout(timer)
+    }
+  }
+  return { ...result, content }
 }
 
 function maskRecord(record) {
@@ -1342,7 +1434,10 @@ export class McpManager {
       throw new HttpError(502, error instanceof Error ? error.message : 'The MCP call failed.', 'mcp_failed')
     }
     await this.#settleTools(id, state, known?.annotations?.readOnlyHint === true).catch(() => undefined)
+    result = await expandResourceLinks(result, (method, params) => state.transport.request(method, params)).catch(() => result)
     const out = { text: flattenContent(result), isError: result?.isError === true }
+    const media = extractMedia(result)
+    if (media.length) out.media = media
     if (this.runtime.get(id) === state && state.toolsHash !== beforeHash) {
       const afterNames = new Set(state.tools.map((tool) => tool.name))
       out.toolsChanged = {

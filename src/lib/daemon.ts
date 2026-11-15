@@ -317,7 +317,7 @@ export function mcpCall(
   tool: string,
   args: Record<string, unknown>,
   signal?: AbortSignal,
-): Promise<{ result: { text: string; isError: boolean }; toolsChanged?: McpToolsChanged }> {
+): Promise<{ result: { text: string; isError: boolean; media?: Array<{ kind: 'image' | 'audio' | 'document'; mimeType: string; data: string; name?: string }> }; toolsChanged?: McpToolsChanged }> {
   return api('/api/mcp/call', { method: 'POST', body: JSON.stringify({ server, tool, args }), signal })
 }
 

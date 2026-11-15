@@ -8,6 +8,9 @@ import {
   parseToolArgs,
   toolResultText,
   userText,
+  mediaDataUrl,
+  splitToolMedia,
+  visibleToolMedia,
   type AdapterRequest,
   type AdapterResult,
 } from './shared'
@@ -16,8 +19,20 @@ type OpenAIMessage = Record<string, unknown>
 
 function buildMessages(history: Message[]): OpenAIMessage[] {
   const messages: OpenAIMessage[] = []
+  const toolMedia = visibleToolMedia(history)
+  // Chat Completions tool messages are text only: images ride along in a user message right after the tool block.
+  let pendingImages: Array<Record<string, unknown>> = []
+  const flushImages = () => {
+    if (pendingImages.length === 0) return
+    messages.push({
+      role: 'user',
+      content: [{ type: 'text', text: '[Media returned by the tool call(s) above]' }, ...pendingImages],
+    })
+    pendingImages = []
+  }
 
   for (const message of history) {
+    if (message.role !== 'tool') flushImages()
     if (message.role === 'user') {
       const images = imageAttachments(message)
       if (images.length > 0) {
@@ -52,12 +67,21 @@ function buildMessages(history: Message[]): OpenAIMessage[] {
       continue
     }
 
+    const { sent, note } = splitToolMedia(toolMedia.get(message.id), ['image', 'document'])
     messages.push({
       role: 'tool',
       tool_call_id: message.call.id,
-      content: toolResultText(message.result, message.status),
+      content: toolResultText(message.result, message.status) + note,
     })
+    for (const item of sent) {
+      pendingImages.push(
+        item.kind === 'document'
+          ? { type: 'file', file: { filename: item.name || 'document.pdf', file_data: mediaDataUrl(item) } }
+          : { type: 'image_url', image_url: { url: mediaDataUrl(item), detail: 'auto' } },
+      )
+    }
   }
+  flushImages()
 
   return messages
 }

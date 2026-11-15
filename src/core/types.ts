@@ -6,6 +6,7 @@ import type {
   Message,
   ModelInfo,
   ToolCall,
+  ToolMedia,
   ToolMessage,
   ToolName,
   Usage,
@@ -33,6 +34,8 @@ export interface ToolSchema {
 export interface ToolResult {
   output: string
   isError: boolean
+  /** Media returned by the tool (MCP image, audio, PDF). */
+  media?: ToolMedia[]
   /** Set by file tools so the UI can show +added / −removed lines. */
   diff?: FileDiff
   /** Structured result for the UI (the answers of ask_question). */

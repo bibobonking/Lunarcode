@@ -8,12 +8,16 @@ import {
   parseToolArgs,
   toolResultText,
   userText,
+  mediaDataUrl,
+  splitToolMedia,
+  visibleToolMedia,
   type AdapterRequest,
   type AdapterResult,
 } from './shared'
 
 function buildInput(history: Message[]): Array<Record<string, unknown>> {
   const input: Array<Record<string, unknown>> = []
+  const toolMedia = visibleToolMedia(history)
 
   for (const message of history) {
     if (message.role === 'user') {
@@ -48,10 +52,22 @@ function buildInput(history: Message[]): Array<Record<string, unknown>> {
       continue
     }
 
+    const { sent, note } = splitToolMedia(toolMedia.get(message.id), ['image', 'document'])
+    const resultText = toolResultText(message.result, message.status) + note
     input.push({
       type: 'function_call_output',
       call_id: message.call.id,
-      output: toolResultText(message.result, message.status),
+      output:
+        sent.length > 0
+          ? [
+              { type: 'input_text', text: resultText },
+              ...sent.map((item) =>
+                item.kind === 'document'
+                  ? { type: 'input_file', filename: item.name || 'document.pdf', file_data: mediaDataUrl(item) }
+                  : { type: 'input_image', image_url: mediaDataUrl(item), detail: 'auto' },
+              ),
+            ]
+          : resultText,
     })
   }
 

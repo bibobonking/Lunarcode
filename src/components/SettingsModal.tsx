@@ -2017,7 +2017,7 @@ export function SettingsModal() {
         <aside className="relative hidden w-[232px] shrink-0 flex-col bg-canvas sm:flex">
           <div className="settings-glow pointer-events-none absolute inset-x-0 top-0 h-48" />
           <div className="relative px-6 pb-4 pt-6">
-            <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-faint">OpenSol · v3.2.3</p>
+            <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-faint">OpenSol · v3.2.4</p>
             <h2 id="settings-title" className="mt-1.5 font-display text-[26px] font-semibold leading-none tracking-[-0.035em] text-ink">
               Settings
             </h2>
