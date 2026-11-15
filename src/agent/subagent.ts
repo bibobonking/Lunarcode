@@ -90,6 +90,7 @@ export async function runSubagent(
         call,
         status: output.isError ? 'error' : 'done',
         result: output.output,
+        ...(output.media?.length ? { media: output.media } : {}),
         round,
         createdAt: Date.now(),
       }

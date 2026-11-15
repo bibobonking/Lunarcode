@@ -2,6 +2,15 @@
 
 ## 3.2.4 (hotfix)
 
+**`read_file` reads more than text**
+- **Images, audio and PDFs are attached, not called binary.** A `.png/.jpg/.jpeg/.gif/.webp`, `.mp3/.wav/.ogg/.oga/.m4a/.aac/.flac` or `.pdf` read with `read_file` now comes back as multimodal content through the same pipeline MCP results already used, so the model sees the image, hears the audio or reads the PDF.
+- **Every provider gets it.** Anthropic: `image` and `document` blocks inside `tool_result`. OpenAI Responses: `input_image` / `input_file`. OpenAI Chat: media follows in a user message next to the tool block. Gemini: `inlineData` for image, audio and PDF. A kind a provider cannot read is named in the text instead of being silently dropped.
+- **Large media is explained, not truncated.** A file over 5 MB returns a message with its size and the limit instead of a cut, invalid payload. Text reads are unchanged.
+- **The card shows it.** Images render in the tool card, audio gets a player, PDFs open from a button.
+
+**Tool names the model made up now resolve**
+- **Fixed: “The model requested a tool that is not enabled: read”.** Models often call `read`, `view`, `cat`, `ls` or `list` for the built-in file tools. Those names now resolve to `read_file` / `list_files` when the target tool is offered, on all four adapters. An exact match still wins, and an alias whose target is unavailable is still refused.
+
 **MCP: results are no longer text-only**
 - **Fixed: images were dropped.** The daemon flattened every MCP result to text, so an `image` block (for example a Blockbench `capture_screenshot`) became an empty `[image … omitted]` placeholder and the model never saw it. Binary content is now kept as base64 and handed to the model.
 - **All MCP content types.** `text`, `image`, `audio`, embedded `resource` (text or `blob`) and `resource_link` are handled. A `blob` that is an image, audio or PDF becomes media; any other binary blob stays a short text note. A `resource_link` is read through `resources/read` (up to 3 links, 10 s each) so the model gets the data instead of a bare URI; a link that cannot be read stays a link. Limits: 8 media items per result, about 8 MB of base64 each.

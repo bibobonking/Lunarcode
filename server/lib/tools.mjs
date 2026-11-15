@@ -21,8 +21,25 @@ import { loadState, loadSecretsSafe } from './store.mjs'
 import { describeCheckpoint, dropCheckpoint, readCheckpoint, recordBefore } from './checkpoints.mjs'
 
 const MAX_READ = 2 * 1024 * 1024
+const MAX_MEDIA = 5 * 1024 * 1024
 const MAX_WRITE = 8 * 1024 * 1024
 const MAX_OUTPUT = 200_000
+/** Files the model can see or hear directly, keyed by extension. */
+const MEDIA_TYPES = new Map([
+  ['.png', ['image', 'image/png']],
+  ['.jpg', ['image', 'image/jpeg']],
+  ['.jpeg', ['image', 'image/jpeg']],
+  ['.gif', ['image', 'image/gif']],
+  ['.webp', ['image', 'image/webp']],
+  ['.mp3', ['audio', 'audio/mpeg']],
+  ['.wav', ['audio', 'audio/wav']],
+  ['.ogg', ['audio', 'audio/ogg']],
+  ['.oga', ['audio', 'audio/ogg']],
+  ['.m4a', ['audio', 'audio/mp4']],
+  ['.aac', ['audio', 'audio/aac']],
+  ['.flac', ['audio', 'audio/flac']],
+  ['.pdf', ['document', 'application/pdf']],
+])
 const SKIP_DIRS = new Set([
   '.git',
   'node_modules',
@@ -126,6 +143,19 @@ function snapshot(buffer) {
   }
 }
 
+/** MIME type and tool-media kind for a file the model can see or hear; null for text or unsupported. */
+export function mediaTypeForPath(filePath) {
+  const found = MEDIA_TYPES.get(path.extname(String(filePath ?? '')).toLowerCase())
+  return found ? { kind: found[0], mimeType: found[1] } : null
+}
+
+/** Base64 media payload for a file, or null when it is text, unsupported or larger than MAX_MEDIA. */
+export function mediaForFile(relative, buffer) {
+  const type = mediaTypeForPath(relative)
+  if (!type || buffer.length > MAX_MEDIA) return null
+  return { ...type, data: buffer.toString('base64'), name: path.basename(relative) }
+}
+
 export async function listTree(input = '', { depth = 2, showHidden = false, limit = 1200 } = {}) {
   const root = await workspaceRoot()
   const rel = cleanRelative(input)
@@ -187,7 +217,7 @@ export async function listTree(input = '', { depth = 2, showHidden = false, limi
   return { root, path: rel || '.', entries, truncated }
 }
 
-export async function readWorkspaceFile(input, { maxBytes = MAX_READ } = {}) {
+export async function readWorkspaceFile(input, { maxBytes = MAX_READ, withMedia = false } = {}) {
   const { root, absolute, relative } = await resolveWorkspacePath(input, { allowRoot: false })
   const info = await stat(absolute).catch(() => null)
   if (!info) throw new HttpError(404, `File not found: ${relative}`, 'not_found')
@@ -195,6 +225,7 @@ export async function readWorkspaceFile(input, { maxBytes = MAX_READ } = {}) {
   const buffer = await readFile(absolute)
   const binary = isProbablyBinary(buffer)
   const clipped = buffer.subarray(0, maxBytes)
+  const media = withMedia ? mediaForFile(relative, buffer) : null
   return {
     path: relative,
     absolute: displayPath(root, absolute),
@@ -205,6 +236,9 @@ export async function readWorkspaceFile(input, { maxBytes = MAX_READ } = {}) {
     content: binary ? '' : clipped.toString('utf8'),
     base64: binary ? clipped.toString('base64') : '',
     hash: snapshot(buffer).hash,
+    ...(media ? { media: [media] } : {}),
+    // Lets the tool explain the cap instead of pretending the file is an unreadable binary.
+    ...(withMedia && !media && mediaTypeForPath(relative) ? { mediaLimit: MAX_MEDIA } : {}),
   }
 }
 
@@ -956,8 +990,11 @@ export async function executeTool(name, args = {}, { mode = 'build', checkpoint 
   switch (name) {
     case 'shell':
       return runShell(String(input.command ?? ''), { mode, timeoutMs: Number(input.timeoutMs) })
-    case 'read_file':
-      return readWorkspaceFile(String(input.path ?? ''))
+    case 'read_file': {
+      const file = await readWorkspaceFile(String(input.path ?? ''), { withMedia: true })
+      // The media payload already carries the bytes; dropping the copy keeps the response within its size limit.
+      return file.media || file.mediaLimit ? { ...file, base64: '' } : file
+    }
     case 'list_files': {
       const result = await listTree(String(input.path ?? ''), { depth: Number(input.depth) || 2 })
       return { ...result, files: result.entries.map((entry) => entry.path) }

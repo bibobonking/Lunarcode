@@ -2,6 +2,7 @@ import type { Context } from 'cordis'
 import { executeDaemonTool } from '../../../lib/daemon'
 import { useWorkspace } from '../../../store/workspace'
 import type { FileDiff } from '../../../types'
+import { mediaToolOutput, parseToolMedia } from '../../../lib/tool-media'
 import type { ToolResult } from '../../types'
 
 const MAX_TOOL_OUTPUT = 28_000
@@ -80,7 +81,8 @@ export function apply(ctx: Context) {
   const unregisters = [
     ctx.tools.register({
       name: 'read_file',
-      description: 'Read a text file from the workspace. Use offset and limit for large files.',
+      description:
+        'Read a workspace file. Text is returned line by line; images, audio and PDFs are attached as multimodal content. Use offset and limit for large text files.',
       parameters: {
         type: 'object',
         properties: {
@@ -95,8 +97,26 @@ export function apply(ctx: Context) {
       async execute(args, exec): Promise<ToolResult> {
         const path = requireString(args, 'path')
         const result = record((await executeDaemonTool('read_file', { path }, exec.mode, exec.signal)).result)
+        const media = parseToolMedia(result.media)
+        if (media.length > 0) {
+          return {
+            output: mediaToolOutput(media, textValue(result.path) || path, numberValue(result.size) ?? 0),
+            isError: false,
+            media,
+          }
+        }
         if (result.binary === true) {
-          return { output: `${path} is binary (${numberValue(result.size) ?? 0} bytes).`, isError: false }
+          const limit = numberValue(result.mediaLimit)
+          if (limit !== undefined) {
+            return {
+              output: `${path} is ${numberValue(result.size) ?? 0} bytes, larger than the ${limit} byte limit for attached media.`,
+              isError: false,
+            }
+          }
+          return {
+            output: `${path} is binary (${numberValue(result.size) ?? 0} bytes); it is not an image, audio file or PDF.`,
+            isError: false,
+          }
         }
         const offset = Math.max(1, Math.round(numberArg(args, 'offset', 1)))
         const limit = Math.min(Math.max(1, Math.round(numberArg(args, 'limit', 400))), 2000)

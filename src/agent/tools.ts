@@ -1,5 +1,6 @@
-import type { AgentMode, AppSettings, BuiltinToolName, ToolName } from '../types'
+import type { AgentMode, AppSettings, BuiltinToolName, ToolMedia, ToolName } from '../types'
 import { executeDaemonTool } from '../lib/daemon'
+import { mediaToolOutput, parseToolMedia } from '../lib/tool-media'
 import { useWorkspace } from '../store/workspace'
 import { kernel } from '../core/kernel'
 
@@ -90,7 +91,8 @@ export function getToolSchemas(
     },
     {
       name: 'read_file',
-      description: 'Read a text file from the workspace. Use offset and limit for large files.',
+      description:
+        'Read a workspace file. Text is returned line by line; images, audio and PDFs are attached as multimodal content. Use offset and limit for large text files.',
       parameters: {
         type: 'object',
         properties: {
@@ -249,6 +251,7 @@ export function getToolSchemas(
 export interface ToolResult {
   output: string
   isError: boolean
+  media?: ToolMedia[]
 }
 
 async function refreshTree() {
@@ -316,8 +319,26 @@ async function runTool(
   if (name === 'read_file') {
     const path = requireString(args, 'path')
     const result = record((await executeDaemonTool('read_file', { path }, mode, signal)).result)
+    const media = parseToolMedia(result.media)
+    if (media.length > 0) {
+      return {
+        output: mediaToolOutput(media, textValue(result.path) || path, numberValue(result.size) ?? 0),
+        isError: false,
+        media,
+      }
+    }
     if (result.binary === true) {
-      return { output: `${path} is binary (${numberValue(result.size) ?? 0} bytes).`, isError: false }
+      const limit = numberValue(result.mediaLimit)
+      if (limit !== undefined) {
+        return {
+          output: `${path} is ${numberValue(result.size) ?? 0} bytes, larger than the ${limit} byte limit for attached media.`,
+          isError: false,
+        }
+      }
+      return {
+        output: `${path} is binary (${numberValue(result.size) ?? 0} bytes); it is not an image, audio file or PDF.`,
+        isError: false,
+      }
     }
     const offset = Math.max(1, Math.round(numberArg(args, 'offset', 1)))
     const limit = Math.min(Math.max(1, Math.round(numberArg(args, 'limit', 400))), 2000)

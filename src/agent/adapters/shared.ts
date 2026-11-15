@@ -114,6 +114,29 @@ export function mediaDataUrl(item: ToolMedia): string {
   return `data:${item.mimeType};base64,${item.data}`
 }
 
+/** Names models commonly use for the built-in file tools instead of the exact schema name. */
+const TOOL_ALIASES: Record<string, string> = {
+  read: 'read_file',
+  readfile: 'read_file',
+  'read-file': 'read_file',
+  view: 'read_file',
+  cat: 'read_file',
+  list: 'list_files',
+  ls: 'list_files',
+  listfiles: 'list_files',
+  'list-files': 'list_files',
+}
+
+/**
+ * Resolves a name the model emitted to a tool that is actually offered. An exact match always wins
+ * (MCP tools may use any casing); an alias only applies when its target is available.
+ */
+export function resolveToolName(name: string, available: ReadonlySet<string>): string | undefined {
+  if (available.has(name)) return name
+  const target = TOOL_ALIASES[name.toLowerCase().replace(/\s+/g, '')]
+  return target && available.has(target) ? target : undefined
+}
+
 export function collectToolCalls(
   candidates: Array<{ id: string; name: string; args: Record<string, unknown>; thoughtSignature?: string }>,
   available: Set<string>,
@@ -121,12 +144,11 @@ export function collectToolCalls(
   const calls: ToolCall[] = []
   for (const candidate of candidates) {
     if (!candidate.name) continue
-    if (!available.has(candidate.name)) {
-      throw new Error(`The model requested a tool that is not enabled: ${candidate.name}`)
-    }
+    const name = resolveToolName(candidate.name, available)
+    if (!name) throw new Error(`The model requested a tool that is not enabled: ${candidate.name}`)
     calls.push({
       id: candidate.id,
-      name: candidate.name as ToolCall['name'],
+      name: name as ToolCall['name'],
       args: candidate.args,
       ...(candidate.thoughtSignature ? { thoughtSignature: candidate.thoughtSignature } : {}),
     })

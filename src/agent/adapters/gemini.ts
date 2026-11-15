@@ -7,6 +7,7 @@ import {
   imageAttachments,
   toolResultText,
   userText,
+  resolveToolName,
   splitToolMedia,
   visibleToolMedia,
   type AdapterRequest,
@@ -212,11 +213,10 @@ export async function streamGemini(request: AdapterRequest): Promise<AdapterResu
         | { name?: string; args?: Record<string, unknown> }
         | undefined
       if (functionCall?.name) {
-        if (!availableTools.has(functionCall.name as ToolCall['name'])) {
-          throw new Error(`Gemini requested a tool that is not enabled: ${functionCall.name}`)
-        }
+        const name = resolveToolName(functionCall.name, availableTools)
+        if (!name) throw new Error(`Gemini requested a tool that is not enabled: ${functionCall.name}`)
         calls.push({
-          name: functionCall.name,
+          name,
           args: functionCall.args ?? {},
           signature: partSignature ?? pendingSignature,
         })

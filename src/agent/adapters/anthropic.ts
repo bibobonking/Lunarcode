@@ -8,6 +8,7 @@ import {
   parseToolArgs,
   toolResultText,
   userText,
+  resolveToolName,
   splitToolMedia,
   visibleToolMedia,
   type AdapterRequest,
@@ -219,17 +220,16 @@ export async function streamAnthropic(request: AdapterRequest): Promise<AdapterR
   const thinkingBlocks: Array<{ text: string; signature?: string }> = []
   for (const [, block] of [...blocks.entries()].sort((a, b) => a[0] - b[0])) {
     if (block.type === 'tool_use' && block.name) {
-      if (!availableTools.has(block.name)) {
-        throw new Error(`The model requested a tool that is not enabled: ${block.name}`)
-      }
+      const name = resolveToolName(block.name, availableTools)
+      if (!name) throw new Error(`The model requested a tool that is not enabled: ${block.name}`)
       const args = block.json
-        ? parseToolArgs(block.json, block.name)
+        ? parseToolArgs(block.json, name)
         : block.input && typeof block.input === 'object'
           ? (block.input as Record<string, unknown>)
           : {}
       toolCalls.push({
         id: block.id || `call_${Date.now().toString(36)}_${toolCalls.length}`,
-        name: block.name as ToolCall['name'],
+        name: name as ToolCall['name'],
         args,
       })
     }

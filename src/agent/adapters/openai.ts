@@ -9,6 +9,7 @@ import {
   toolResultText,
   userText,
   mediaDataUrl,
+  resolveToolName,
   splitToolMedia,
   visibleToolMedia,
   type AdapterRequest,
@@ -214,13 +215,12 @@ export async function streamOpenAI(request: AdapterRequest): Promise<AdapterResu
   const toolCalls: ToolCall[] = []
   for (const [index, call] of [...toolAccumulator.entries()].sort((a, b) => a[0] - b[0])) {
     if (!call.name) continue
-    if (!availableTools.has(call.name)) {
-      throw new Error(`The model requested a tool that is not enabled: ${call.name}`)
-    }
+    const name = resolveToolName(call.name, availableTools)
+    if (!name) throw new Error(`The model requested a tool that is not enabled: ${call.name}`)
     toolCalls.push({
       id: call.id || `call_${Date.now().toString(36)}_${index}`,
-      name: call.name as ToolCall['name'],
-      args: parseToolArgs(call.arguments, call.name),
+      name: name as ToolCall['name'],
+      args: parseToolArgs(call.arguments, name),
     })
   }
   if (toolCalls.length > 0) handlers.onToolCalls(toolCalls)
