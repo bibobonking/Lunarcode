@@ -204,7 +204,7 @@ export function McpPanel() {
       open={open}
       onClose={close}
       labelledBy="mcp-title"
-      className="h-[94dvh] p-0 sm:h-[min(88dvh,780px)] sm:w-[min(1080px,96vw)]"
+      className="h-[94dvh] p-0 sm:h-[min(92dvh,900px)] sm:w-[min(1240px,97vw)]"
     >
       <header className="adw-headerbar shrink-0 border-b border-line">
         <div className="min-w-0 flex-1">
@@ -230,7 +230,7 @@ export function McpPanel() {
 
       <div className="flex min-h-0 flex-1">
         {/* Server list */}
-        <aside className={cn('thin-scroll min-h-0 w-full shrink-0 overflow-y-auto bg-sidebar p-3 md:block md:w-[300px] md:border-r md:border-line', mobileDetail ? 'hidden' : 'block')}>
+        <aside className={cn('thin-scroll min-h-0 w-full shrink-0 overflow-y-auto bg-sidebar p-3 md:block md:w-[290px] md:border-r md:border-line', mobileDetail ? 'hidden' : 'block')}>
           {error && <p className="mb-2 rounded-[12px] border border-danger/30 bg-danger/10 px-3 py-2 text-[12px] text-danger">{error}</p>}
           {!loaded && (
             <p className="flex items-center gap-2 px-2 py-3 text-[12px] text-faint">
@@ -255,7 +255,7 @@ export function McpPanel() {
                   >
                     <StatusDot status={server.status} />
                     <span className="min-w-0 flex-1">
-                      <span className="flex items-center gap-1.5 text-[14px] font-semibold text-ink">
+                      <span className="flex items-center gap-1.5 text-[13px] font-semibold text-ink">
                         <span className="truncate">{server.name}</span>
                         {server.oauth?.enabled && (
                           <KeyRound size={11} className={cn('shrink-0', server.oauth.authorized ? 'text-success' : 'text-warning')} aria-label="OAuth" />
@@ -402,7 +402,7 @@ function ServerDetail({
             <p className="mt-0.5 text-[12px] leading-relaxed text-muted">
               {server.oauth.authorized
                 ? 'Tokens are stored encrypted by the local daemon and refreshed automatically.'
-                : 'Approve access in your browser. OpenSol registers itself with the server and keeps the tokens encrypted on this machine.'}
+                : 'Approve access in your browser. Lunarcode registers itself with the server and keeps the tokens encrypted on this machine.'}
             </p>
           </div>
           {server.oauth.authorized ? (
@@ -527,21 +527,21 @@ function ServerForm({
         if (draftIsValid(draft) && !busy) onSubmit(draft)
       }}
     >
-      <h3 className="text-[22px] font-semibold leading-tight text-ink">{title}</h3>
+      <h3 className="text-[18px] font-semibold leading-tight text-ink">{title}</h3>
 
       {presets && (
         <div>
           <p className="mb-2 text-[12px] font-medium text-muted">Start from a template</p>
-          <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
+          <div className="grid gap-2 [grid-template-columns:repeat(auto-fill,minmax(132px,1fr))]">
             {MCP_PRESETS.map((preset) => (
               <button
                 key={preset.label}
                 type="button"
                 onClick={() => setDraft({ ...EMPTY_DRAFT, ...preset.draft })}
-                className="rounded-[12px] border border-line px-3 py-2 text-left transition-all hover:border-accent/40 hover:bg-raised/60 active:scale-[0.98]"
+                className="lift-card min-w-0 rounded-[10px] border border-line px-2.5 py-2 text-left hover:bg-raised/60"
               >
                 <span className="block text-[12px] font-medium text-ink">{preset.label}</span>
-                <span className="mt-0.5 block truncate text-[12px] text-muted">{preset.description}</span>
+                <span className="mt-0.5 line-clamp-2 block text-[11.5px] leading-snug text-muted">{preset.description}</span>
               </button>
             ))}
           </div>

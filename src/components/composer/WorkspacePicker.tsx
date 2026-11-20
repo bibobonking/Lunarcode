@@ -39,8 +39,8 @@ export function WorkspacePicker() {
       open={open}
       onClose={() => setOpen(false)}
       placement="below"
-      width={280}
-      maxHeight={260}
+      width={340}
+      maxHeight={380}
       trigger={
         <TextButton
           open={open}
@@ -76,7 +76,7 @@ export function WorkspacePicker() {
               {workspace.path === info.root ? <Check size={16} className="text-link" /> : <FolderOpen size={16} className="text-muted" />}
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-[14px] leading-snug text-ink">{workspace.name}</span>
+              <span className="block truncate text-[13px] leading-snug text-ink">{workspace.name}</span>
               <span className="block truncate text-[12px] leading-snug text-muted">{workspace.path}</span>
             </span>
             {switching === workspace.path && (

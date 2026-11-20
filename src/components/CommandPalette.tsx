@@ -111,7 +111,7 @@ export function CommandPalette() {
         group: 'Actions',
         icon: themeIsDark ? Sun : Moon,
         action: () => {
-          useSettings.getState().update({ theme: themeIsDark ? 'light' : 'dark' })
+          useSettings.getState().update({ theme: themeIsDark ? 'light' : 'lunar' })
           close()
         },
       },
@@ -194,7 +194,7 @@ export function CommandPalette() {
       },
       {
         id: 'action-about',
-        label: 'About OpenSol',
+        label: 'About Lunarcode',
         hint: 'Local storage and reset controls',
         group: 'Settings',
         icon: Info,
@@ -317,7 +317,7 @@ export function CommandPalette() {
         role="dialog"
         aria-modal="true"
         aria-label="Search and commands"
-        className="adw-dialog relative flex max-h-[min(72dvh,560px)] w-full max-w-[560px] flex-col overflow-hidden"
+        className="adw-dialog relative flex max-h-[min(78dvh,700px)] w-full max-w-[700px] flex-col overflow-hidden"
       >
         <div className="flex h-12 shrink-0 items-center gap-2.5 border-b border-line px-3.5">
           <Search size={16} className="shrink-0 text-muted" />
@@ -342,7 +342,7 @@ export function CommandPalette() {
               }
             }}
             placeholder="Search chats, files, settings, actions…"
-            className="h-full min-w-0 flex-1 bg-transparent text-[14px] text-ink outline-none placeholder:text-faint"
+            className="h-full min-w-0 flex-1 bg-transparent text-[13px] text-ink outline-none placeholder:text-faint"
             role="combobox"
             aria-expanded="true"
             aria-controls="palette-results"
@@ -356,7 +356,7 @@ export function CommandPalette() {
         <div id="palette-results" role="listbox" className="thin-scroll min-h-0 flex-1 overflow-y-auto p-1.5">
           {filtered.length === 0 && (
             <div className="px-4 py-10 text-center">
-              <p className="text-[14px] font-semibold text-muted">No matches</p>
+              <p className="text-[13px] font-semibold text-muted">No matches</p>
               <p className="mt-1 text-[12px] text-faint">Try a chat title, a file name or “deploy”.</p>
             </div>
           )}
@@ -392,7 +392,7 @@ export function CommandPalette() {
                     <Icon size={16} />
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[14px] text-ink">{command.label}</span>
+                    <span className="block truncate text-[13px] text-ink">{command.label}</span>
                     {command.hint && (
                       <span className="mt-0.5 block truncate text-[12px] text-faint">{command.hint}</span>
                     )}
@@ -420,7 +420,7 @@ export function CommandPalette() {
               <kbd className="adw-kbd !h-4 !min-w-0 px-1">↵</kbd> open
             </span>
           </span>
-          <span>OpenSol</span>
+          <span>Lunarcode</span>
         </div>
       </div>
     </div>,

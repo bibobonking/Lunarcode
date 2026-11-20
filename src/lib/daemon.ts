@@ -83,7 +83,7 @@ export async function ensureSession(force = false): Promise<void> {
       })
     } catch {
       throw new DaemonError(
-        'OpenSol’s local daemon is not reachable. Start it with “npm start” in the OpenSol folder, then reload this page.',
+        'Lunarcode’s local daemon is not reachable. Start it with “npm start” in the Lunarcode folder, then reload this page.',
         0,
         'daemon_unreachable',
       )

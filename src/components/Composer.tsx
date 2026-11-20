@@ -410,8 +410,8 @@ export function Composer({
           onBlur={() => setFocused(false)}
           placeholder={placeholder}
           rows={1}
-          aria-label="Message OpenSol"
-          className="block w-full resize-none bg-transparent px-4 pb-1 pt-3 text-[14px] leading-[1.5] text-ink outline-none placeholder:text-faint"
+          aria-label="Message Lunarcode"
+          className="block w-full resize-none bg-transparent px-4 pb-1 pt-3 text-[13px] leading-[1.5] text-ink outline-none placeholder:text-faint"
           style={{ minHeight: 44, maxHeight: 220 }}
         />
 
@@ -421,7 +421,7 @@ export function Composer({
             <Popover
               open={modeOpen}
               onClose={() => setModeOpen(false)}
-              width={260}
+              width={310}
               trigger={
                 <TextButton
                   open={modeOpen}
@@ -459,7 +459,7 @@ export function Composer({
             <Popover
               open={permissionOpen}
               onClose={() => setPermissionOpen(false)}
-              width={300}
+              width={350}
               trigger={
                 <TextButton
                   open={permissionOpen}
@@ -468,7 +468,7 @@ export function Composer({
                     setModeOpen(false)
                     setPermissionOpen((open) => !open)
                   }}
-                  title="Choose how much OpenSol can do without asking"
+                  title="Choose how much Lunarcode can do without asking"
                 >
                   {permissionLabel(permission)}
                 </TextButton>
@@ -492,7 +492,7 @@ export function Composer({
               <Popover
                 open={effortOpen}
                 onClose={() => setEffortOpen(false)}
-                width={270}
+                width={320}
                 trigger={
                   <TextButton
                     open={effortOpen}
@@ -553,7 +553,7 @@ export function Composer({
               <button
                 type="button"
                 onClick={onStop}
-                className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-ink/[.12] text-ink transition-colors hover:bg-ink/[.2]"
+                className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-ink/[.12] text-ink transition-colors hover:bg-ink/[.2]"
                 aria-label="Stop generating"
                 title="Stop"
               >
@@ -565,7 +565,7 @@ export function Composer({
                 onClick={() => void submit()}
                 disabled={disabledSend}
                 className={cn(
-                  'flex h-[34px] w-[34px] items-center justify-center rounded-full transition-colors duration-150',
+                  'flex h-[30px] w-[30px] items-center justify-center rounded-full transition-colors duration-150',
                   disabledSend ? 'cursor-not-allowed bg-ink/[.08] text-faint' : 'bg-accent text-on-accent hover:bg-accent/90',
                 )}
                 aria-label="Send message"
@@ -580,7 +580,7 @@ export function Composer({
         {dragging && (
           <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-1 rounded-[12px] border-2 border-dashed border-accent bg-panel">
             <Upload size={20} className="text-link" />
-            <p className="text-[14px] font-semibold text-ink">Drop files to attach</p>
+            <p className="text-[13px] font-semibold text-ink">Drop files to attach</p>
             <p className="text-[12px] text-muted">Images up to 5 MB · text up to 512 KB</p>
           </div>
         )}

@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react'
-import { ChevronRight } from 'lucide-react'
+import { Bot, Check, ChevronRight, FileDiff as FileDiffIcon, FilePenLine, FilePlus2, FileText, FolderTree, Globe, GitBranch, HelpCircle, Plug, Search, Sparkles, Terminal, TriangleAlert, Wrench, X } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import type { FileDiff, ToolMedia, ToolMessage, ToolName } from '../types'
 import { toolLabel, toolSummary } from '../lib/tool-meta'
 import { resolveApproval } from '../core/services/approval'
 import { useUi } from '../store/ui'
 import { cn } from '../lib/utils'
 import { diffLines, diffStats } from '../lib/diff'
-import { DiffBadge, DiffView } from './DiffView'
+import { colorizeShellOutput, escapeHtml, highlightCode, langFromPath } from '../lib/highlight'
+import { DiffView } from './DiffView'
 import { QuestionCard } from './QuestionCard'
-import { Spinner } from './ui'
 
 const FILE_TOOLS = new Set(['write_file', 'edit_file', 'rewrite_file'])
 
@@ -21,21 +22,6 @@ export function diffForTool(message: ToolMessage): FileDiff | undefined {
   return diffStats(diffLines(oldText, newText))
 }
 
-function statusMeta(status: ToolMessage['status']) {
-  switch (status) {
-    case 'awaiting':
-      return { label: 'Needs approval', className: 'text-warning', dot: 'bg-warning' }
-    case 'running':
-      return { label: 'Running', className: 'text-accent', dot: 'bg-accent' }
-    case 'done':
-      return { label: 'Done', className: 'text-success', dot: 'bg-success' }
-    case 'denied':
-      return { label: 'Denied', className: 'text-muted', dot: 'bg-faint' }
-    default:
-      return { label: 'Failed', className: 'text-danger', dot: 'bg-danger' }
-  }
-}
-
 function durationLabel(ms?: number) {
   if (ms === undefined) return ''
   return ms < 1000 ? `${ms}ms` : `${(ms / 1000).toFixed(1)}s`
@@ -44,26 +30,26 @@ function durationLabel(ms?: number) {
 function approvalCopy(name: ToolName) {
   switch (name) {
     case 'shell':
-      return 'OpenSol wants to run this command in the open workspace.'
+      return 'Lunarcode wants to run this command in the open workspace.'
     case 'write_file':
-      return 'OpenSol wants to create or overwrite this file on disk.'
+      return 'Lunarcode wants to create or overwrite this file on disk.'
     case 'edit_file':
     case 'rewrite_file':
-      return 'OpenSol wants to change this file on disk.'
+      return 'Lunarcode wants to change this file on disk.'
     case 'git':
-      return 'OpenSol wants to change the Git state of this repository.'
+      return 'Lunarcode wants to change the Git state of this repository.'
     case 'subagent':
-      return 'OpenSol wants to start a read-only subagent to investigate.'
+      return 'Lunarcode wants to start a read-only subagent to investigate.'
     case 'skill':
-      return 'OpenSol wants to load an installed skill.'
+      return 'Lunarcode wants to load an installed skill.'
     case 'ask_question':
-      return 'OpenSol wants to ask you a question.'
+      return 'Lunarcode wants to ask you a question.'
     case 'web_search':
-      return 'OpenSol wants to search the web.'
+      return 'Lunarcode wants to search the web.'
     case 'read_url':
-      return 'OpenSol wants to read this public page.'
+      return 'Lunarcode wants to read this public page.'
     default:
-      return 'OpenSol wants to use this tool.'
+      return 'Lunarcode wants to use this tool.'
   }
 }
 
@@ -116,12 +102,54 @@ function ToolMediaView({ item, index }: { item: ToolMedia; index: number }) {
   )
 }
 
+const TOOL_ICONS: Partial<Record<string, LucideIcon>> = {
+  shell: Terminal,
+  read_file: FileText,
+  list_files: FolderTree,
+  write_file: FilePlus2,
+  edit_file: FilePenLine,
+  rewrite_file: FileDiffIcon,
+  grep: Search,
+  web_search: Globe,
+  read_url: Globe,
+  git: GitBranch,
+  subagent: Bot,
+  skill: Sparkles,
+  ask_question: HelpCircle,
+}
+
+function toolIcon(name: string): LucideIcon {
+  if (name.startsWith('mcp__')) return Plug
+  return TOOL_ICONS[name] ?? Wrench
+}
+
+/** Five tiny blocks showing the add/remove proportion of a change. */
+function DiffBar({ added, removed }: { added: number; removed: number }) {
+  const total = added + removed
+  if (total === 0) return null
+  const addBlocks = Math.max(added > 0 ? 1 : 0, Math.round((added / total) * 5))
+  const delBlocks = removed > 0 ? 5 - addBlocks : 0
+  return (
+    <span className="diff-bar" aria-hidden="true">
+      {Array.from({ length: 5 }, (_, index) => (
+        <i key={index} className={index < addBlocks ? 'add' : index < addBlocks + delBlocks ? 'del' : ''} />
+      ))}
+    </span>
+  )
+}
+
+function splitPath(path: string) {
+  const clean = path.replace(/\\/g, '/')
+  const index = clean.lastIndexOf('/')
+  return index === -1 ? { dir: '', base: clean } : { dir: clean.slice(0, index + 1), base: clean.slice(index + 1) }
+}
+
 function GenericToolCard({ message, compact = false }: { message: ToolMessage; compact?: boolean }) {
   const [decided, setDecided] = useState<'allow' | 'deny' | null>(null)
   const [open, setOpen] = useState((!compact && message.status === 'awaiting') || message.status === 'error')
+  const [everOpen, setEverOpen] = useState(open)
   const [copied, setCopied] = useState(false)
   const notify = useUi((state) => state.notify)
-  const status = statusMeta(message.status)
   const summary = toolSummary(message.call.name, message.call.args)
   const args = message.call.args
   const diff = diffForTool(message)
@@ -135,10 +163,24 @@ function GenericToolCard({ message, compact = false }: { message: ToolMessage; c
         : typeof args.oldText === 'string'
           ? args.oldText
           : ''
+  const Icon = toolIcon(message.call.name)
+  const filePath = typeof args.path === 'string' ? args.path : undefined
+  const lang = langFromPath(filePath)
+  const isShell = message.call.name === 'shell'
+  const path = isFileTool && typeof args.path === 'string' ? splitPath(args.path) : null
+  const isNewFile = message.call.name === 'write_file' && message.status === 'done' && (diff?.removed ?? 0) === 0
 
   useEffect(() => {
-    if (message.status === 'awaiting' || message.status === 'error') setOpen(true)
+    if (message.status === 'awaiting' || message.status === 'error') {
+      setOpen(true)
+      setEverOpen(true)
+    }
   }, [message.status])
+
+  const toggle = () => {
+    setEverOpen(true)
+    setOpen((value) => !value)
+  }
 
   const copyOutput = async () => {
     try {
@@ -150,39 +192,84 @@ function GenericToolCard({ message, compact = false }: { message: ToolMessage; c
     }
   }
 
-  const trailing =
-    message.status === 'done' && message.durationMs !== undefined
-      ? durationLabel(message.durationMs)
-      : message.status === 'done'
-        ? ''
-        : status.label.toLowerCase()
+  const showDiff = isFileTool && diff && message.status === 'done'
+  const duration = message.status === 'done' && message.durationMs !== undefined ? durationLabel(message.durationMs) : ''
 
   return (
-    <div className="text-[13px]">
+    <div
+      className="tool-card text-[13px]"
+      data-status={message.status}
+      data-kind={isFileTool ? 'file' : 'tool'}
+    >
       <button
         type="button"
-        onClick={() => setOpen((value) => !value)}
-        className="flex min-h-[32px] w-full min-w-0 items-center gap-1.5 rounded-[6px] px-1 text-left hover:bg-ink/[.05]"
+        onClick={toggle}
+        className="flex min-h-[40px] w-full min-w-0 items-center gap-2.5 py-1.5 pl-3.5 pr-2.5 text-left transition-colors hover:bg-ink/[.035]"
         aria-expanded={open}
       >
-        <ChevronRight size={16} className={cn('shrink-0 text-muted transition-transform duration-150', open && 'rotate-90')} />
-        <span className="shrink-0 font-semibold text-ink">{toolLabel(message.call.name)}</span>
-        <span className="min-w-0 flex-1 truncate font-mono text-[12px] text-muted">{summary || '—'}</span>
-        {isFileTool && diff && message.status === 'done' ? (
-          <DiffBadge added={diff.added} removed={diff.removed} line={diff.line} column={diff.column} className="shrink-0" />
+        <span className="tool-icon" aria-hidden="true">
+          <Icon size={14} />
+        </span>
+        <span className="shrink-0 text-[12px] font-semibold text-ink">{toolLabel(message.call.name)}</span>
+        {path ? (
+          <span className="min-w-0 flex-1 truncate font-mono text-[12px]" title={typeof args.path === 'string' ? args.path : undefined}>
+            <span className="text-faint">{path.dir}</span>
+            <span className="font-semibold text-ink">{path.base}</span>
+          </span>
         ) : (
-          trailing && (
-            <span className={cn('flex shrink-0 items-center gap-1.5 text-[12px]', message.status === 'done' ? 'text-faint' : status.className)}>
-              {message.status === 'running' && <Spinner size={12} />}
-              {trailing}
-            </span>
-          )
+          <span
+            className={cn(
+              'min-w-0 flex-1 truncate font-mono text-[12px]',
+              message.status === 'running' ? 'shimmer-text' : 'text-muted',
+            )}
+          >
+            {summary || '—'}
+          </span>
         )}
+
+        {isNewFile && <span className="tool-chip" data-tone="done">new</span>}
+        {showDiff && (
+          <span className="flex shrink-0 items-center gap-1.5">
+            <span className="diff-pill diff-pill-add">+{diff.added}</span>
+            <span className="diff-pill diff-pill-del">−{diff.removed}</span>
+            <DiffBar added={diff.added} removed={diff.removed} />
+            {diff.line ? (
+              <span className="hidden font-mono text-[11px] text-faint sm:inline">
+                L{diff.line}
+                {diff.column ? `:${diff.column}` : ''}
+              </span>
+            ) : null}
+          </span>
+        )}
+        {message.status === 'running' && (
+          <span className="tool-chip shrink-0" data-tone="running">
+            <span className="moon-spinner h-3 w-3" aria-hidden="true" />
+            Running
+          </span>
+        )}
+        {message.status === 'awaiting' && (
+          <span className="tool-chip shrink-0" data-tone="awaiting">
+            <TriangleAlert size={11} /> Needs approval
+          </span>
+        )}
+        {message.status === 'error' && (
+          <span className="tool-chip shrink-0" data-tone="error">
+            <X size={11} /> Failed
+          </span>
+        )}
+        {message.status === 'denied' && <span className="tool-chip shrink-0">Denied</span>}
+        {message.status === 'done' && (
+          <span className="flex shrink-0 items-center gap-1.5 text-[11px] text-faint">
+            {!showDiff && <Check size={13} className="tool-check text-success" aria-label="Done" />}
+            {duration && <span className="tabular-nums">{duration}</span>}
+          </span>
+        )}
+        <ChevronRight size={14} className={cn('ws-chevron shrink-0 text-muted', open && 'is-open')} />
       </button>
 
       {message.status === 'awaiting' && !decided && (
-        <div className="mx-1 my-1 rounded-[9px] border border-warning/30 bg-warning/10 px-3 py-2">
-          <p className="text-[13px] leading-relaxed text-ink">{approvalCopy(message.call.name)}</p>
+        <div className="mx-3 mb-2.5 ml-3.5 rounded-[8px] border border-warning/30 bg-warning/10 px-3 py-2">
+          <p className="text-[12px] leading-relaxed text-ink">{approvalCopy(message.call.name)}</p>
           <div className="mt-2 flex items-center gap-2">
             <button
               type="button"
@@ -190,7 +277,7 @@ function GenericToolCard({ message, compact = false }: { message: ToolMessage; c
                 setDecided('allow')
                 resolveApproval(message.call.id, true)
               }}
-              className="adw-btn adw-btn-suggested h-8"
+              className="adw-btn adw-btn-suggested h-7"
             >
               Allow once
             </button>
@@ -200,7 +287,7 @@ function GenericToolCard({ message, compact = false }: { message: ToolMessage; c
                 setDecided('deny')
                 resolveApproval(message.call.id, false)
               }}
-              className="adw-btn h-8"
+              className="adw-btn h-7"
             >
               Deny
             </button>
@@ -209,59 +296,80 @@ function GenericToolCard({ message, compact = false }: { message: ToolMessage; c
       )}
 
       {message.status === 'awaiting' && decided && (
-        <p className="py-1 pl-7 text-[12px] text-muted">{decided === 'allow' ? 'Allowed — running…' : 'Denied.'}</p>
+        <p className="pb-2 pl-4 text-[12px] text-muted">{decided === 'allow' ? 'Allowed — running…' : 'Denied.'}</p>
       )}
 
-      {open && (
-        <div className="space-y-2 pb-1.5 pl-7 pt-0.5">
-          {command && (
-            <pre className="adw-recessed thin-scroll max-h-40 overflow-auto whitespace-pre-wrap break-words font-mono text-[12px] leading-relaxed text-ink">
-              $ {command}
-            </pre>
-          )}
-          {message.call.name === 'edit_file' && typeof args.oldText === 'string' && typeof args.newText === 'string' && (
-            <DiffView before={args.oldText} after={args.newText} startLine={diff?.line ?? 1} />
-          )}
-          {content && message.call.name !== 'edit_file' && (
-            <pre className="thin-scroll max-h-48 overflow-auto whitespace-pre-wrap break-words font-mono text-[12px] leading-relaxed text-muted">
-              {content.length > 4000 ? `${content.slice(0, 4000)}\n… ${content.length - 4000} more characters` : content}
-            </pre>
-          )}
+      <div className={cn('collapse-grid', open && 'is-open')}>
+        <div className="collapse-inner">
+          {everOpen && (
+            <div className="space-y-2 border-t border-line/70 px-3.5 pb-3 pt-2.5">
+              {command && (
+                <pre className="tool-output thin-scroll max-h-40 overflow-auto whitespace-pre-wrap break-words p-2.5 font-mono text-[12px] leading-relaxed text-ink">
+                  <span className="select-none text-accent">$ </span>
+                  <code className="hljs" dangerouslySetInnerHTML={{ __html: highlightCode(command, 'bash') }} />
+                </pre>
+              )}
+              {message.call.name === 'edit_file' && typeof args.oldText === 'string' && typeof args.newText === 'string' && (
+                <DiffView before={args.oldText} after={args.newText} startLine={diff?.line ?? 1} lang={lang} />
+              )}
+              {content && message.call.name !== 'edit_file' && (
+                <pre className="tool-output thin-scroll max-h-60 overflow-auto whitespace-pre-wrap break-words p-2.5 font-mono text-[12px] leading-relaxed text-ink">
+                  <code
+                    className="hljs"
+                    dangerouslySetInnerHTML={{
+                      __html:
+                        highlightCode(content.length > 4000 ? content.slice(0, 4000) : content, lang) +
+                        (content.length > 4000 ? `\n… ${content.length - 4000} more characters` : ''),
+                    }}
+                  />
+                </pre>
+              )}
 
-          {message.result !== undefined && (
-            <div>
-              <p className="mb-1 flex items-center gap-3 text-[12px] text-muted">
-                <span>{message.status === 'error' ? 'Error' : 'Output'}</span>
-                <button type="button" onClick={copyOutput} className="text-link hover:underline">
-                  {copied ? 'Copied' : 'Copy'}
-                </button>
-              </p>
-              <pre
-                className={cn(
-                  'thin-scroll max-h-72 overflow-auto whitespace-pre-wrap break-words font-mono text-[12px] leading-[1.65]',
-                  message.status === 'error' ? 'text-danger' : 'text-muted',
-                )}
-              >
-                {message.result || '(no output)'}
-              </pre>
+              {message.result !== undefined && (
+                <div>
+                  <p className="mb-1 flex items-center gap-3 text-[11px] font-semibold uppercase tracking-wide text-muted">
+                    <span className="text-muted">{message.status === 'error' ? 'Error' : 'Output'}</span>
+                    <button type="button" onClick={copyOutput} className="font-medium normal-case tracking-normal text-link hover:underline">
+                      {copied ? 'Copied' : 'Copy'}
+                    </button>
+                  </p>
+                  <pre
+                    className={cn(
+                      'tool-output thin-scroll max-h-72 overflow-auto whitespace-pre-wrap break-words p-2.5 font-mono text-[12.5px] leading-[1.6]',
+                      message.status === 'error' ? 'text-danger' : 'text-ink/90',
+                    )}
+                  >
+                    <code
+                      className="hljs"
+                      dangerouslySetInnerHTML={{
+                        __html: !message.result
+                          ? '(no output)'
+                          : isShell || message.status === 'error'
+                            ? colorizeShellOutput(message.result)
+                            : message.call.name === 'read_file' && lang
+                              ? highlightCode(message.result, lang)
+                              : escapeHtml(message.result),
+                      }}
+                    />
+                  </pre>
+                </div>
+              )}
+
+              {message.media && message.media.length > 0 && (
+                <div className="flex flex-wrap items-start gap-2">
+                  {message.media.map((item, index) => (
+                    <ToolMediaView key={index} item={item} index={index} />
+                  ))}
+                </div>
+              )}
+
+              {message.result === undefined && !command && !content && message.status !== 'awaiting' && (
+                <p className="text-[12px] text-muted">{message.status === 'running' ? 'Working…' : 'No result was recorded.'}</p>
+              )}
             </div>
-          )}
-
-          {message.media && message.media.length > 0 && (
-            <div className="flex flex-wrap items-start gap-2">
-              {message.media.map((item, index) => (
-                <ToolMediaView key={index} item={item} index={index} />
-              ))}
-            </div>
-          )}
-
-          {message.result === undefined && !command && !content && message.status !== 'awaiting' && (
-            <p className="text-[12px] text-muted">
-              {message.status === 'running' ? 'Working…' : 'No result was recorded.'}
-            </p>
           )}
         </div>
-      )}
+      </div>
     </div>
   )
 }

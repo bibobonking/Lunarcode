@@ -75,7 +75,7 @@ function serverRequestReply(message, roots) {
   if (message.method === 'roots/list' && typeof roots === 'function') {
     return { jsonrpc: '2.0', id: message.id, result: { roots: roots() } }
   }
-  return { jsonrpc: '2.0', id: message.id, error: { code: -32601, message: 'Method not supported by OpenSol.' } }
+  return { jsonrpc: '2.0', id: message.id, error: { code: -32601, message: 'Method not supported by Lunarcode.' } }
 }
 
 /** Newline-delimited JSON-RPC over a child process. */
@@ -890,7 +890,7 @@ export class McpManager {
       } else if (stored?.client?.redirectUri === redirectUri && stored.client.issuer === metadata.issuer) {
         client = stored.client
       } else {
-        client = { ...(await registerClient(metadata, redirectUri, 'OpenSol')), redirectUri, issuer: metadata.issuer }
+        client = { ...(await registerClient(metadata, redirectUri, 'Lunarcode')), redirectUri, issuer: metadata.issuer }
       }
       const { verifier, challenge } = createPkce()
       const resource = metadata.resource || config.url
@@ -1200,7 +1200,7 @@ export class McpManager {
           transport.request('initialize', {
             protocolVersion: version,
             capabilities: { roots: { listChanged: false } },
-            clientInfo: { name: 'OpenSol', version: CLIENT_VERSION },
+            clientInfo: { name: 'Lunarcode', version: CLIENT_VERSION },
           }),
           CONNECT_TIMEOUT_MS,
           'initialize',

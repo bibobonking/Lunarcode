@@ -71,7 +71,7 @@ type TabDef = { id: string; label: string; icon: typeof Info; description: strin
 const TABS: readonly TabDef[] = [
   { id: 'general', label: 'General', icon: SlidersHorizontal, description: 'Permissions, appearance and conversation display.' },
   { id: 'models', label: 'Models', icon: Cpu, description: 'Providers, encrypted keys, live models and reasoning defaults.' },
-  { id: 'tools', label: 'Tools', icon: Wrench, description: 'What OpenSol can do on this machine, and when it must ask.' },
+  { id: 'tools', label: 'Tools', icon: Wrench, description: 'What Lunarcode can do on this machine, and when it must ask.' },
   { id: 'search', label: 'Search', icon: Globe2, description: 'Give the agent current web results with your own key.' },
   { id: 'skills', label: 'Skills', icon: Sparkles, description: 'Skill folders the agent loads on demand: upload a folder or install from npm.' },
   { id: 'plugins', label: 'Plugins', icon: Package, description: 'Plugins are temporarily disabled for maintenance.', disabled: true },
@@ -821,7 +821,7 @@ function SearchTab() {
     try {
       const response = await executeDaemonTool(
         'web_search',
-        { query: 'OpenSol local coding agent', provider: settings.searchProvider },
+        { query: 'Lunarcode local coding agent', provider: settings.searchProvider },
         'build',
       )
       const result = response.result && typeof response.result === 'object' ? (response.result as Record<string, unknown>) : {}
@@ -1133,7 +1133,7 @@ function SkillsTab() {
           </button>
         </form>
         <p className="mt-2 text-[12px] leading-relaxed text-faint">
-          npm installs run with scripts disabled; OpenSol only copies the SKILL.md folders the package ships. Skill scripts run
+          npm installs run with scripts disabled; Lunarcode only copies the SKILL.md folders the package ships. Skill scripts run
           only when the model calls the shell tool, and that still asks for approval.
         </p>
       </div>
@@ -1399,7 +1399,7 @@ function DeployTab() {
 
       <SettingsSection
         title="Command-line tools"
-        description="OpenSol uses an installed CLI when available and falls back to npx. Node.js must be on PATH."
+        description="Lunarcode uses an installed CLI when available and falls back to npx. Node.js must be on PATH."
       >
         <div className="overflow-hidden rounded-[12px] border border-line">
           {(Object.keys(DEPLOY_META) as DeployProviderId[]).map((provider, index) => {
@@ -1445,7 +1445,7 @@ function PluginsTab() {
   return (
     <SettingsSection
       title="Local plugins"
-      description="OpenSol only installs plugin packages you choose from this machine. A plugin stays sandboxed and disabled until you review its permissions and mark it Safe."
+      description="Lunarcode only installs plugin packages you choose from this machine. A plugin stays sandboxed and disabled until you review its permissions and mark it Safe."
     >
       <PluginManager />
     </SettingsSection>
@@ -1461,8 +1461,8 @@ function GeneralTab() {
 
   const quickThemes = [
     { id: 'light' as const, label: 'Light', icon: Sun },
-    { id: 'dark' as const, label: 'Dark', icon: Moon },
-    { id: 'system' as const, label: 'System', icon: Monitor },
+    { id: 'lunar' as const, label: 'Lunar', icon: Moon },
+    { id: 'dark' as const, label: 'Dark', icon: Monitor },
   ]
 
   const copyConfig = async () => {
@@ -1604,7 +1604,7 @@ function GeneralTab() {
       <div className="adw-row flex-wrap justify-between gap-3">
         <div className="min-w-0">
           <p className="adw-row-title">Show mascot</p>
-          <p className="adw-row-subtitle">The OpenSol mark above the greeting on the home screen. Off by default.</p>
+          <p className="adw-row-subtitle">The Lunarcode mark above the greeting on the home screen. Off by default.</p>
         </div>
         <Switch checked={settings.showMascot} onChange={(showMascot) => update({ showMascot })} label="Show mascot" />
       </div>
@@ -1648,18 +1648,8 @@ function AppearanceTab() {
   const update = useSettings((state) => state.update)
   const themes = [
     { id: 'light' as const, label: 'Light', className: 'bg-[#fafafb]', line: 'bg-[#e0e0e3]', bar: 'bg-[#ffffff]', accent: 'bg-[#3584e4]' },
+    { id: 'lunar' as const, label: 'Lunar', className: 'bg-[#131420]', line: 'bg-[#2c2e42]', bar: 'bg-[#0e0f17]', accent: 'bg-[#8e96ff]' },
     { id: 'dark' as const, label: 'Dark', className: 'bg-[#222226]', line: 'bg-[#3e3e42]', bar: 'bg-[#1d1d20]', accent: 'bg-[#3584e4]' },
-    { id: 'night-owl' as const, label: 'Dark — Teal', className: 'bg-[#222226]', line: 'bg-[#3e3e42]', bar: 'bg-[#1d1d20]', accent: 'bg-[#2190a4]' },
-    { id: 'claude-code' as const, label: 'Dark — Purple', className: 'bg-[#222226]', line: 'bg-[#3e3e42]', bar: 'bg-[#1d1d20]', accent: 'bg-[#9141ac]' },
-    { id: 'flame' as const, label: 'Dark — Orange', className: 'bg-[#222226]', line: 'bg-[#3e3e42]', bar: 'bg-[#1d1d20]', accent: 'bg-[#ed5b00]' },
-    {
-      id: 'system' as const,
-      label: 'System',
-      className: 'bg-[#fafafb]',
-      line: 'bg-[#8a8a92]',
-      bar: 'bg-[#222226]',
-      accent: 'bg-[#3584e4]',
-    },
     // Themes contributed by Safe plugins.
     ...pluginRuntime().themes().map((theme) => ({
       id: theme.id,
@@ -1673,7 +1663,7 @@ function AppearanceTab() {
 
   return (
     <>
-      <SettingsSection title="Theme" description="System follows your OS preference and updates when it changes.">
+      <SettingsSection title="Theme" description="Light, Lunar (moonlit indigo) or neutral Dark.">
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {themes.map((theme) => {
             const selected = settings.theme === theme.id
@@ -1769,7 +1759,7 @@ function AboutTab() {
           ? 'Conversation history cleared.'
           : scope === 'settings'
             ? 'Settings restored to defaults.'
-            : 'OpenSol was reset.',
+            : 'Lunarcode was reset.',
         'success',
       )
     } catch (cause) {
@@ -1786,13 +1776,13 @@ function AboutTab() {
           <LogoMark size={46} />
           <div>
             <div className="flex flex-wrap items-baseline gap-2">
-              <h3 className="text-[20px] font-bold text-ink">OpenSol</h3>
+              <h3 className="text-[16px] font-bold text-ink">Lunarcode</h3>
               <span className="text-[12px] text-faint">v{daemon?.version ?? '1.0.0'}</span>
             </div>
             <p className="mt-0.5 text-[12px] font-medium text-muted">An OpenSoftX product</p>
             <p className="mt-2 max-w-[520px] text-[12px] leading-relaxed text-muted">
               A local-first coding agent with a real workspace, shell, git, web research, subagents and deploy flows.
-              No OpenSol account and no OpenSoftX server. Your keys never leave this machine.
+              No Lunarcode account and no OpenSoftX server. Your keys never leave this machine.
             </p>
           </div>
         </div>
@@ -1804,13 +1794,13 @@ function AboutTab() {
           ].map(([label, value]) => (
             <div key={label} className="rounded-[9px] border border-line bg-raised/30 px-3 py-2">
               <p className="text-[12px] text-faint">{label}</p>
-              <p className="mt-0.5 text-[15px] font-bold text-ink">{value}</p>
+              <p className="mt-0.5 text-[13px] font-bold text-ink">{value}</p>
             </div>
           ))}
         </div>
       </SettingsSection>
 
-      <SettingsSection title="Local data" description="Everything is stored under ~/.maxcode. Clearing that folder removes OpenSol’s local state.">
+      <SettingsSection title="Local data" description="Everything is stored under ~/.maxcode. Clearing that folder removes Lunarcode’s local state.">
         <div className="space-y-1.5 rounded-[9px] border border-line bg-raised/30 px-3 py-2.5 text-[12px]">
           <p className="flex items-center justify-between gap-3">
             <span className="text-faint">Data folder</span>
@@ -1921,7 +1911,7 @@ function AboutTab() {
           </div>
           <div className="flex flex-col gap-2 rounded-[9px] border border-danger/20 bg-danger/[0.02] px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-[12px] font-medium text-ink">Reset OpenSol</p>
+              <p className="text-[12px] font-medium text-ink">Reset Lunarcode</p>
               <p className="mt-0.5 text-[12px] text-muted">
                 Delete conversations, encrypted keys, skills, settings and the remembered workspace.
               </p>
@@ -1999,7 +1989,7 @@ export function SettingsModal() {
   }, [open, tab])
 
   const copyConfig = async () => {
-    const path = daemon?.dataDir ?? '~/.opensol'
+    const path = daemon?.dataDir ?? '~/.lunarcode'
     try {
       await navigator.clipboard.writeText(path)
       notify(`Copied the data folder path: ${path}`, 'success')
@@ -2013,15 +2003,15 @@ export function SettingsModal() {
       open={open}
       onClose={close}
       labelledBy="settings-title"
-      className="h-[94dvh] p-0 sm:h-[min(88dvh,780px)] sm:w-[min(1040px,96vw)]"
+      className="h-[94dvh] p-0 sm:h-[min(92dvh,900px)] sm:w-[min(1240px,97vw)]"
     >
       <div className="flex min-h-0 flex-1 flex-col sm:flex-row">
-        <aside className="hidden w-[240px] shrink-0 flex-col border-r border-line bg-sidebar sm:flex">
+        <aside className="hidden w-[270px] shrink-0 flex-col border-r border-line bg-sidebar sm:flex">
           <div className="px-4 pb-3 pt-4">
-            <h2 id="settings-title" className="text-[18px] font-bold text-ink">
+            <h2 id="settings-title" className="text-[16px] font-bold text-ink">
               Preferences
             </h2>
-            <p className="text-[12px] text-muted">OpenSol · v3.2.4</p>
+            <p className="text-[12px] text-muted">Lunarcode · v3.2.4</p>
           </div>
           <nav className="flex-1 space-y-0.5 overflow-y-auto px-2 pb-3" aria-label="Preferences">
             {TABS.map((item) => {
@@ -2077,7 +2067,7 @@ export function SettingsModal() {
               type="button"
               onClick={() => void copyConfig()}
               className="adw-btn hidden h-8 sm:inline-flex"
-              title={daemon?.dataDir ?? '~/.opensol'}
+              title={daemon?.dataDir ?? '~/.lunarcode'}
             >
               <HardDrive size={16} />
               Data folder

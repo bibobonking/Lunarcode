@@ -60,9 +60,9 @@ export function PreviewPane() {
     return (
       <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 px-8 text-center">
         <Monitor size={32} className="text-muted" />
-        <p className="text-[18px] font-bold text-ink">Nothing to preview yet</p>
-        <p className="max-w-[280px] text-[14px] leading-relaxed text-muted">
-          Ask OpenSol to build a page or a game. The first HTML file it writes shows up here and reloads as it changes.
+        <p className="text-[16px] font-bold text-ink">Nothing to preview yet</p>
+        <p className="max-w-[280px] text-[13px] leading-relaxed text-muted">
+          Ask Lunarcode to build a page or a game. The first HTML file it writes shows up here and reloads as it changes.
         </p>
       </div>
     )
@@ -128,7 +128,7 @@ export function PreviewPane() {
       <div className="relative min-h-0 flex-1 overflow-auto bg-raised p-2">
         {error && (
           <div className="mx-auto mt-6 max-w-[300px] rounded-[12px] border border-danger/30 bg-danger/10 px-4 py-3 text-center">
-            <p className="text-[14px] font-semibold text-ink">The preview could not start</p>
+            <p className="text-[13px] font-semibold text-ink">The preview could not start</p>
             <p className="mt-1 text-[12px] leading-relaxed text-muted">{error}</p>
             <button
               type="button"
@@ -140,7 +140,7 @@ export function PreviewPane() {
           </div>
         )}
         {!error && !src && (
-          <p className="flex items-center justify-center gap-2 py-8 text-[14px] text-muted">
+          <p className="flex items-center justify-center gap-2 py-8 text-[13px] text-muted">
             <Spinner size={16} /> Starting preview…
           </p>
         )}
@@ -157,7 +157,7 @@ export function PreviewPane() {
       </div>
 
       <p className="shrink-0 border-t border-line px-3 py-1.5 text-[12px] text-muted">
-        Runs in a sandbox: it can load your files and public CDNs, but cannot reach OpenSol or your keys.
+        Runs in a sandbox: it can load your files and public CDNs, but cannot reach Lunarcode or your keys.
       </p>
     </div>
   )

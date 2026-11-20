@@ -75,7 +75,7 @@ export function Modal({
   if (!open) return null
 
   return createPortal(
-    <div className="fixed inset-0 z-[80] flex items-end justify-center p-0 sm:items-center sm:p-6">
+    <div className="fixed inset-0 z-[80] flex items-end justify-center p-0 sm:items-center sm:p-4">
       <button type="button" aria-label="Close dialog" tabIndex={-1} onClick={onClose} className="adw-scrim cursor-default" />
       <div
         ref={panelRef}
@@ -84,8 +84,8 @@ export function Modal({
         aria-labelledby={labelledBy}
         tabIndex={-1}
         className={cn(
-          'adw-dialog max-h-[92dvh] w-full rounded-b-none sm:max-h-[86dvh] sm:rounded-b-[15px]',
-          wide ? 'sm:w-[min(920px,94vw)]' : 'sm:w-[min(640px,94vw)]',
+          'adw-dialog max-h-[92dvh] w-full rounded-b-none sm:max-h-[92dvh] sm:rounded-b-[15px]',
+          wide ? 'sm:w-[min(1180px,97vw)]' : 'sm:w-[min(780px,96vw)]',
           className,
         )}
       >
@@ -234,7 +234,7 @@ export function Segmented<T extends string>({
           onClick={() => onChange(option.value)}
           className={cn(
             'rounded-[7px] font-semibold transition-colors duration-150 disabled:cursor-not-allowed',
-            size === 'md' ? 'h-8 px-3 text-[14px]' : 'h-[26px] px-2.5 text-[13px]',
+            size === 'md' ? 'h-8 px-3 text-[13px]' : 'h-[26px] px-2.5 text-[13px]',
             value === option.value ? 'bg-panel text-ink shadow-[0_0_0_1px_rgb(var(--line))]' : 'text-muted hover:bg-ink/[.06] hover:text-ink',
           )}
         >
@@ -340,8 +340,8 @@ export function StatusPage({
   return (
     <div className={cn('flex flex-col items-center justify-center px-6 py-10 text-center', className)}>
       {icon && <div className="mb-4 flex h-12 w-12 items-center justify-center text-muted">{icon}</div>}
-      <h2 className="text-[20px] font-bold leading-tight text-ink">{title}</h2>
-      {description && <p className="mt-2 max-w-md text-[14px] leading-relaxed text-muted">{description}</p>}
+      <h2 className="text-[16px] font-bold leading-tight text-ink">{title}</h2>
+      {description && <p className="mt-2 max-w-md text-[13px] leading-relaxed text-muted">{description}</p>}
       {children && <div className="mt-5 flex flex-wrap items-center justify-center gap-2">{children}</div>}
     </div>
   )
@@ -371,7 +371,7 @@ export function ToastHost() {
     <div className="pointer-events-none fixed inset-x-0 bottom-24 z-[100] flex justify-center px-4">
       <div role="status" className="adw-toast flex max-w-[min(92vw,480px)] items-center gap-2.5">
         <Icon size={16} className={cn('shrink-0', tone.className)} />
-        <p className="min-w-0 flex-1 text-[14px] leading-snug">{toast.message}</p>
+        <p className="min-w-0 flex-1 text-[13px] leading-snug">{toast.message}</p>
         <button
           type="button"
           className="-mr-1 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-[6px] text-white/70 hover:bg-white/10 hover:text-white"
@@ -395,8 +395,8 @@ export function ConfirmDialog() {
   return (
     <Modal open={Boolean(confirm)} onClose={() => resolve(false)} className="sm:w-[420px]">
       <div className="p-6">
-        <h2 className="text-[18px] font-bold leading-tight">{confirm?.title}</h2>
-        <p className="mt-2 text-[14px] leading-relaxed text-muted">{confirm?.body}</p>
+        <h2 className="text-[16px] font-bold leading-tight">{confirm?.title}</h2>
+        <p className="mt-2 text-[13px] leading-relaxed text-muted">{confirm?.body}</p>
         <div className="mt-6 flex justify-end gap-2">
           <button type="button" className="adw-btn" onClick={() => resolve(false)}>
             Cancel

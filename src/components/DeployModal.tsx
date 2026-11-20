@@ -253,12 +253,12 @@ export function DeployModal() {
   const folderName = path.trim().split(/[\\/]/).filter(Boolean).pop() ?? ''
 
   return (
-    <Modal open={open} onClose={close} labelledBy="deploy-title" wide className="h-[92dvh] p-0 sm:h-[min(90dvh,780px)]">
+    <Modal open={open} onClose={close} labelledBy="deploy-title" wide className="h-[92dvh] p-0 sm:h-[min(92dvh,900px)]">
       <div className="flex shrink-0 items-center justify-between gap-4 border-b border-line px-5 py-3.5 sm:px-6">
         <div className="flex min-w-0 items-center gap-3">
           <Rocket size={16} className="shrink-0 text-muted" />
           <div className="min-w-0">
-            <h2 id="deploy-title" className="text-[18px] font-bold leading-tight text-ink">
+            <h2 id="deploy-title" className="text-[16px] font-bold leading-tight text-ink">
               Deploy
             </h2>
             <p className="truncate text-[12px] text-muted">Build and publish a folder to a live URL. Tokens stay encrypted on this machine.</p>
@@ -455,7 +455,7 @@ export function DeployModal() {
               <Terminal size={11} className="mt-0.5 shrink-0" />
               {tool?.installed
                 ? `${tool.label}${tool.version ? ` ${tool.version}` : ''} found on this machine.`
-                : `${tool?.label ?? 'The CLI'} is not installed; OpenSol will fetch it with npx for this deploy.`}
+                : `${tool?.label ?? 'The CLI'} is not installed; Lunarcode will fetch it with npx for this deploy.`}
             </div>
           </div>
         </div>
@@ -522,7 +522,7 @@ export function DeployModal() {
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="text-[12px] font-medium text-muted">Live on {meta.label}</p>
-                  <a href={result.url} target="_blank" rel="noreferrer" className="block truncate text-[14px] font-semibold text-accent hover:underline">
+                  <a href={result.url} target="_blank" rel="noreferrer" className="block truncate text-[13px] font-semibold text-accent hover:underline">
                     {result.url}
                   </a>
                 </div>
@@ -551,7 +551,7 @@ export function DeployModal() {
                 </span>
                 <p className="text-[12px] font-medium text-muted">Ready when you are</p>
                 <p className="max-w-[280px] text-[12px] leading-relaxed text-faint">
-                  Leave the fields on auto: OpenSol installs dependencies, builds if there is no output folder yet, then publishes it. Tokens never appear in the log.
+                  Leave the fields on auto: Lunarcode installs dependencies, builds if there is no output folder yet, then publishes it. Tokens never appear in the log.
                 </p>
               </div>
             ) : (

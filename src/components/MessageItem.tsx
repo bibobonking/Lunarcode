@@ -15,7 +15,6 @@ import type { AssistantMessage, ToolMessage, UserMessage } from '../types'
 import type { ConversationTurn } from '../lib/conversation'
 import { useUi } from '../store/ui'
 import { useSettings } from '../store/settings'
-import { useModelCatalog } from '../store/models'
 import { regenerateLastTurn, runAgent } from '../agent'
 import { restoreCheckpoint } from '../lib/daemon'
 import { useWorkspace } from '../store/workspace'
@@ -25,7 +24,7 @@ import { formatBytes, cn } from '../lib/utils'
 import { Markdown } from './Markdown'
 import { ToolCallCard, diffForTool } from './ToolCallCard'
 import { DiffBadge } from './DiffView'
-import { LogoMark } from './Logo'
+import { AgentActivity } from './AgentActivity'
 import { Spinner } from './ui'
 
 function formatTokens(value?: number) {
@@ -293,11 +292,11 @@ export function TaskCompletedBox({
   const StatusIcon = awaiting ? (
     <CircleAlert size={16} className="shrink-0 text-warning" />
   ) : active ? (
-    <Spinner size={16} className="shrink-0 text-muted" />
+    <span className="moon-spinner h-4 w-4 shrink-0" aria-hidden="true" />
   ) : failed > 0 ? (
     <CircleAlert size={16} className="shrink-0 text-danger" />
   ) : (
-    <Check size={16} className="shrink-0 text-success" />
+    <Check size={16} className="tool-check shrink-0 text-success" />
   )
 
   return (
@@ -312,7 +311,7 @@ export function TaskCompletedBox({
         aria-expanded={open}
       >
         {StatusIcon}
-        <span className={cn('shrink-0 text-[14px] font-semibold', awaiting && 'text-warning')}>
+        <span className={cn('shrink-0 text-[13px] font-semibold', awaiting && 'text-warning')}>
           {awaiting ? 'Action required' : active ? 'Running task…' : 'Task completed'}
         </span>
         <span className="min-w-0 flex-1 truncate text-[12px] text-muted">
@@ -320,12 +319,18 @@ export function TaskCompletedBox({
           {summary ? ` (${summary})` : ''}
         </span>
         {failed > 0 && <span className="shrink-0 text-[12px] text-danger">{failed} failed</span>}
-        {total && <DiffBadge added={total.added} removed={total.removed} className="shrink-0 text-[12px]" />}
-        <ChevronRight size={16} className={cn('shrink-0 text-muted transition-transform duration-150', open && 'rotate-90')} />
+        {total && (
+          <span className="flex shrink-0 items-center gap-1">
+            <span className="diff-pill diff-pill-add">+{total.added}</span>
+            <span className="diff-pill diff-pill-del">−{total.removed}</span>
+          </span>
+        )}
+        <ChevronRight size={16} className={cn('ws-chevron shrink-0 text-muted', open && 'is-open')} />
       </button>
 
-      {open && (
-        <div className="space-y-0.5 px-3 py-2">
+      <div className={cn('collapse-grid', open && 'is-open')}>
+        <div className="collapse-inner">
+        <div className="space-y-2 border-t border-line/70 px-3 py-2.5">
           {taskItems.map((item) =>
             item.kind === 'tool' ? (
               <ToolCallCard key={item.tool.id} message={item.tool} compact={!detailed} />
@@ -341,7 +346,8 @@ export function TaskCompletedBox({
             ),
           )}
         </div>
-      )}
+        </div>
+      </div>
     </div>
   )
 }
@@ -401,16 +407,11 @@ export function AssistantBlock({
   const notify = useUi((state) => state.notify)
   const openSettings = useUi((state) => state.openSettings)
   const showTokenEstimate = useSettings((state) => state.showTokenEstimate)
-  const providerModels = useModelCatalog((state) =>
-    message.provider ? state.byProvider[message.provider] : undefined,
-  )
   const [copied, setCopied] = useState(false)
   // Thoughts stay closed until the person opens them, even while the model is still thinking.
   const [reasoningOpen, setReasoningOpen] = useState(false)
   const hasBody = Boolean(message.content.trim() || message.reasoning.trim() || message.error)
   if (message.compaction) return <CompactionNote message={message} />
-  const modelName =
-    providerModels?.find((model) => model.id === message.model)?.name ?? message.model ?? ''
   const needsConfig = Boolean(message.error && /api key|base url|settings|credential|403|401/i.test(message.error))
   const tokenBits: string[] = []
   const usedInput = turnUsage?.input || message.usage?.input
@@ -421,7 +422,6 @@ export function AssistantBlock({
     tokenBits.push(`~${formatTokens(Math.ceil(message.content.length / 4))} out`)
   }
   const metaLine = [
-    modelName,
     ...tokenBits,
     message.durationMs ? `${(message.durationMs / 1000).toFixed(1)}s` : '',
   ]
@@ -440,11 +440,7 @@ export function AssistantBlock({
 
   const header = (
     <div className="flex min-h-[28px] items-center gap-2">
-      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-ink/[.08]">
-        <LogoMark size={14} />
-      </span>
-      <span className="text-[13px] font-bold text-ink">OpenSol</span>
-      {modelName && <span className="truncate text-[12px] text-muted">{modelName}</span>}
+      <span className="assistant-name text-[13px] font-bold">Lunarcode</span>
       {message.stopped && (
         <span className="adw-badge gap-1">
           <Square size={8} fill="currentColor" />
@@ -458,7 +454,7 @@ export function AssistantBlock({
     return (
       <div>
         {showHeader && header}
-        <p className="mt-1 text-[14px] text-muted">The model returned an empty response.</p>
+        <p className="mt-1 text-[13px] text-muted">The model returned an empty response.</p>
         {isLastAssistant && (
           <button type="button" onClick={() => regenerateLastTurn(sessionId)} className="adw-btn adw-btn-flat mt-1 h-8 px-2 text-link">
             <RefreshCw size={16} /> Try again
@@ -501,19 +497,12 @@ export function AssistantBlock({
         </div>
       )}
 
-      {streaming && !message.content && !message.reasoning && (
-        <div className="mt-2 flex items-center gap-2 text-[14px] text-muted">
-          <Spinner size={16} />
-          Working
-        </div>
-      )}
-
       {message.error && (
         <div className="mt-3 rounded-[12px] border border-danger/30 bg-danger/10 px-4 py-3">
           <div className="flex items-start gap-2.5">
             <AlertCircle size={16} className="mt-0.5 shrink-0 text-danger" />
             <div className="min-w-0 flex-1">
-              <p className="text-[14px] font-semibold text-ink">The request did not finish</p>
+              <p className="text-[13px] font-semibold text-ink">The request did not finish</p>
               <p className="mt-1 whitespace-pre-wrap text-[12px] leading-relaxed text-muted">{message.error}</p>
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 {needsConfig && (
@@ -565,7 +554,7 @@ export function AssistantBlock({
   )
 }
 
-export function TurnBlock({
+function TurnBlockInner({
   turn,
   sessionId,
   streaming,
@@ -672,5 +661,22 @@ export function TurnBlock({
         <UndoBar turnId={turn.user.id} files={changedFiles(allTools)} diff={totalDiff(allTools)} />
       )}
     </div>
+  )
+}
+
+export function TurnBlock(props: {
+  turn: ConversationTurn
+  sessionId: string
+  streaming: boolean
+  lastAssistantId?: string
+  activeTurn?: boolean
+}) {
+  const tools: ToolMessage[] = []
+  for (const segment of props.turn.segments) if (segment.kind === 'tools') tools.push(...segment.tools)
+  return (
+    <>
+      <TurnBlockInner {...props} />
+      {props.activeTurn && <AgentActivity tools={tools} className="mt-1" />}
+    </>
   )
 }

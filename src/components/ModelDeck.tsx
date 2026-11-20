@@ -189,13 +189,13 @@ export function ModelDeck({ open, onClose }: { open: boolean; onClose: () => voi
 
   const needsKey = !connectedNow && !keyless
   return createPortal(
-    <div className="fixed inset-0 z-[90] flex items-end justify-center sm:items-center sm:p-6">
+    <div className="fixed inset-0 z-[90] flex items-end justify-center sm:items-center sm:p-4">
       <button type="button" aria-label="Close model picker" tabIndex={-1} onClick={onClose} className="adw-scrim absolute inset-0 cursor-default" />
       <div
         role="dialog"
         aria-modal="true"
         aria-label="Model"
-        className="adw-dialog relative flex h-[min(92dvh,640px)] w-full flex-col overflow-hidden rounded-b-none sm:w-[min(920px,96vw)] sm:rounded-[15px]"
+        className="adw-dialog relative flex h-[min(92dvh,800px)] w-full flex-col overflow-hidden rounded-b-none sm:w-[min(1180px,97vw)] sm:rounded-[15px]"
       >
         <header className="adw-headerbar shrink-0 border-b border-line">
           <div className="min-w-0 flex-1">
@@ -238,7 +238,7 @@ export function ModelDeck({ open, onClose }: { open: boolean; onClose: () => voi
           <nav
             ref={railRef}
             aria-label="Providers"
-            className="thin-scroll flex shrink-0 gap-1 overflow-x-auto border-b border-line bg-sidebar p-2 md:w-[200px] md:flex-col md:overflow-y-auto md:overflow-x-hidden md:border-b-0 md:border-r"
+            className="thin-scroll flex shrink-0 gap-1 overflow-x-auto border-b border-line bg-sidebar p-2 md:w-[230px] md:flex-col md:overflow-y-auto md:overflow-x-hidden md:border-b-0 md:border-r"
           >
             {PROVIDERS.map((entry) => {
               const ready = connected(entry.id) || entry.keyless || entry.id === 'custom'
@@ -266,8 +266,8 @@ export function ModelDeck({ open, onClose }: { open: boolean; onClose: () => voi
             {needsKey ? (
               <div className="flex flex-1 flex-col items-center justify-center gap-3 px-8 text-center">
                 <KeyRound size={32} className="text-muted" />
-                <p className="text-[18px] font-bold text-ink">Connect {PROVIDER_MAP[provider]?.name ?? provider}</p>
-                <p className="max-w-[320px] text-[14px] leading-relaxed text-muted">
+                <p className="text-[16px] font-bold text-ink">Connect {PROVIDER_MAP[provider]?.name ?? provider}</p>
+                <p className="max-w-[320px] text-[13px] leading-relaxed text-muted">
                   Keys are encrypted by the local daemon before they touch disk and never come back to this page.
                 </p>
                 <button
@@ -284,7 +284,7 @@ export function ModelDeck({ open, onClose }: { open: boolean; onClose: () => voi
             ) : (
               <>
                 <div className="shrink-0 px-4 pb-2 pt-3">
-                  <div className="adw-search">
+                  <div className="adw-searchbox">
                     <Search size={16} className="shrink-0 text-muted" />
                     <input
                       ref={searchRef}
@@ -310,7 +310,7 @@ export function ModelDeck({ open, onClose }: { open: boolean; onClose: () => voi
 
                 <div ref={listRef} className="thin-scroll min-h-0 flex-1 overflow-y-auto px-4 pb-4">
                   {loading && models.length === 0 && (
-                    <p className="flex items-center gap-2 px-3 py-4 text-[14px] text-muted">
+                    <p className="flex items-center gap-2 px-3 py-4 text-[13px] text-muted">
                       <Spinner size={16} /> Loading live models…
                     </p>
                   )}
@@ -354,10 +354,10 @@ export function ModelDeck({ open, onClose }: { open: boolean; onClose: () => voi
                     </div>
                   )}
                   {!loading && filtered.length === 0 && models.length > 0 && (
-                    <p className="px-3 py-6 text-center text-[14px] text-muted">No model matches “{query}”.</p>
+                    <p className="px-3 py-6 text-center text-[13px] text-muted">No model matches “{query}”.</p>
                   )}
                   {!loading && models.length === 0 && !error && (
-                    <p className="px-3 py-6 text-center text-[14px] text-muted">This provider returned no usable chat models.</p>
+                    <p className="px-3 py-6 text-center text-[13px] text-muted">This provider returned no usable chat models.</p>
                   )}
 
                   {showManual ? (
@@ -385,7 +385,7 @@ export function ModelDeck({ open, onClose }: { open: boolean; onClose: () => voi
           </section>
 
           {/* Reasoning effort */}
-          <aside className="shrink-0 overflow-y-auto border-t border-line bg-sidebar px-4 py-4 md:w-[272px] md:border-l md:border-t-0">
+          <aside className="shrink-0 overflow-y-auto border-t border-line bg-sidebar px-4 py-4 md:w-[310px] md:border-l md:border-t-0">
             <p className="adw-section-label mb-2 flex items-center gap-2">
               <Brain size={16} /> Reasoning
             </p>
@@ -399,7 +399,7 @@ export function ModelDeck({ open, onClose }: { open: boolean; onClose: () => voi
               />
             ) : (
               <div className="adw-boxed px-4 py-6 text-center">
-                <p className="text-[14px] font-semibold text-ink">{active ? 'No effort setting' : 'Pick a model'}</p>
+                <p className="text-[13px] font-semibold text-ink">{active ? 'No effort setting' : 'Pick a model'}</p>
                 <p className="mt-1 text-[12px] leading-relaxed text-muted">{reasoningSummary(active)}</p>
               </div>
             )}

@@ -115,9 +115,9 @@ function FolderPicker({ onDone }: { onDone?: () => void }) {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="border-b border-line px-4 py-4">
-        <p className="text-[18px] font-bold text-ink">Choose a real folder</p>
-        <p className="mt-1 text-[14px] leading-relaxed text-muted">
-          OpenSol works directly in this folder through the local daemon. Nothing is uploaded.
+        <p className="text-[16px] font-bold text-ink">Choose a real folder</p>
+        <p className="mt-1 text-[13px] leading-relaxed text-muted">
+          Lunarcode works directly in this folder through the local daemon. Nothing is uploaded.
         </p>
       </div>
 
@@ -422,7 +422,7 @@ export function WorkspacePanel() {
         <div className="flex h-12 shrink-0 items-center gap-2 border-b border-line px-3">
           <FolderOpen size={16} className="shrink-0 text-muted" />
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[14px] font-bold text-ink">
+            <p className="truncate text-[13px] font-bold text-ink">
               {info.available ? info.name : 'Workspace'}
             </p>
             <p className="truncate text-[12px] text-muted" title={root}>
@@ -536,7 +536,7 @@ export function WorkspacePanel() {
             {tab === 'files' ? (
               <>
                 <div className="shrink-0 border-b border-line px-2.5 py-2">
-                  <div className="adw-search">
+                  <div className="adw-searchbox">
                     <Search size={16} className="shrink-0 text-muted" />
                     <input
                       value={query}
@@ -645,7 +645,7 @@ export function WorkspacePanel() {
                         </button>
                       </div>
                       {file.binary ? (
-                        <div className="flex flex-1 items-center justify-center px-6 text-center text-[14px] text-muted">
+                        <div className="flex flex-1 items-center justify-center px-6 text-center text-[13px] text-muted">
                           This file is binary and cannot be edited here.
                         </div>
                       ) : (
@@ -670,7 +670,7 @@ export function WorkspacePanel() {
                     <div className="flex flex-1 flex-col items-center justify-center gap-2 px-6 text-center">
                       <FileText size={32} className="text-muted" />
                       <p className="text-[16px] font-bold text-ink">No file selected</p>
-                      <p className="max-w-[260px] text-[14px] leading-relaxed text-muted">
+                      <p className="max-w-[260px] text-[13px] leading-relaxed text-muted">
                         Pick a file from the tree. The agent reads and writes these same files.
                       </p>
                     </div>
@@ -686,7 +686,7 @@ export function WorkspacePanel() {
                 <div className="flex items-center gap-2 border-b border-line px-3 py-3">
                   <GitBranch size={16} className="text-muted" />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[14px] font-semibold text-ink">
+                    <p className="truncate text-[13px] font-semibold text-ink">
                       {git.available ? git.branch || 'detached HEAD' : 'Not a git repository'}
                     </p>
                     <p className="text-[12px] text-muted">
@@ -703,7 +703,7 @@ export function WorkspacePanel() {
                   </button>
                 </div>
                 {git.entries.length === 0 ? (
-                  <p className="px-3 py-5 text-[14px] text-muted">The working tree is clean.</p>
+                  <p className="px-3 py-5 text-[13px] text-muted">The working tree is clean.</p>
                 ) : (
                   git.entries.map((entry) => (
                     <button
@@ -725,7 +725,7 @@ export function WorkspacePanel() {
                     onClick={async () => {
                       const confirmed = await askConfirm({
                         title: 'Forget this workspace?',
-                        body: 'The folder stays on disk. OpenSol stops showing it and closes the current file.',
+                        body: 'The folder stays on disk. Lunarcode stops showing it and closes the current file.',
                         confirmLabel: 'Forget workspace',
                       })
                       if (confirmed) await forgetWorkspace()

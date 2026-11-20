@@ -1,24 +1,25 @@
 {
-  "name": "@bibobonking/opensol",
+  "name": "@bibobonking/lunarcode",
   "private": false,
-  "version": "3.2.4",
+  "version": "3.3.0",
   "type": "module",
   "bin": {
-    "opensol": "./server/opensol.mjs"
+    "lunarcode": "./server/lunarcode.mjs",
+    "opensol": "./server/lunarcode.mjs"
   },
   "scripts": {
-    "dev": "node server/opensol.mjs start && vite",
+    "dev": "node server/lunarcode.mjs start && vite",
     "build": "tsc -b && vite build",
     "artifacts": "node scripts/pull-artifacts.mjs",
     "preview": "vite preview",
     "typecheck": "tsc -b --pretty",
     "test": "node --test",
-    "start": "node server/opensol.mjs start --open",
-    "daemon": "node server/opensol.mjs start",
+    "start": "node server/lunarcode.mjs start --open",
+    "daemon": "node server/lunarcode.mjs start",
     "daemon:foreground": "node server/daemon.mjs",
-    "daemon:stop": "node server/opensol.mjs stop",
-    "daemon:status": "node server/opensol.mjs status",
-    "daemon:logs": "node server/opensol.mjs logs"
+    "daemon:stop": "node server/lunarcode.mjs stop",
+    "daemon:status": "node server/lunarcode.mjs status",
+    "daemon:logs": "node server/lunarcode.mjs logs"
   },
   "dependencies": {
     "clsx": "^2.1.1",

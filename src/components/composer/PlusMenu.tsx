@@ -57,7 +57,7 @@ export function PlusMenu({ onAddFiles }: { onAddFiles: () => void }) {
     <Popover
       open={open}
       onClose={close}
-      width={280}
+      width={330}
       trigger={
         <button
           type="button"

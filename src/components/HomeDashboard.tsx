@@ -6,7 +6,7 @@ import { useWorkspace } from '../store/workspace'
 import { cn } from '../lib/utils'
 import { formatCredits } from '../lib/credits'
 import { computeUsage, formatTokens, shortModelName, type UsageRange } from '../lib/usage'
-import { LogoMark } from './Logo'
+import { PixelLogo } from './AgentActivity'
 import { BoxedList, ListRow, PageGroup, Segmented } from './ui'
 
 const RANGES: Array<{ value: UsageRange; label: string }> = [
@@ -32,15 +32,18 @@ export function HomeGreeting() {
   const name = home.split(/[\\/]/).filter(Boolean).pop() || workspace.name || 'there'
   return (
     <div className="home-greeting flex flex-col items-center gap-3 text-center">
-      {showMascot && <LogoMark size={48} />}
-      <h1 className="text-[28px] font-bold leading-[1.2] text-ink">What should we build, {name}?</h1>
-      <p className="text-[14px] text-muted">Local-first agent. Your folder, your keys, your machine.</p>
+      <span className="lunar-stars" aria-hidden="true" style={{ inset: '-40px -80px' }} />
+      {showMascot && <PixelLogo mode="orbit" size={64} />}
+      <h1 className="text-[26px] font-bold leading-[1.2] text-ink">
+        What should we build, <span className="lunar-text">{name}</span>?
+      </h1>
+      <p className="text-[13px] text-muted">Local-first agent. Your folder, your keys, your machine.</p>
     </div>
   )
 }
 
 function Value({ children }: { children: string }) {
-  return <span className="max-w-[200px] truncate text-[14px] tabular-nums text-ink">{children}</span>
+  return <span className="max-w-[200px] truncate text-[13px] tabular-nums text-ink">{children}</span>
 }
 
 /** Usage as a compact boxed list under the welcome content. */
@@ -116,7 +119,7 @@ export function HomeDashboard() {
         <BoxedList>
           <div className="flex flex-col items-center px-4 py-8 text-center">
             <Cpu size={20} className="text-muted" />
-            <p className="mt-2 text-[14px] font-semibold text-ink">No model usage yet</p>
+            <p className="mt-2 text-[13px] font-semibold text-ink">No model usage yet</p>
             <p className="mt-0.5 text-[12px] text-muted">Models appear here after you send a message.</p>
           </div>
         </BoxedList>
@@ -125,7 +128,7 @@ export function HomeDashboard() {
           {stats.models.slice(0, 6).map((model) => (
             <div key={model.model} className="px-4 py-2.5">
               <div className="flex items-baseline justify-between gap-3">
-                <span className="min-w-0 truncate text-[14px] text-ink" title={model.model}>
+                <span className="min-w-0 truncate text-[13px] text-ink" title={model.model}>
                   {shortModelName(model.model)}
                 </span>
                 <span className="shrink-0 text-[12px] tabular-nums text-muted">
@@ -134,7 +137,7 @@ export function HomeDashboard() {
               </div>
               <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-ink/[.1]">
                 <div
-                  className="usage-bar h-full rounded-full bg-accent"
+                  className="usage-bar h-full rounded-full bg-gradient-to-r from-accent to-[rgb(var(--lunar-b))]"
                   style={{ width: `${topModelTokens ? Math.max(4, (model.tokens / topModelTokens) * 100) : 4}%` }}
                 />
               </div>

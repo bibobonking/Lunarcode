@@ -1,4 +1,5 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { useClickOutside } from '../../lib/hooks'
 import { cn } from '../../lib/utils'
 import { RadioMark } from '../ui'
@@ -17,7 +18,7 @@ export function Popover({
   children,
   width = 260,
   placement = 'above',
-  maxHeight = 260,
+  maxHeight = 400,
   className,
 }: {
   open: boolean
@@ -33,9 +34,14 @@ export function Popover({
 }) {
   const wrapperRef = useRef<HTMLDivElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
-  const [layout, setLayout] = useState({ side: placement, height: maxHeight, alignRight: false })
-  useClickOutside(wrapperRef, onClose, open)
+  const [layout, setLayout] = useState<{ top?: number; bottom?: number; left: number; height: number }>({
+    left: 0,
+    height: maxHeight,
+  })
+  useClickOutside(wrapperRef, onClose, open, panelRef)
 
+  // The panel is portalled to <body> and positioned with fixed coordinates, so no ancestor
+  // stacking context (animated welcome cards, transformed panes) can paint over it.
   useLayoutEffect(() => {
     if (!open) return
     const measure = () => {
@@ -50,34 +56,40 @@ export function Popover({
       const other = placement === 'above' ? below : above
       const side = fits(preferred) || preferred >= other ? placement : placement === 'above' ? 'below' : 'above'
       const room = side === 'above' ? above : below
+      const panelWidth = Math.min(width, window.innerWidth - EDGE * 2)
+      const left = Math.max(EDGE, Math.min(rect.left, window.innerWidth - panelWidth - EDGE))
       setLayout({
-        side,
+        left,
         height: Math.max(96, Math.min(maxHeight, room)),
-        alignRight: rect.left + width > window.innerWidth - EDGE,
+        ...(side === 'above' ? { bottom: window.innerHeight - rect.top + GAP } : { top: rect.bottom + GAP }),
       })
     }
     measure()
     window.addEventListener('resize', measure)
-    return () => window.removeEventListener('resize', measure)
+    window.addEventListener('scroll', measure, true)
+    return () => {
+      window.removeEventListener('resize', measure)
+      window.removeEventListener('scroll', measure, true)
+    }
   }, [open, placement, maxHeight, width])
 
   return (
     <div ref={wrapperRef} className="relative">
       {trigger}
-      {open && (
-        <div
-          ref={panelRef}
-          style={{ width, maxHeight: layout.height }}
-          className={cn(
-            'adw-popover thin-scroll absolute z-40 max-w-[calc(100vw-24px)] overflow-y-auto overscroll-contain',
-            layout.alignRight ? 'right-0' : 'left-0',
-            layout.side === 'above' ? 'bottom-[calc(100%+8px)]' : 'top-[calc(100%+6px)]',
-            className,
-          )}
-        >
-          {children}
-        </div>
-      )}
+      {open &&
+        createPortal(
+          <div
+            ref={panelRef}
+            style={{ width, maxHeight: layout.height, left: layout.left, top: layout.top, bottom: layout.bottom }}
+            className={cn(
+              'adw-popover thin-scroll fixed z-[95] max-w-[calc(100vw-24px)] overflow-y-auto overscroll-contain',
+              className,
+            )}
+          >
+            {children}
+          </div>,
+          document.body,
+        )}
     </div>
   )
 }
@@ -108,7 +120,7 @@ export function MenuOption({
     >
       <RadioMark checked={selected} className="mt-0.5" />
       <span className="min-w-0">
-        <span className="block text-[14px] leading-snug text-ink">{label}</span>
+        <span className="block text-[13px] leading-snug text-ink">{label}</span>
         {hint && <span className="block text-[12px] leading-snug text-muted">{hint}</span>}
       </span>
     </button>

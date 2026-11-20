@@ -205,6 +205,80 @@ function normalizeReasoning(model) {
   return result
 }
 
+
+/**
+ * Gateways such as 9router, LiteLLM or one-api expose models under their own ids
+ * ("ag/claude-sonnet-4-6", "gemini/gemini-3.8-flash", "tokenharbor/deepseek-v4.1-flash:free"),
+ * so the models.dev catalog never matches and no reasoning control would be offered. These
+ * helpers recover the underlying model: first by looking its bare id up in every catalog
+ * provider, then by well-known family patterns.
+ */
+function bareModelId(id) {
+  let bare = String(id).toLowerCase().trim()
+  bare = bare.replace(/:[a-z0-9._-]+$/i, '') // ":free", ":thinking", ":online"
+  bare = bare.split('/').pop() ?? bare // drop gateway / vendor prefixes
+  bare = bare.replace(/^models?[-_]/, '')
+  return bare
+}
+
+function stripThinkingSuffix(bare) {
+  return bare.replace(/[-_](thinking|reasoning|reasoner|think|high|medium|low|xhigh|max|preview|latest|exp)$/g, '')
+}
+
+function inferFromCatalog(catalog, id) {
+  const bare = bareModelId(id)
+  const candidates = new Set([bare, stripThinkingSuffix(bare)])
+  for (const [, providerEntry] of Object.entries(catalog?.providers ?? {})) {
+    const models = record(providerEntry?.models)
+    for (const candidate of candidates) {
+      const hit = models[candidate]
+      if (!hit) continue
+      const options = normalizeReasoning(hit)
+      if (options.length > 0) return options
+    }
+  }
+  return []
+}
+
+const EFFORT_3 = ['low', 'medium', 'high']
+
+export function inferReasoningFromId(id) {
+  const bare = bareModelId(id)
+  if (!bare || NON_CHAT.test(bare)) return []
+  if (/^(o[1-9])(-|$)/.test(bare)) return [{ type: 'effort', values: EFFORT_3 }]
+  if (/gpt-5/.test(bare)) {
+    const minimal = /gpt-5(?!\.)/.test(bare) && !/codex/.test(bare)
+    return [{ type: 'effort', values: minimal ? ['minimal', ...EFFORT_3] : EFFORT_3 }]
+  }
+  if (/gpt-oss/.test(bare)) return [{ type: 'effort', values: EFFORT_3 }]
+  if (/claude/.test(bare)) {
+    const modern = /(opus|sonnet)-(4|5)|(3[-.]7)|haiku-4/.test(bare) || /thinking/.test(bare)
+    if (!modern) return []
+    const max = /opus-4[-.]?[5-9]|opus-5|fable|mythos/.test(bare)
+    return [{ type: 'effort', values: max ? [...EFFORT_3, 'max'] : EFFORT_3 }]
+  }
+  if (/gemini-(2\.5|[3-9])/.test(bare)) {
+    const pro = /pro/.test(bare)
+    return [{ type: 'effort', values: pro ? EFFORT_3 : ['minimal', ...EFFORT_3] }]
+  }
+  if (/grok-(3-mini|4)|grok-[5-9]/.test(bare)) return [{ type: 'effort', values: EFFORT_3 }]
+  if (/deepseek/.test(bare) && /(r1|reasoner|v3\.[1-9]|v[4-9])/.test(bare)) {
+    return [{ type: 'effort', values: ['low', 'medium', 'high'] }]
+  }
+  if (/(qwen3|qwq|glm-[4-9]|kimi-k2|mimo|minimax-m[1-9]|magistral|hunyuan-t1|ernie-x1)/.test(bare)) {
+    return /(thinking|reason|r1|qwq|mimo|minimax|glm-[5-9]|glm-4\.[5-9]|qwen3)/.test(bare)
+      ? [{ type: 'effort', values: EFFORT_3 }]
+      : []
+  }
+  if (/(thinking|reasoning|reasoner)/.test(bare)) return [{ type: 'effort', values: EFFORT_3 }]
+  return []
+}
+
+export function inferReasoning(catalog, id) {
+  const fromCatalog = inferFromCatalog(catalog, id)
+  return fromCatalog.length > 0 ? fromCatalog : inferReasoningFromId(id)
+}
+
 function opencodeKindFromId(modelId, catalogEntry) {
   const api = text(catalogEntry?.provider?.api)
   if (api.includes('/anthropic/')) return 'anthropic'
@@ -240,11 +314,15 @@ function pricingOf(livePricing, catalogCost) {
   return undefined
 }
 
-function modelInfo({ providerId, id, name, context, maxOutput, vision, catalogEntry, fallbackKind, livePricing }) {
+function modelInfo({ providerId, id, name, context, maxOutput, vision, catalogEntry, fallbackKind, livePricing, catalog }) {
   const catalogDef = catalogEntry ?? {}
   const modalities = record(catalogDef.modalities)
   const limit = record(catalogDef.limit)
-  const reasoningOptions = normalizeReasoning(catalogDef)
+  let reasoningOptions = normalizeReasoning(catalogDef)
+  // Custom endpoints, Ollama and any model the catalog does not know: recover the family from the id.
+  if (reasoningOptions.length === 0 && (!catalogEntry || providerId === 'custom')) {
+    reasoningOptions = inferReasoning(catalog, id)
+  }
   const apiKind =
     providerId === 'opencode'
       ? opencodeKindFromId(id, catalogDef)
@@ -318,6 +396,7 @@ function fromOpenAI(payload, providerId, catalog) {
         vision: strings(architecture.input_modalities).includes('image'),
         catalogEntry: entry,
         livePricing: item.pricing,
+        catalog,
       }),
     )
   }
@@ -447,7 +526,7 @@ async function authHeaders(providerId, { settings, key } = {}) {
       )
     }
     headers['HTTP-Referer'] = 'http://127.0.0.1'
-    headers['X-Title'] = 'OpenSol'
+    headers['X-Title'] = 'Lunarcode'
   }
   return headers
 }

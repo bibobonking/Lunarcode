@@ -1,5 +1,5 @@
 appId: dev.opensoft.opensol
-productName: OpenSol
+productName: Lunarcode
 copyright: Copyright © 2026 OpenSoftX
 asar: true
 npmRebuild: false
@@ -32,8 +32,8 @@ linux:
     - deb
     - rpm
   category: Development
-  synopsis: OpenSol coding agent
-  description: OpenSol Desktop runs the OpenSol local daemon and shows the app in an Electron window.
+  synopsis: Lunarcode coding agent
+  description: Lunarcode Desktop runs the Lunarcode local daemon and shows the app in an Electron window.
   maintainer: OpenSoftX <bibobonking@gmail.com>
   syncDesktopName: true
 

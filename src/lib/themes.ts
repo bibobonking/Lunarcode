@@ -1,4 +1,4 @@
-export type BuiltinThemeId = 'light' | 'dark' | 'system' | 'night-owl' | 'claude-code' | 'flame'
+export type BuiltinThemeId = 'light' | 'dark' | 'lunar' | 'system'
 
 /** A built-in theme id, or a Safe plugin's `plugin-<plugin>:<theme>` id. */
 export type ThemeId = BuiltinThemeId | (string & {})
@@ -14,10 +14,8 @@ export interface ThemeMeta {
 
 export const THEMES: ThemeMeta[] = [
   { id: 'light', label: 'Light', dark: false },
+  { id: 'lunar', label: 'Lunar', dark: true },
   { id: 'dark', label: 'Dark', dark: true },
-  { id: 'night-owl', label: 'Dark — Teal', dark: true },
-  { id: 'claude-code', label: 'Dark — Purple', dark: true },
-  { id: 'flame', label: 'Dark — Orange', dark: true },
 ]
 
 const SLUG = /^[a-z0-9][a-z0-9:_-]{0,79}$/
@@ -46,7 +44,11 @@ export function themeIsDark(theme: ThemeId, prefersDark: boolean): boolean {
   return registry.get(resolveTheme(theme, prefersDark))?.dark ?? false
 }
 
+/** Palettes that were removed; anyone who had one gets the Lunar look instead. */
+const RETIRED = new Set(['night-owl', 'claude-code', 'flame'])
+
 export function normalizeTheme(value: unknown): ThemeId {
   if (value === 'system') return 'system'
+  if (typeof value === 'string' && RETIRED.has(value)) return 'lunar'
   return isThemeId(value) ? value : 'system'
 }

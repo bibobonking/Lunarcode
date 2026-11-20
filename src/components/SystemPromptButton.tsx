@@ -37,7 +37,7 @@ function Choice({
     >
       <RadioMark checked={active} className="mt-0.5" />
       <span className="min-w-0">
-        <span className="block text-[14px] leading-snug text-ink">{title}</span>
+        <span className="block text-[13px] leading-snug text-ink">{title}</span>
         <span className="block text-[12px] leading-snug text-muted">{description}</span>
       </span>
     </button>

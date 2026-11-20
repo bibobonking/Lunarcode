@@ -134,7 +134,7 @@ function allowedOrigins() {
 function guardRequest(req) {
   const hostHeader = String(req.headers.host ?? '').toLowerCase()
   if (!hostHeader || !allowedHosts().has(hostHeader)) {
-    throw new HttpError(403, 'OpenSol only answers requests addressed to localhost.', 'bad_host')
+    throw new HttpError(403, 'Lunarcode only answers requests addressed to localhost.', 'bad_host')
   }
   const origin = String(req.headers.origin ?? '')
   if (origin && !allowedOrigins().has(origin.toLowerCase())) {
@@ -171,7 +171,7 @@ function sessionFrom(req) {
 
 function requireSession(req) {
   const session = sessionFrom(req)
-  if (!session) throw new HttpError(401, 'Open OpenSol from its local address to start a session.', 'no_session')
+  if (!session) throw new HttpError(401, 'Open Lunarcode from its local address to start a session.', 'no_session')
   return session
 }
 
@@ -516,7 +516,7 @@ const PREVIEW_CSP = [
 
 function previewTokenFor(sessionToken) {
   const record = sessions.get(sessionToken)
-  if (!record) throw new HttpError(401, 'Open OpenSol from its local address to start a session.', 'no_session')
+  if (!record) throw new HttpError(401, 'Open Lunarcode from its local address to start a session.', 'no_session')
   if (!record.previewToken) {
     record.previewToken = randomBytes(24).toString('base64url')
     previewTokens.set(record.previewToken, sessionToken)
@@ -528,7 +528,7 @@ function previewTokenFor(sessionToken) {
 async function handlePreview(req, res, rawPath) {
   const hostHeader = String(req.headers.host ?? '').toLowerCase()
   if (!hostHeader || !allowedHosts().has(hostHeader)) {
-    throw new HttpError(403, 'OpenSol only answers requests addressed to localhost.', 'bad_host')
+    throw new HttpError(403, 'Lunarcode only answers requests addressed to localhost.', 'bad_host')
   }
   if (req.method !== 'GET' && req.method !== 'HEAD') {
     throw new HttpError(405, 'Method not allowed.', 'method_not_allowed')
@@ -539,7 +539,7 @@ async function handlePreview(req, res, rawPath) {
   const record = sessionToken ? sessions.get(sessionToken) : null
   if (!record || Date.now() - record.created > SESSION_TTL) {
     previewTokens.delete(match[1])
-    throw new HttpError(401, 'This preview link expired. Reopen the preview from OpenSol.', 'preview_expired')
+    throw new HttpError(401, 'This preview link expired. Reopen the preview from Lunarcode.', 'preview_expired')
   }
   let relative
   try {
@@ -562,13 +562,13 @@ async function handlePreview(req, res, rawPath) {
 
 function oauthResultPage(ok, message) {
   const safe = String(message).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c])
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>OpenSol · MCP sign-in</title><style>body{margin:0;min-height:100dvh;display:grid;place-items:center;font:15px system-ui,sans-serif;background:#faf9f5;color:#1f1e1d}main{max-width:360px;padding:32px;text-align:center}h1{font-size:20px;margin:0 0 8px}p{margin:0;color:#6b6a68;line-height:1.5}.dot{width:44px;height:44px;border-radius:50%;margin:0 auto 16px;display:grid;place-items:center;color:#fff;font-size:22px;background:${ok ? '#2f9e6b' : '#c4443a'}}@media(prefers-color-scheme:dark){body{background:#141413;color:#f2f1ee}p{color:#a5a39e}}</style></head><body><main><div class="dot">${ok ? '✓' : '!'}</div><h1>${ok ? 'Signed in' : 'Sign-in failed'}</h1><p>${safe}</p></main><script>try{var c=new BroadcastChannel('opensol-mcp-oauth');c.postMessage({ok:${ok ? 'true' : 'false'}});c.close()}catch(e){}${ok ? 'setTimeout(function(){window.close()},900)' : ''}</script></body></html>`
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Lunarcode · MCP sign-in</title><style>body{margin:0;min-height:100dvh;display:grid;place-items:center;font:15px system-ui,sans-serif;background:#faf9f5;color:#1f1e1d}main{max-width:360px;padding:32px;text-align:center}h1{font-size:20px;margin:0 0 8px}p{margin:0;color:#6b6a68;line-height:1.5}.dot{width:44px;height:44px;border-radius:50%;margin:0 auto 16px;display:grid;place-items:center;color:#fff;font-size:22px;background:${ok ? '#2f9e6b' : '#c4443a'}}@media(prefers-color-scheme:dark){body{background:#141413;color:#f2f1ee}p{color:#a5a39e}}</style></head><body><main><div class="dot">${ok ? '✓' : '!'}</div><h1>${ok ? 'Signed in' : 'Sign-in failed'}</h1><p>${safe}</p></main><script>try{var c=new BroadcastChannel('opensol-mcp-oauth');c.postMessage({ok:${ok ? 'true' : 'false'}});c.close()}catch(e){}${ok ? 'setTimeout(function(){window.close()},900)' : ''}</script></body></html>`
 }
 
 async function handleMcpOAuthCallback(req, res, url) {
   const hostHeader = String(req.headers.host ?? '').toLowerCase()
   if (!hostHeader || !allowedHosts().has(hostHeader)) {
-    throw new HttpError(403, 'OpenSol only answers requests addressed to localhost.', 'bad_host')
+    throw new HttpError(403, 'Lunarcode only answers requests addressed to localhost.', 'bad_host')
   }
   const send = (status, ok, message) => {
     const body = Buffer.from(oauthResultPage(ok, message))
@@ -1141,7 +1141,7 @@ async function route(req, res) {
   }
   if (pathname === '/preview-host.html') {
     // Hosts model-written pages inside a sandboxed iframe (opaque origin: no cookies, no
-    // access to OpenSol). It needs CDN scripts and inline code, so it gets its own CSP.
+    // access to Lunarcode). It needs CDN scripts and inline code, so it gets its own CSP.
     res.removeHeader('X-Frame-Options')
     res.setHeader(
       'Content-Security-Policy',
@@ -1172,7 +1172,7 @@ async function handler(req, res) {
       return
     }
     if (!(error instanceof HttpError)) {
-      console.error(`[opensol] ${clientIp(req)} ${req.method} ${req.url}`)
+      console.error(`[lunarcode] ${clientIp(req)} ${req.method} ${req.url}`)
       console.error(error)
     }
     sendError(res, error)
@@ -1227,7 +1227,7 @@ export async function startServer({ port: requested = 4174, open = false } = {})
   )
 
   const shutdown = async (signal) => {
-    console.log(`[opensol] ${signal} received, shutting down.`)
+    console.log(`[lunarcode] ${signal} received, shutting down.`)
     server.close()
     await mcp.shutdown().catch(() => undefined)
     await rm(pidFile, { force: true }).catch(() => undefined)
@@ -1235,13 +1235,13 @@ export async function startServer({ port: requested = 4174, open = false } = {})
   }
   process.on('SIGTERM', () => void shutdown('SIGTERM'))
   process.on('SIGINT', () => void shutdown('SIGINT'))
-  process.on('uncaughtException', (error) => console.error('[opensol] uncaught exception', error))
-  process.on('unhandledRejection', (error) => console.error('[opensol] unhandled rejection', error))
+  process.on('uncaughtException', (error) => console.error('[lunarcode] uncaught exception', error))
+  process.on('unhandledRejection', (error) => console.error('[lunarcode] unhandled rejection', error))
 
   const url = `http://${host}:${port}`
-  console.log(`[opensol] daemon listening on ${url}`)
-  console.log(`[opensol] data: ${DATA_DIR}`)
-  console.log(`[opensol] dist: ${DIST}`)
+  console.log(`[lunarcode] daemon listening on ${url}`)
+  console.log(`[lunarcode] data: ${DATA_DIR}`)
+  console.log(`[lunarcode] dist: ${DIST}`)
   // Probe the user's shell only after the port is printed: a slow or hanging shell profile must never keep the app from loading.
   await repairProcessEnv()
   await mcp.setConfigs(await getMcpServers())
@@ -1251,7 +1251,7 @@ export async function startServer({ port: requested = 4174, open = false } = {})
     const opener = process.platform === 'darwin' ? 'open' : process.platform === 'win32' ? 'cmd' : 'xdg-open'
     const args = process.platform === 'win32' ? ['/c', 'start', '', url] : [url]
     const child = spawn(opener, args, { detached: true, stdio: 'ignore' })
-    child.on('error', () => console.log(`[opensol] open ${url} in your browser.`))
+    child.on('error', () => console.log(`[lunarcode] open ${url} in your browser.`))
     child.unref()
   }
   return { server, url, port }
@@ -1277,7 +1277,7 @@ export async function stopDaemon() {
   const status = await daemonStatus()
   if (!status.running) {
     await rm(path.join(DATA_DIR, 'daemon.json'), { force: true })
-    return { stopped: false, reason: 'OpenSol is not running.' }
+    return { stopped: false, reason: 'Lunarcode is not running.' }
   }
   try {
     process.kill(status.info.pid, 'SIGTERM')

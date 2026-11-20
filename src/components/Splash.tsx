@@ -6,8 +6,8 @@ import { cn } from '../lib/utils'
 const STATUS = ['Waking the local daemon', 'Unlocking your keys', 'Loading workspace', 'Almost there']
 
 /**
- * Intro build of the OpenSol mark: the tile pops in, the ring draws itself, the prompt chevron is
- * written, then the sun lands in the opening with a shockwave. Pure SVG + CSS (see `.splash-logo`).
+ * Intro build of the Lunarcode mark: the tile pops in, the ring draws itself, the prompt chevron is
+ * written, then the moon lands in the opening with a shockwave. Pure SVG + CSS (see `.splash-logo`).
  */
 function LogoBuild({ size = 104 }: { size?: number }) {
   return (
@@ -22,16 +22,18 @@ function LogoBuild({ size = 104 }: { size?: number }) {
       <svg viewBox="0 0 64 64" width={size} height={size} fill="none" className="sl-svg absolute inset-0 m-auto" aria-hidden="true">
         <defs>
           <linearGradient id="sl-bg" x1="8" y1="4" x2="56" y2="60" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stopColor="#26211b" />
-            <stop offset="1" stopColor="#0f0d0b" />
+            <stop offset="0" stopColor="#2a2d5e" />
+            <stop offset="1" stopColor="#0a0b18" />
           </linearGradient>
           <linearGradient id="sl-ring" x1="14" y1="12" x2="50" y2="52" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stopColor="#ffb347" />
-            <stop offset="1" stopColor="#f26b21" />
+            <stop offset="0" stopColor="#d8dbff" />
+            <stop offset="0.45" stopColor="#8e96ff" />
+            <stop offset="1" stopColor="#4fc6ea" />
           </linearGradient>
           <radialGradient id="sl-sun" cx="46" cy="18" r="6" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stopColor="#fff2b8" />
-            <stop offset="1" stopColor="#ffc233" />
+            <stop offset="0" stopColor="#ffffff" />
+            <stop offset="0.6" stopColor="#dfe2ff" />
+            <stop offset="1" stopColor="#a9b0ff" />
           </radialGradient>
         </defs>
         <g className="sl-tile">
@@ -40,7 +42,7 @@ function LogoBuild({ size = 104 }: { size?: number }) {
         </g>
         <path className="sl-ring" d="M51.32 26.82A20 20 0 1 1 37.18 12.68" stroke="url(#sl-ring)" strokeWidth="5.6" strokeLinecap="round" pathLength={1} />
         <circle className="sl-sun" cx="46.14" cy="17.86" r="5" fill="url(#sl-sun)" />
-        <g stroke="#fff4e0" strokeWidth="4.6" strokeLinecap="round" strokeLinejoin="round">
+        <g stroke="#e6e9ff" strokeWidth="4.6" strokeLinecap="round" strokeLinejoin="round">
           <path className="sl-chev" d="M25.2 25.6L34 32l-8.8 6.4" pathLength={1} />
           <path className="sl-under" d="M37.6 39.2h6" />
         </g>
@@ -72,9 +74,9 @@ export function Splash({
       <div className="hero-wash pointer-events-none absolute inset-0" aria-hidden="true" />
       <div className="relative flex w-full max-w-[400px] flex-col items-center px-6 text-center">
         <LogoBuild />
-        <h1 className="splash-word -mt-2 text-[26px] font-semibold leading-none tracking-[-0.04em] text-ink" aria-label="OpenSol">
-          {'OpenSol'.split('').map((char, index) => (
-            <span key={index} style={{ animationDelay: `${1.15 + index * 0.055}s` }} className={index >= 4 ? 'text-accent' : undefined}>
+        <h1 className="splash-word -mt-2 text-[26px] font-semibold leading-none tracking-[-0.04em] text-ink" aria-label="Lunarcode">
+          {'Lunarcode'.split('').map((char, index) => (
+            <span key={index} style={{ animationDelay: `${1.15 + index * 0.055}s` }} className={index >= 5 ? 'text-accent' : undefined}>
               {char}
             </span>
           ))}
@@ -101,8 +103,8 @@ export function Splash({
               Try again
             </button>
             <p className="mt-3 text-[11px] leading-relaxed text-faint">
-              Start OpenSol with <code className="rounded bg-raised px-1 py-0.5 font-mono text-[10.5px]">npm start</code> in the
-              OpenSol folder, then reload this page.
+              Start Lunarcode with <code className="rounded bg-raised px-1 py-0.5 font-mono text-[10.5px]">npm start</code> in the
+              Lunarcode folder, then reload this page.
             </p>
           </div>
         ) : (

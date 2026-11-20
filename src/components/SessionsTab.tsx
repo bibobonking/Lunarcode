@@ -107,7 +107,7 @@ export function SessionsTab() {
           <div className="px-4 py-10 text-center">
             <MessagesSquare size={32} className="mx-auto text-muted" />
             <p className="mt-2 text-[16px] font-bold text-ink">No sessions here yet</p>
-            <p className="mt-1 text-[14px] leading-relaxed text-muted">
+            <p className="mt-1 text-[13px] leading-relaxed text-muted">
               {scope === 'workspace' && untagged > 0
                 ? `${untagged} older session${untagged === 1 ? '' : 's'} were started before workspaces were tracked. Switch to “All” to see them.`
                 : 'Start a conversation and it shows up here.'}

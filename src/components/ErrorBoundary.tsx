@@ -38,8 +38,8 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, State> {
       <div className="flex h-dvh items-center justify-center bg-panel px-5 text-ink">
         <div className="w-full max-w-[460px]">
           <LogoMark size={34} />
-          <h1 className="mt-4 text-[24px] font-bold">Something broke on this screen</h1>
-          <p className="mt-2 text-[14px] leading-relaxed text-muted">
+          <h1 className="mt-4 text-[21px] font-bold">Something broke on this screen</h1>
+          <p className="mt-2 text-[13px] leading-relaxed text-muted">
             Your conversations are saved on this computer. Try the screen again, or reload the app.
           </p>
           <pre className="thin-scroll mt-4 max-h-40 overflow-auto rounded-[12px] border border-line bg-canvas p-3 font-mono text-[12px] leading-relaxed text-muted">

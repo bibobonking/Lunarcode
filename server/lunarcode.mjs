@@ -11,14 +11,14 @@ const DAEMON = path.join(HERE, 'daemon.mjs')
 const LOG_FILE = path.join(DATA_DIR, 'daemon.log')
 const PID_FILE = path.join(DATA_DIR, 'daemon.json')
 
-const HELP = `OpenSol — local coding agent daemon
+const HELP = `Lunarcode — local coding agent daemon
 
 Usage:
-  opensol start [--port=4174] [--open] [--foreground]
-  opensol stop
-  opensol status
-  opensol open
-  opensol logs
+  lunarcode start [--port=4174] [--open] [--foreground]
+  lunarcode stop
+  lunarcode status
+  lunarcode open
+  lunarcode logs
 
 The daemon serves the built app from dist/ and keeps your settings, chats and
 encrypted provider keys in ${DATA_DIR}. It listens on 127.0.0.1 only.
@@ -99,7 +99,7 @@ async function commandStart(args) {
   await ensureDataDir()
   const existing = await daemonStatus()
   if (existing.running) {
-    console.log(`OpenSol is already running at ${existing.info.url}`)
+    console.log(`Lunarcode is already running at ${existing.info.url}`)
     if (flags.open) openerFor(existing.info.url)
     return
   }
@@ -116,19 +116,19 @@ async function commandStart(args) {
     detached: true,
     stdio: ['ignore', handle.fd, handle.fd],
     cwd: path.resolve(HERE, '..'),
-    env: { ...process.env, OPENSOL_DATA: DATA_DIR, MAXCODE_DATA: DATA_DIR },
+    env: { ...process.env, LUNARCODE_DATA: DATA_DIR, OPENSOL_DATA: DATA_DIR, MAXCODE_DATA: DATA_DIR },
   })
   child.unref()
   await handle.close()
 
   const status = await waitForDaemon(child.pid)
   if (!status.running) {
-    console.error('OpenSol did not start. Recent log:')
+    console.error('Lunarcode did not start. Recent log:')
     await tailLog(20)
     process.exitCode = 1
     return
   }
-  console.log(`OpenSol is running at ${status.info.url}`)
+  console.log(`Lunarcode is running at ${status.info.url}`)
   console.log(`Data: ${DATA_DIR}`)
   console.log(`Log:  ${LOG_FILE}`)
   if (flags.open) openerFor(status.info.url)
@@ -137,10 +137,10 @@ async function commandStart(args) {
 async function commandStatus() {
   const status = await daemonStatus()
   if (!status.running) {
-    console.log('OpenSol is not running.')
+    console.log('Lunarcode is not running.')
     return
   }
-  console.log(`OpenSol is running at ${status.info.url}`)
+  console.log(`Lunarcode is running at ${status.info.url}`)
   console.log(`PID: ${status.info.pid}`)
   console.log(`Data: ${status.info.dataDir ?? DATA_DIR}`)
   console.log(`Dist ready: ${status.info.dist ? 'yes' : 'no'}`)
@@ -149,7 +149,7 @@ async function commandStatus() {
 async function commandOpen() {
   const status = await daemonStatus()
   if (!status.running) {
-    console.error('OpenSol is not running. Start it with: opensol start')
+    console.error('Lunarcode is not running. Start it with: lunarcode start')
     process.exitCode = 1
     return
   }
@@ -160,10 +160,10 @@ async function commandOpen() {
 async function commandStop() {
   const result = await stopDaemon()
   if (!result.stopped) {
-    console.log(result.reason ?? 'OpenSol is not running.')
+    console.log(result.reason ?? 'Lunarcode is not running.')
     return
   }
-  console.log(`Stopped OpenSol${result.pid ? ` (pid ${result.pid})` : ''}.`)
+  console.log(`Stopped Lunarcode${result.pid ? ` (pid ${result.pid})` : ''}.`)
 }
 
 async function main() {

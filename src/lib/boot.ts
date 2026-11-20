@@ -51,7 +51,7 @@ export const useBoot = create<BootState>()((set, get) => ({
         error:
           error instanceof Error
             ? error.message
-            : 'OpenSol could not reach its local daemon.',
+            : 'Lunarcode could not reach its local daemon.',
       })
     }
   },

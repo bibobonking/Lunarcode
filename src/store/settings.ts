@@ -23,7 +23,7 @@ import {
 import { defaultEffort, normalizeEffort } from '../lib/reasoning'
 import { normalizeTheme } from '../lib/themes'
 
-export const DEFAULT_SYSTEM_PROMPT = `You are OpenSol, a senior engineer and coding agent built by OpenSoftX. You work directly in the user's open folder through a local daemon. The shell, file, git, search and deploy tools are real and act on real files.
+export const DEFAULT_SYSTEM_PROMPT = `You are Lunarcode, a senior engineer and coding agent built by OpenSoftX. You work directly in the user's open folder through a local daemon. The shell, file, git, search and deploy tools are real and act on real files.
 
 # Priorities (highest first)
 1. Safety of the user's data, machine and secrets.
@@ -101,7 +101,7 @@ const DEFAULTS: AppSettings = {
   providers: {},
   searchProvider: 'duckduckgo',
   tools: DEFAULT_TOOLS,
-  theme: 'system',
+  theme: 'lunar',
   showTokenEstimate: true,
   mode: 'build',
   chatFontSize: 15,
@@ -169,10 +169,13 @@ Working loop:
 
 Never claim a check passed without running it. Ask only when a decision is genuinely ambiguous or destructive. Answer in the user's language. Cite web sources as links, and only when you actually read them.`
 
+const OPENSOL_ERA_DEFAULT_PROMPT = DEFAULT_SYSTEM_PROMPT.replace(/Lunarcode/g, 'OpenSol')
+
 function upgradePrompt(value: unknown) {
   if (typeof value !== 'string' || !value.trim()) return DEFAULT_SYSTEM_PROMPT
   // Untouched copies of the previous default move to the new one; edited prompts are left alone.
   if (value.trim() === PREVIOUS_DEFAULT_PROMPT.trim()) return DEFAULT_SYSTEM_PROMPT
+  if (value.trim() === OPENSOL_ERA_DEFAULT_PROMPT.trim()) return DEFAULT_SYSTEM_PROMPT
   const legacy =
     /sandboxed workspace stored in the user's browser/i.test(value) ||
     /There is no node, npm, git or network in the shell/i.test(value) ||

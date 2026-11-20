@@ -47,7 +47,7 @@ export function TrajectoryView({ session }: { session: ChatSession }) {
         <div className="text-center">
           <Wrench size={32} className="mx-auto text-muted" />
           <p className="mt-2 text-[16px] font-bold text-ink">No trajectory yet</p>
-          <p className="mt-1 text-[14px] text-muted">Send a message to see every step here.</p>
+          <p className="mt-1 text-[13px] text-muted">Send a message to see every step here.</p>
         </div>
       </div>
     )
@@ -58,7 +58,7 @@ export function TrajectoryView({ session }: { session: ChatSession }) {
       <div className="mx-auto w-full max-w-[800px] px-4 pb-12 pt-7 sm:px-6">
         <div className="mb-5 flex items-center justify-between gap-3 border-b border-line pb-3">
           <div>
-            <p className="text-[14px] font-bold text-ink">Trajectory</p>
+            <p className="text-[13px] font-bold text-ink">Trajectory</p>
             <p className="mt-0.5 text-[12px] text-muted">
               {events.length} step{events.length === 1 ? '' : 's'} · {toolCount} tool call{toolCount === 1 ? '' : 's'}
             </p>
@@ -97,7 +97,7 @@ export function TrajectoryView({ session }: { session: ChatSession }) {
                     <div className="min-w-0 flex-1 adw-boxed px-3 py-2">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <span className="flex min-w-0 items-center gap-1.5 text-[13px] font-semibold text-ink">
-                          OpenSol
+                          Lunarcode
                           {message.model && (
                             <span className="truncate text-[12px] font-normal text-faint">{message.model}</span>
                           )}

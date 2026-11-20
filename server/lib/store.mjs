@@ -1,17 +1,28 @@
 import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto'
 import { chmod, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises'
-import { existsSync } from 'node:fs'
+import { existsSync, renameSync } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 
-// OpenSol keeps its data in ~/.opensol. An existing ~/.maxcode (from before the
-// rename) keeps being used so saved keys, chats and plugins are not orphaned.
+// Lunarcode keeps its data in ~/.lunarcode. The format never changed, so an existing ~/.opensol
+// (or the older ~/.maxcode) is simply renamed on first start and everything carries over. If the
+// rename is not possible (permissions, folder in use) the old folder keeps being used.
 function resolveDataDir() {
-  const override = process.env.OPENSOL_DATA || process.env.MAXCODE_DATA
+  const override = process.env.LUNARCODE_DATA || process.env.OPENSOL_DATA || process.env.MAXCODE_DATA
   if (override) return path.resolve(override)
-  const next = path.join(os.homedir(), '.opensol')
-  const legacy = path.join(os.homedir(), '.maxcode')
-  return !existsSync(next) && existsSync(legacy) ? legacy : next
+  const home = os.homedir()
+  const next = path.join(home, '.lunarcode')
+  if (existsSync(next)) return next
+  for (const old of [path.join(home, '.opensol'), path.join(home, '.maxcode')]) {
+    if (!existsSync(old)) continue
+    try {
+      renameSync(old, next)
+      return next
+    } catch {
+      return old
+    }
+  }
+  return next
 }
 
 export const DATA_DIR = resolveDataDir()
@@ -79,7 +90,7 @@ async function readJson(file, fallback) {
     if (error instanceof SyntaxError) {
       const backup = `${file}.broken-${Date.now()}`
       await rename(file, backup).catch(() => undefined)
-      throw new Error(`OpenSol data is damaged. The file was moved to ${backup}.`)
+      throw new Error(`Lunarcode data is damaged. The file was moved to ${backup}.`)
     }
     throw error
   }
@@ -204,7 +215,7 @@ export async function loadSecrets() {
     return secretsCache
   } catch (error) {
     throw new Error(
-      `OpenSol could not decrypt its saved keys. Restore ${MASTER_FILE} or reset secrets from Settings → About. (${error instanceof Error ? error.message : 'unknown error'})`,
+      `Lunarcode could not decrypt its saved keys. Restore ${MASTER_FILE} or reset secrets from Settings → About. (${error instanceof Error ? error.message : 'unknown error'})`,
     )
   }
 }

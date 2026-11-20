@@ -66,7 +66,7 @@ function PreviewFrame({ html, reloadKey, className }: { html: string; reloadKey:
       ref={frameRef}
       src="/preview-host.html"
       title="Live preview"
-      // No allow-same-origin: the page cannot reach OpenSol, its cookies or the local daemon.
+      // No allow-same-origin: the page cannot reach Lunarcode, its cookies or the local daemon.
       sandbox="allow-scripts allow-pointer-lock allow-forms allow-modals"
       allow="fullscreen"
       className={cn('block h-full w-full border-0 bg-white', className)}
@@ -88,7 +88,7 @@ function PreviewOverlay({ html, onClose }: { html: string; onClose: () => void }
   return createPortal(
     <div className="fixed inset-0 z-[90] flex flex-col bg-canvas p-3 sm:p-5" role="dialog" aria-label="Live preview">
       <div className="mb-3 flex items-center justify-between">
-        <p className="text-[14px] font-bold text-ink">Live preview</p>
+        <p className="text-[13px] font-bold text-ink">Live preview</p>
         <div className="flex items-center gap-1">
           <button type="button" className="adw-icon-btn" onClick={() => setReloadKey((value) => value + 1)} title="Restart" aria-label="Restart preview">
             <RotateCw size={16} />

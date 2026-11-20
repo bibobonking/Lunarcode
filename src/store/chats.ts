@@ -258,7 +258,7 @@ if (typeof window !== 'undefined') {
 export function exportChats() {
   const data = useChats.getState().sessions
   const blob = new Blob(
-    [JSON.stringify({ app: 'OpenSol', exportedAt: new Date().toISOString(), sessions: data }, null, 2)],
+    [JSON.stringify({ app: 'Lunarcode', exportedAt: new Date().toISOString(), sessions: data }, null, 2)],
     { type: 'application/json' },
   )
   const url = URL.createObjectURL(blob)
@@ -272,7 +272,7 @@ export function exportChats() {
 export function importChats(file: File): Promise<number> {
   return file.text().then((text) => {
     const parsed = JSON.parse(text) as { sessions?: unknown[] }
-    if (!Array.isArray(parsed.sessions)) throw new Error('This file does not contain a OpenSol history.')
+    if (!Array.isArray(parsed.sessions)) throw new Error('This file does not contain a Lunarcode history.')
     const sessions = parsed.sessions.filter(isSession).map(normalizeSession)
     if (sessions.length === 0) throw new Error('No valid conversations were found in this file.')
     const existing = new Set(useChats.getState().sessions.map((session) => session.id))

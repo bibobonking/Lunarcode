@@ -118,7 +118,7 @@ export async function resolveWorkspacePath(input, { allowRoot = true } = {}) {
     throw new HttpError(403, 'That path is outside the open workspace.', 'outside_workspace')
   }
   if (/^(.*\/)?\.git(\/|$)/.test(rel)) {
-    throw new HttpError(403, 'OpenSol does not edit the .git directory.', 'git_protected')
+    throw new HttpError(403, 'Lunarcode does not edit the .git directory.', 'git_protected')
   }
   const absolute = await insideRoot(root, candidate)
   return { root, absolute, relative: rel || '.' }
@@ -285,7 +285,7 @@ export async function writeWorkspaceFile(input, content, { create = true } = {})
   const { root, absolute, relative } = await resolveWorkspacePath(input, { allowRoot: false })
   if (typeof content !== 'string') throw new HttpError(400, 'File content must be text.', 'bad_content')
   if (Buffer.byteLength(content, 'utf8') > MAX_WRITE) {
-    throw new HttpError(413, 'That file is too large to write from OpenSol.', 'file_too_large')
+    throw new HttpError(413, 'That file is too large to write from Lunarcode.', 'file_too_large')
   }
   const existing = await stat(absolute).catch(() => null)
   if (!existing && !create) throw new HttpError(404, `File not found: ${relative}`, 'not_found')
@@ -889,7 +889,7 @@ export async function readUrl(rawUrl, { maxBytes = 400_000 } = {}) {
   }
   const type = response.headers.get('content-type') ?? ''
   if (!/text\/|json|xml|javascript/i.test(type)) {
-    throw new HttpError(415, `OpenSol cannot read ${type || 'that content type'}.`, 'unsupported_type')
+    throw new HttpError(415, `Lunarcode cannot read ${type || 'that content type'}.`, 'unsupported_type')
   }
   const raw = (await response.text()).slice(0, maxBytes)
   const text = /html/i.test(type) ? stripHtml(raw) : raw
@@ -904,7 +904,7 @@ export async function readUrl(rawUrl, { maxBytes = 400_000 } = {}) {
   }
 }
 
-const INSTRUCTION_FILES = ['OPENSOL.md', 'MAXCODE.md', 'AGENTS.md', 'CLAUDE.md', '.opensol/instructions.md', '.maxcode/instructions.md']
+const INSTRUCTION_FILES = ['LUNARCODE.md', 'OPENSOL.md', 'MAXCODE.md', 'AGENTS.md', 'CLAUDE.md', '.lunarcode/instructions.md', '.opensol/instructions.md', '.maxcode/instructions.md']
 const MAX_INSTRUCTIONS = 20_000
 
 /** The first project instruction file found in the open workspace, if any. */

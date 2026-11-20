@@ -142,7 +142,7 @@ export function QuestionCard({ message }: { message: ToolMessage }) {
         </div>
       )}
 
-      <p key={step} className="mt-3 text-[14px] font-semibold leading-snug text-ink">
+      <p key={step} className="mt-3 text-[13px] font-semibold leading-snug text-ink">
         {question.question}
       </p>
       <p className="mt-0.5 text-[12px] text-muted">{question.multiSelect ? 'Select all that apply' : 'Select one'}</p>

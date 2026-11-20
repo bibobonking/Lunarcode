@@ -3,12 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#fafafb" />
+    <meta name="theme-color" content="#0e0f17" />
     <meta
       name="description"
-      content="OpenSol by OpenSoftX is a local-first coding agent. Work in a real folder, run commands, edit files and deploy with your own model keys. Keys stay encrypted on your machine."
+      content="Lunarcode by OpenSoftX is a local-first coding agent. Work in a real folder, run commands, edit files and deploy with your own model keys. Keys stay encrypted on your machine."
     />
-    <title>OpenSol — Local coding agent by OpenSoftX</title>
+    <title>Lunarcode — Local coding agent by OpenSoftX</title>
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -18,11 +18,13 @@
     />
     <script>
       try {
-        const NAMED = ['light', 'dark', 'night-owl', 'claude-code', 'flame']
-        const DARK = ['dark', 'night-owl', 'claude-code', 'flame']
+        const NAMED = ['light', 'dark', 'lunar']
+        const DARK = ['dark', 'lunar']
         const stored = localStorage.getItem('opensol.theme') || localStorage.getItem('maxcode.theme')
         const theme = NAMED.includes(stored)
           ? stored
+          : ['night-owl', 'claude-code', 'flame'].includes(stored)
+            ? 'lunar'
           : window.matchMedia('(prefers-color-scheme: dark)').matches
             ? 'dark'
             : 'light'
@@ -31,15 +33,15 @@
         if (DARK.includes(theme)) root.classList.add('dark')
       } catch {}
     </script>
-    <script type="module" crossorigin src="./assets/index-Cwnjq-nL.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-f5koHcXC.css">
+    <script type="module" crossorigin src="./assets/index-sQKHfuBN.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-CQvfmOj7.css">
   </head>
   <body>
     <div id="root"><div class="splash" id="boot-splash" aria-hidden="true">
       <style>
         .splash{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgb(var(--panel))}
       </style>
-      <!-- Intentionally empty: the animated OpenSol logo (src/components/Splash.tsx) starts as soon as React mounts,
+      <!-- Intentionally empty: the animated Lunarcode logo (src/components/Splash.tsx) starts as soon as React mounts,
            so nothing here may draw a different mark that would flash before it. -->
     </div></div>
   </body>

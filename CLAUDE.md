@@ -11,7 +11,7 @@ node --test src/lib/themes.test.mjs   # single test file
 npm run typecheck  # tsc -b --pretty
 npm run build      # tsc -b && vite build → dist/
 npm start          # daemon serving the prebuilt dist/ on :4174
-node server/opensol.mjs {status,logs,stop}
+node server/lunarcode.mjs {status,logs,stop}
 ```
 
 Node 24 runs the `.test.mjs` files directly: they import TypeScript sources with an explicit `.ts` extension (`from './themes.ts'`) and rely on Node's built-in type stripping. See **Testing traps** below.
@@ -20,7 +20,7 @@ Node 24 runs the `.test.mjs` files directly: they import TypeScript sources with
 
 The React app in `src/` never talks to a provider or the filesystem directly. It calls a local Node daemon (`server/daemon.mjs`, `127.0.0.1:4174`) over `/api`, and the daemon owns every privileged operation — provider credentials, workspace files, shell, git, search, deploy, plugins.
 
-- **Provider calls** go browser → `POST /api/llm` → daemon → provider. Keys are AES-256-GCM encrypted in `~/.opensol/secrets.enc`; the browser only ever sees a masked hint, so adding a provider means touching both `src/` and `server/lib/providers.mjs`.
+- **Provider calls** go browser → `POST /api/llm` → daemon → provider. Keys are AES-256-GCM encrypted in `~/.lunarcode/secrets.enc`; the browser only ever sees a masked hint, so adding a provider means touching both `src/` and `server/lib/providers.mjs`.
 - **Tool calls** are dispatched by the client agent loop via `src/lib/daemon.ts` → `POST /api/tools/execute` → `server/lib/tools.mjs`.
 - **All `/api` routes** require a session cookie plus `x-maxcode-csrf`; Host, Origin and `Sec-Fetch-Site` are checked in `server/daemon.mjs`. New routes go inside the `pathname.startsWith('/api/')` block, after the session guard.
 
@@ -60,7 +60,7 @@ Lifecycle: install (disabled + untrusted) → review capabilities/domains (v1) �
 - `src/plugins/runtime.ts` runs Safe plugins as **blob ES modules** (`const maxcode = ...` injected).
   - **API v1**: Handed `createPluginApi` with capability guards, restricted host calls, and manual contribution tracking.
   - **API v2**: Handed a scoped Cordis child `Context` (`kernel.plugin(fn)`). The plugin has 100% unrestricted access to internal services (`ctx.tools`, `ctx.ui`, `ctx.sessions`, `ctx.llm`, `ctx.on(...)`, events, stores). When deactivated/uninstalled, `fiber.dispose()` cleans up all hooks and registrations automatically without mutating files on disk.
-- `server/lib/plugins.mjs` stores packages under `~/.opensol/plugins` and is the **only** path to the network for v1 plugins. `network.request` is HTTPS-only, port 443, exact host from `manifest.domains` ∩ `grants.domains`, private IPs blocked, redirects refused, content-type allowlist, 64 KB request / 1 MB response / 12 s timeout.
+- `server/lib/plugins.mjs` stores packages under `~/.lunarcode/plugins` and is the **only** path to the network for v1 plugins. `network.request` is HTTPS-only, port 443, exact host from `manifest.domains` ∩ `grants.domains`, private IPs blocked, redirects refused, content-type allowlist, 64 KB request / 1 MB response / 12 s timeout.
 - `src/plugins/api.ts` (`createPluginApi`) re-checks grants at every call site for v1 plugins.
 - `src/plugins/preview.ts` builds the sandboxed preview (`iframe sandbox="allow-scripts"`, deliberately **no** `allow-same-origin`) with a stub API and validates every postMessage through `bridge.mjs`.
 
@@ -88,5 +88,5 @@ Plugin themes are registered at runtime as `plugin-<pluginId>:<themeId>` and sty
 
 - Vite's root is the repo root. Edit `src/` and `index.html` only.
 - `dist/` is committed and is what the daemon serves — a source change is invisible in `npm start` until `npm run build`.
-- The data directory is `~/.opensol` (override with `OPENSOL_DATA`; `MAXCODE_DATA` and an existing `~/.maxcode` are still honoured); provider keys, chats, settings and plugins all live there, so tests and manual runs share state with the real app.
+- The data directory is `~/.lunarcode` (override with `LUNARCODE_DATA`; `OPENSOL_DATA`/`MAXCODE_DATA` are still honoured, and an existing `~/.opensol` or `~/.maxcode` is renamed to it on first start); provider keys, chats, settings and plugins all live there, so tests and manual runs share state with the real app.
 - The CSRF header is still named `x-maxcode-csrf` for compatibility; the plugin global is still `maxcode`.

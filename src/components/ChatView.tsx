@@ -154,7 +154,7 @@ export function ChatView({ view, onViewChange }: { view: ChatViewMode; onViewCha
       case 'search': {
         if (!args.trim()) {
           setDraft('/search ')
-          notify('Type what you want OpenSol to research.', 'info')
+          notify('Type what you want Lunarcode to research.', 'info')
           focusComposer()
           return false
         }
@@ -176,7 +176,7 @@ export function ChatView({ view, onViewChange }: { view: ChatViewMode; onViewCha
       case 'build': {
         setMode('build')
         if (!args.trim()) {
-          notify('Build mode is on: OpenSol can edit files and run commands.', 'info')
+          notify('Build mode is on: Lunarcode can edit files and run commands.', 'info')
           focusComposer()
           return true
         }
@@ -236,7 +236,7 @@ export function ChatView({ view, onViewChange }: { view: ChatViewMode; onViewCha
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-panel">
       {!session || messages.length === 0 ? (
-        <div className="thin-scroll min-h-0 flex-1 overflow-y-auto">
+        <div className="thin-scroll lunar-aurora min-h-0 flex-1 overflow-y-auto">
           <div className="welcome-stagger mx-auto flex min-h-full w-full max-w-[760px] flex-col justify-center gap-6 px-4 py-8 sm:px-6">
             <HomeGreeting />
 
@@ -266,17 +266,22 @@ export function ChatView({ view, onViewChange }: { view: ChatViewMode; onViewCha
             </div>
 
             <PageGroup title="Get started">
-              <BoxedList className="stagger">
+              <div className="grid gap-2 sm:grid-cols-3">
                 {STARTERS.map((starter) => (
-                  <ListRow
+                  <button
                     key={starter.label}
-                    icon={<starter.icon size={16} />}
-                    title={starter.label}
-                    trailing={<ChevronRight size={16} />}
+                    type="button"
                     onClick={() => useStarter(starter.prompt)}
-                  />
+                    className="lift-card group/start flex items-center gap-2.5 rounded-[10px] border border-line bg-card px-3 py-2.5 text-left"
+                  >
+                    <span className="tool-icon h-7 w-7" aria-hidden="true">
+                      <starter.icon size={15} />
+                    </span>
+                    <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-ink">{starter.label}</span>
+                    <ChevronRight size={14} className="shrink-0 text-faint transition-transform duration-200 group-hover/start:translate-x-0.5 group-hover/start:text-accent" />
+                  </button>
                 ))}
-              </BoxedList>
+              </div>
             </PageGroup>
 
             <HomeDashboard />
