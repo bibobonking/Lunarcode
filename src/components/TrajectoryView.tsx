@@ -68,7 +68,7 @@ export function TrajectoryView({ session }: { session: ChatSession }) {
 
         <div className="relative">
           <span className="absolute bottom-3 left-[13px] top-3 w-px bg-line" aria-hidden="true" />
-          <div className="space-y-4">
+          <div className="stagger space-y-4">
             {events.map((message) => {
               if (message.role === 'user') {
                 return (

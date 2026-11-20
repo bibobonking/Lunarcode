@@ -31,7 +31,7 @@ export function HomeGreeting() {
   const home = daemon?.home ?? ''
   const name = home.split(/[\\/]/).filter(Boolean).pop() || workspace.name || 'there'
   return (
-    <div className="flex flex-col items-center gap-3 text-center">
+    <div className="home-greeting flex flex-col items-center gap-3 text-center">
       {showMascot && <LogoMark size={48} />}
       <h1 className="text-[28px] font-bold leading-[1.2] text-ink">What should we build, {name}?</h1>
       <p className="text-[14px] text-muted">Local-first agent. Your folder, your keys, your machine.</p>
@@ -80,7 +80,7 @@ export function HomeDashboard() {
     >
       {tab === 'overview' ? (
         <>
-          <BoxedList>
+          <BoxedList className="stagger">
             <ListRow className={row} title="Sessions" trailing={<Value>{String(stats.sessions)}</Value>} />
             <ListRow className={row} title="Messages" trailing={<Value>{String(stats.messages)}</Value>} />
             <ListRow className={row} title="Total tokens" trailing={<Value>{stats.tokens ? formatTokens(stats.tokens) : '0'}</Value>} />
@@ -95,7 +95,8 @@ export function HomeDashboard() {
                     {week.map((day) => (
                       <span
                         key={day.key}
-                        className={cn('h-[11px] w-[11px] rounded-[3px]', HEAT_LEVELS[heatLevel(day.count, stats.busiestDay)])}
+                        className={cn('heat-cell h-[11px] w-[11px] rounded-[3px]', HEAT_LEVELS[heatLevel(day.count, stats.busiestDay)])}
+                        style={{ animationDelay: `${Math.min(260, index * 9)}ms` }}
                         title={`${day.key} · ${day.count} message${day.count === 1 ? '' : 's'}`}
                       />
                     ))}
@@ -120,7 +121,7 @@ export function HomeDashboard() {
           </div>
         </BoxedList>
       ) : (
-        <BoxedList>
+        <BoxedList className="stagger">
           {stats.models.slice(0, 6).map((model) => (
             <div key={model.model} className="px-4 py-2.5">
               <div className="flex items-baseline justify-between gap-3">
@@ -133,7 +134,7 @@ export function HomeDashboard() {
               </div>
               <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-ink/[.1]">
                 <div
-                  className="h-full rounded-full bg-accent"
+                  className="usage-bar h-full rounded-full bg-accent"
                   style={{ width: `${topModelTokens ? Math.max(4, (model.tokens / topModelTokens) * 100) : 4}%` }}
                 />
               </div>

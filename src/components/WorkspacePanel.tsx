@@ -415,7 +415,7 @@ export function WorkspacePanel() {
         className="adw-scrim fixed inset-0 z-40 cursor-default xl:hidden"
       />
       <aside className={cn(
-          'fixed inset-y-0 right-0 z-50 flex h-dvh w-[min(96vw,400px)] flex-col border-l border-line bg-panel shadow-popover xl:static xl:z-auto xl:h-auto xl:shadow-none',
+          'workspace-panel fixed inset-y-0 right-0 z-50 flex h-dvh w-[min(96vw,400px)] flex-col border-l border-line bg-panel shadow-popover xl:static xl:z-auto xl:h-auto xl:shadow-none',
           tab === 'preview' && info.available && !choosing ? 'sm:w-[min(96vw,620px)] xl:w-[560px]' : 'xl:w-[360px]',
         )}
       >

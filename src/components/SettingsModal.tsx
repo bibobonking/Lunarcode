@@ -2088,7 +2088,7 @@ export function SettingsModal() {
           </header>
 
           <div ref={contentRef} className="thin-scroll min-h-0 flex-1 overflow-y-auto pb-6">
-            <div key={tab}>
+            <div key={tab} className="settings-tab">
               {tab === 'general' && <GeneralTab />}
               {tab === 'models' && <ModelsTab />}
               {tab === 'tools' && <ToolsTab />}

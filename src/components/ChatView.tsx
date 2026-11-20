@@ -237,7 +237,7 @@ export function ChatView({ view, onViewChange }: { view: ChatViewMode; onViewCha
     <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-panel">
       {!session || messages.length === 0 ? (
         <div className="thin-scroll min-h-0 flex-1 overflow-y-auto">
-          <div className="mx-auto flex min-h-full w-full max-w-[760px] flex-col justify-center gap-6 px-4 py-8 sm:px-6">
+          <div className="welcome-stagger mx-auto flex min-h-full w-full max-w-[760px] flex-col justify-center gap-6 px-4 py-8 sm:px-6">
             <HomeGreeting />
 
             <div className="w-full space-y-3">
@@ -266,7 +266,7 @@ export function ChatView({ view, onViewChange }: { view: ChatViewMode; onViewCha
             </div>
 
             <PageGroup title="Get started">
-              <BoxedList>
+              <BoxedList className="stagger">
                 {STARTERS.map((starter) => (
                   <ListRow
                     key={starter.label}
@@ -300,7 +300,7 @@ export function ChatView({ view, onViewChange }: { view: ChatViewMode; onViewCha
                 >
                   <div className="mx-auto w-full max-w-[780px] px-4 pb-10 pt-6 sm:px-6">
                     {turns.map((turn, index) => (
-                      <div key={turn.id} className={index === 0 ? undefined : 'mt-8'}>
+                      <div key={turn.id} className={index === 0 ? 'turn-in' : 'turn-in mt-8'}>
                         <TurnBlock
                           turn={turn}
                           sessionId={session.id}
@@ -320,7 +320,7 @@ export function ChatView({ view, onViewChange }: { view: ChatViewMode; onViewCha
                       setAtBottom(true)
                       scrollToBottom('smooth')
                     }}
-                    className="adw-btn absolute bottom-4 left-1/2 -translate-x-1/2 border border-line bg-panel shadow-popover hover:bg-raised"
+                    className="adw-btn jump-in absolute bottom-4 left-1/2 -translate-x-1/2 border border-line bg-panel shadow-popover hover:bg-raised"
                   >
                     <ArrowUp size={16} />
                     Jump to latest

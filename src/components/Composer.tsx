@@ -360,14 +360,14 @@ export function Composer({
         }}
         onDrop={onDrop}
         className={cn(
-          'relative rounded-[12px] border bg-panel transition-colors duration-150',
+          'composer-shell relative rounded-[12px] border bg-panel transition-colors duration-150',
           focused || dragging ? 'border-accent ring-2 ring-accent/30' : 'border-line',
         )}
       >
         {attachments.length > 0 && (
           <ul className="flex flex-wrap gap-2 px-3 pt-3" aria-label="Attachments">
             {attachments.map((attachment) => (
-              <li key={attachment.id}>
+              <li key={attachment.id} className="attach-in">
                 {attachment.kind === 'image' ? (
                   <div className="relative">
                     <img src={attachment.dataUrl} alt={attachment.name} className="h-14 w-14 rounded-[9px] border border-line object-cover" />

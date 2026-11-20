@@ -175,7 +175,7 @@ export function RadioMark({ checked, className }: { checked: boolean; className?
       aria-hidden="true"
       className={cn(
         'flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full border-2 transition-colors',
-        checked ? 'border-accent bg-accent' : 'border-ink/30',
+        checked ? 'is-checked border-accent bg-accent' : 'border-ink/30',
         className,
       )}
     >
@@ -190,7 +190,7 @@ export function CheckMark({ checked, className }: { checked: boolean; className?
       aria-hidden="true"
       className={cn(
         'flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-[6px] border-2 transition-colors',
-        checked ? 'border-accent bg-accent text-on-accent' : 'border-ink/30',
+        checked ? 'is-checked border-accent bg-accent text-on-accent' : 'border-ink/30',
         className,
       )}
     >

@@ -301,7 +301,7 @@ export function TaskCompletedBox({
   )
 
   return (
-    <div className="adw-boxed">
+    <div className={cn('adw-boxed', active ? 'is-running' : awaiting ? undefined : 'is-settled')}>
       <button
         type="button"
         onClick={() => {

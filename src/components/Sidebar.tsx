@@ -222,7 +222,7 @@ export function Sidebar() {
         />
       </div>
 
-      <nav aria-label="Tools" className="space-y-0.5 px-2 pt-1">
+      <nav aria-label="Tools" className="stagger space-y-0.5 px-2 pt-1">
         <button
           type="button"
           onClick={() => {
@@ -355,7 +355,7 @@ export function Sidebar() {
           {groups.map((group) => (
             <div key={group.label} className="mb-2">
               <p className="px-2.5 pb-1 pt-1 text-[12px] text-muted">{group.label}</p>
-              <ul className="space-y-0.5">
+              <ul className="stagger space-y-0.5">
                 {group.items.map((session) => (
                   <li key={session.id} className="group/item relative">
                     {editingId === session.id ? (

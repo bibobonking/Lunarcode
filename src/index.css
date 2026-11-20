@@ -650,14 +650,46 @@
   }
 }
 
+/* Reduced motion: entrances land in their final state, loops settle, and only
+   colour/opacity feedback keeps a short transition. Nothing moves spatially. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
+  }
+
+  .heat-cell:hover {
+    transform: none;
+  }
+
+  .adw-btn,
+  .adw-icon-btn,
+  .adw-menu-item,
+  .adw-nav-row,
+  .adw-row,
+  .adw-entry,
+  .adw-search,
+  .adw-select,
+  .composer-shell::before {
+    transition-duration: 120ms !important;
+  }
+
+  .turn-in,
+  .welcome-stagger > *,
+  .stagger > *,
+  .settings-tab,
+  .attach-in,
+  .jump-in,
+  .heat-cell,
+  .usage-bar,
+  .home-greeting::before {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
   }
 }
 
@@ -802,4 +834,471 @@
 }
 @keyframes spinslow {
   to { transform: rotate(360deg); }
+}
+
+/* ---------------------------------------------------------------------------
+   Motion layer.
+
+   Adwaita is a still design language, so motion here is quiet and carries
+   meaning: where a surface came from, that a state changed, that work is
+   running. One authored moment — the ambient accent halo behind the welcome
+   mark — and everywhere else timing that stays under 450ms. Transform and
+   opacity only, except the single bounded focus glow. Every loop and entrance
+   has a reduced-motion path above.
+   --------------------------------------------------------------------------- */
+
+:root {
+  --ease-out-quint: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out-quint: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+@keyframes mo-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes mo-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes mo-dialog {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes mo-sheet {
+  from {
+    opacity: 0;
+    transform: translateY(26px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes mo-pop {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes mo-toast {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes mo-row {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes mo-mark {
+  0% {
+    transform: scale(0.7);
+  }
+  55% {
+    transform: scale(1.12);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes mo-chip {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes mo-seg {
+  from {
+    transform: scale(0.94);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+@keyframes mo-heat {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes mo-grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes mo-halo-in {
+  from {
+    opacity: 0;
+    transform: scale(0.86) translateY(8px);
+  }
+  to {
+    opacity: 0.85;
+    transform: none;
+  }
+}
+
+@keyframes mo-halo-breathe {
+  0%,
+  100% {
+    opacity: 0.8;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes mo-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes mo-swap {
+  from {
+    opacity: 0;
+    transform: rotate(-40deg) scale(0.7);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes mo-close {
+  from {
+    box-shadow: 0 0 0 3px rgb(var(--accent) / 0.2);
+  }
+  to {
+    box-shadow: 0 0 0 0 rgb(var(--accent) / 0);
+  }
+}
+
+@keyframes mo-drawer {
+  from {
+    opacity: 0;
+    transform: translateX(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Arriving surfaces */
+
+.adw-dialog {
+  animation: mo-dialog 0.26s var(--ease-out-quint) both;
+}
+
+.adw-popover {
+  animation: mo-pop 0.18s var(--ease-out-quint) both;
+}
+
+.adw-toast {
+  animation: mo-toast 0.32s var(--ease-out-quint) both;
+}
+
+.adw-scrim {
+  animation: mo-fade 0.2s ease-out both;
+}
+
+@media (max-width: 640px) {
+  .adw-dialog {
+    animation-name: mo-sheet;
+  }
+}
+
+/* Controls answer the pointer and the press without sliding under it. */
+
+.adw-btn,
+.adw-icon-btn,
+.adw-menu-item,
+.adw-nav-row {
+  transition-property: color, background-color, border-color, opacity, scale, box-shadow;
+  transition-duration: 150ms;
+  transition-timing-function: var(--ease-out-quint);
+}
+
+.adw-btn:not(:disabled):active {
+  scale: 0.97;
+}
+
+.adw-icon-btn:not(:disabled):active {
+  scale: 0.93;
+}
+
+.adw-menu-item:not(:disabled):active {
+  scale: 0.985;
+}
+
+.adw-nav-row:not(:disabled):active {
+  scale: 0.99;
+}
+
+.adw-btn-suggested,
+.adw-btn-destructive {
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+}
+
+.adw-btn-suggested:hover,
+.adw-btn-destructive:hover {
+  box-shadow: 0 2px 8px -2px rgb(var(--accent) / 0.45);
+}
+
+/* Segmented pills settle in when the choice changes. */
+[role='group'] > button[aria-pressed='true'] {
+  animation: mo-seg 0.2s var(--ease-out-quint);
+}
+
+/* Sidebar / settings switches get a small pop when they come on. */
+.is-checked {
+  animation: mo-mark 0.3s var(--ease-out-quint);
+}
+
+/* Composer: a bounded glow under the border while it holds focus. */
+.composer-shell::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  box-shadow:
+    0 0 0 1px rgb(var(--accent) / 0.18),
+    0 0 26px -2px rgb(var(--accent) / 0.35),
+    0 14px 30px -20px rgb(var(--accent) / 0.6);
+  transition: opacity 0.28s var(--ease-out-quint);
+}
+
+.composer-shell:focus-within::before {
+  opacity: 1;
+}
+
+/* The welcome surface: one authored moment, quiet enough for Adwaita. */
+.home-greeting {
+  position: relative;
+  isolation: isolate;
+}
+
+.home-greeting::before {
+  content: '';
+  position: absolute;
+  z-index: 0;
+  top: -74px;
+  left: 50%;
+  width: min(340px, 70vw);
+  height: 230px;
+  translate: -50% 0;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(
+    closest-side,
+    rgb(var(--accent) / 0.16),
+    rgb(var(--accent) / 0.06) 58%,
+    transparent 78%
+  );
+  filter: blur(14px);
+  animation:
+    mo-halo-in 1s var(--ease-out-quint) both,
+    mo-halo-breathe 11s ease-in-out 1.1s infinite;
+}
+
+.home-greeting > * {
+  position: relative;
+  z-index: 1;
+}
+
+.home-greeting > span[aria-hidden='true'] {
+  animation: mo-float 7s ease-in-out infinite;
+}
+
+/* Conversation turns and page-group content arrive in order. */
+
+.turn-in {
+  animation: mo-rise 0.42s var(--ease-out-quint) both;
+}
+
+.welcome-stagger > * {
+  animation: mo-rise 0.55s var(--ease-out-quint) both;
+}
+
+.welcome-stagger > *:nth-child(2) {
+  animation-delay: 0.06s;
+}
+
+.welcome-stagger > *:nth-child(3) {
+  animation-delay: 0.11s;
+}
+
+.welcome-stagger > *:nth-child(4) {
+  animation-delay: 0.16s;
+}
+
+.welcome-stagger > *:nth-child(5) {
+  animation-delay: 0.21s;
+}
+
+.stagger > * {
+  animation: mo-row 0.34s var(--ease-out-quint) both;
+}
+
+.stagger > *:nth-child(2) {
+  animation-delay: 30ms;
+}
+
+.stagger > *:nth-child(3) {
+  animation-delay: 60ms;
+}
+
+.stagger > *:nth-child(4) {
+  animation-delay: 90ms;
+}
+
+.stagger > *:nth-child(5) {
+  animation-delay: 120ms;
+}
+
+.stagger > *:nth-child(6) {
+  animation-delay: 150ms;
+}
+
+.stagger > *:nth-child(7) {
+  animation-delay: 180ms;
+}
+
+.stagger > *:nth-child(8) {
+  animation-delay: 210ms;
+}
+
+.stagger > *:nth-child(n + 9) {
+  animation-delay: 240ms;
+}
+
+.settings-tab {
+  animation: mo-rise 0.3s var(--ease-out-quint) both;
+}
+
+.attach-in {
+  animation: mo-chip 0.26s var(--ease-out-quint) both;
+}
+
+.jump-in {
+  animation: mo-toast 0.24s var(--ease-out-quint) both;
+}
+
+.workspace-panel {
+  animation: mo-drawer 0.3s var(--ease-out-quint) both;
+}
+
+.theme-toggle svg {
+  animation: mo-swap 0.45s var(--ease-out-quint);
+}
+
+/* Data surfaces: heatmap cells settle in, usage bars grow from the origin. */
+
+.heat-cell {
+  transition: transform 150ms var(--ease-out-quint);
+  animation: mo-heat 0.5s var(--ease-out-quint) backwards;
+}
+
+.heat-cell:hover {
+  transform: scale(1.28);
+}
+
+.usage-bar {
+  transform-origin: left center;
+  animation: mo-grow 0.7s var(--ease-out-quint) both;
+  transition: width 0.45s var(--ease-out-quint);
+}
+
+/* Work in progress: a thin indeterminate line under the running task box. */
+.adw-boxed.is-running {
+  position: relative;
+}
+
+.adw-boxed.is-running::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  width: 38%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, transparent, rgb(var(--accent) / 0.85), transparent);
+  animation: sweep 1.35s var(--ease-in-out-quint) infinite;
+  pointer-events: none;
+}
+
+/* A finished task closes with one soft accent ring that fades out. */
+.adw-boxed.is-settled {
+  animation: mo-close 0.55s var(--ease-out-quint) both;
+}
+
+/* Text inputs get the accent caret; it is the cheapest built-in signal. */
+.adw-entry,
+.adw-search,
+textarea,
+input[type='text'],
+input[type='search'] {
+  caret-color: rgb(var(--accent));
 }
