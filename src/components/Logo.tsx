@@ -7,7 +7,7 @@ import { cn } from '../lib/utils'
 export function LogoMark({ size = 28, className, spin = false }: { size?: number; className?: string; spin?: boolean }) {
   return (
     <span
-      className={cn('inline-flex shrink-0 items-center justify-center text-accent', className)}
+      className={cn('inline-flex shrink-0 items-center justify-center text-[#f26b21]', className)}
       style={{ width: size, height: size }}
       aria-hidden="true"
     >
@@ -29,7 +29,7 @@ export function LogoLockup({ compact = false }: { compact?: boolean }) {
       <LogoMark size={compact ? 20 : 22} className="transition-transform duration-500 ease-out group-hover/logo:rotate-90" />
       {!compact && (
         <span className="text-[15px] font-semibold leading-none tracking-[-0.025em] text-ink">
-          Open<span className="text-accent">Sol</span>
+          Open<span className="text-[#f26b21]">Sol</span>
         </span>
       )}
     </div>

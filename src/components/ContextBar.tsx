@@ -1,9 +1,9 @@
 /**
- * ContextBar — compact context-usage indicator shown in the TopBar.
+ * ContextBar — quiet 12px context-usage status shown in the headerbar.
  *
- * Displays used / total context tokens and the percentage as plain text. When the session is
- * being compacted it shows a pulsing "Compacting…" state. Colour grades from
- * neutral → warning → danger as the context fills up.
+ * Shows used / total context tokens, percentage and spent credits as plain tabular text.
+ * While the session is compacting it shows a spinner and "Compacting…". Text grades from
+ * neutral → warning → danger as the context window fills up.
  */
 
 import { useMemo } from 'react'
@@ -12,6 +12,7 @@ import { getContextUsage, AUTO_COMPACT_THRESHOLD } from '../lib/context'
 import { useRuntime } from '../store/ui'
 import { formatCredits, sumCost } from '../lib/credits'
 import { cn } from '../lib/utils'
+import { Spinner } from './ui'
 
 interface ContextBarProps {
   messages: Message[]
@@ -39,26 +40,28 @@ export function ContextBar({ messages, model, sessionId }: ContextBarProps) {
   return (
     <div
       className={cn(
-        'hidden items-baseline gap-1.5 text-[11.5px] tabular-nums text-muted sm:flex',
+        'flex items-center gap-1.5 whitespace-nowrap text-[12px] tabular-nums text-muted',
         isWarning && 'text-warning',
         isDanger && 'text-danger',
       )}
       title={`Context window: ~${used.toLocaleString()} of ${limit.toLocaleString()} tokens used (${pct}%)`}
     >
       {compacting ? (
-        <span className="text-shimmer">Compacting…</span>
+        <>
+          <Spinner size={12} />
+          <span>Compacting…</span>
+        </>
       ) : (
         <>
-          <span className="text-ink/80">{formatTokens(used)}</span>
-          <span className="text-faint">/ {formatTokens(limit)} tokens</span>
-          <span className="text-faint">·</span>
+          <span>
+            {formatTokens(used)} / {formatTokens(limit)}
+          </span>
+          <span aria-hidden="true">·</span>
           <span>{pct}%</span>
           {spent > 0 && (
             <>
-              <span className="text-faint">·</span>
-              <span className="text-ink/80" title="Credits spent in this session (provider-reported, or tokens × model price)">
-                {formatCredits(spent)}
-              </span>
+              <span aria-hidden="true">·</span>
+              <span title="Credits spent in this session (provider-reported, or tokens × model price)">{formatCredits(spent)}</span>
             </>
           )}
         </>

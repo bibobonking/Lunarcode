@@ -7,11 +7,9 @@ import {
   LoaderCircle,
   MoreHorizontal,
   Package,
-  PanelLeftClose,
   Pencil,
   Plus,
   Rocket,
-  Search,
   Plug,
   Settings,
   Sparkles,
@@ -50,7 +48,6 @@ export function Sidebar() {
   const addWorkspace = useWorkspace((state) => state.addWorkspace)
   const removeWorkspace = useWorkspace((state) => state.removeWorkspace)
   const sidebarCollapsed = useUi((state) => state.sidebarCollapsed)
-  const toggleSidebar = useUi((state) => state.toggleSidebar)
   const mobileOpen = useUi((state) => state.mobileSidebarOpen)
   const setMobileOpen = useUi((state) => state.setMobileSidebarOpen)
   const openSettings = useUi((state) => state.openSettings)
@@ -192,53 +189,49 @@ export function Sidebar() {
     notify('Conversation exported.', 'success')
   }
 
+  const closeMobile = () => setMobileOpen(false)
+
   return (
     <aside
+      aria-label="Sidebar"
       className={cn(
-        'fixed inset-y-0 left-0 z-50 flex h-dvh w-[264px] shrink-0 flex-col bg-canvas shadow-float transition-transform duration-300 ease-out lg:static lg:z-auto lg:shadow-none',
-        mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
+        'fixed inset-y-0 left-0 z-50 flex h-dvh w-[272px] shrink-0 flex-col border-r border-line bg-sidebar transition-transform duration-200 ease-out lg:static lg:z-auto lg:h-auto',
+        mobileOpen ? 'translate-x-0 shadow-popover' : '-translate-x-full lg:translate-x-0',
         sidebarCollapsed && 'lg:hidden',
       )}
     >
-      <div className="flex h-12 items-center gap-1 pl-3 pr-2">
+      <div className="flex h-12 shrink-0 items-center gap-2 pl-4 pr-2 lg:hidden">
         <LogoLockup />
-        <button
-          type="button"
-          className="icon-button ml-auto hidden lg:inline-flex"
-          onClick={toggleSidebar}
-          title="Collapse sidebar (Ctrl B)"
-          aria-label="Collapse sidebar"
-        >
-          <PanelLeftClose size={16} strokeWidth={1.7} />
-        </button>
-        <button
-          type="button"
-          className="icon-button ml-auto lg:hidden"
-          onClick={() => setMobileOpen(false)}
-          aria-label="Close menu"
-        >
-          <X size={17} />
+        <button type="button" className="adw-icon-btn ml-auto" onClick={closeMobile} aria-label="Close menu">
+          <X size={16} />
         </button>
       </div>
 
-      <nav className="space-y-0.5 px-2 pt-1">
-        <button
-          type="button"
-          onClick={startNewChat}
-          className="group/new mb-2 flex h-9 w-full items-center gap-2 rounded-lg border border-line bg-panel px-2.5 text-left text-[13px] font-medium text-ink shadow-pill transition-all duration-150 hover:border-accent/40 hover:shadow-composer active:scale-[0.985]"
-        >
-          <Plus size={15} strokeWidth={2} className="text-accent transition-transform duration-300 group-hover/new:rotate-90" />
+      <div className="space-y-1 px-2 pt-2 lg:pt-3">
+        <button type="button" onClick={startNewChat} className="adw-btn mb-1 w-full justify-start">
+          <Plus size={16} />
           New chat
         </button>
+        <input
+          type="search"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Search conversations"
+          className="adw-search mb-1"
+          aria-label="Search conversations"
+        />
+      </div>
+
+      <nav aria-label="Tools" className="space-y-0.5 px-2 pt-1">
         <button
           type="button"
           onClick={() => {
-            setMobileOpen(false)
+            closeMobile()
             openSettings('skills')
           }}
-          className="nav-item"
+          className="adw-nav-row"
         >
-          <Sparkles size={15} strokeWidth={1.7} className="shrink-0 text-faint" />
+          <Sparkles size={16} className="shrink-0 text-muted" />
           Skills
         </button>
         <button
@@ -246,77 +239,63 @@ export function Sidebar() {
           disabled
           aria-disabled="true"
           title="Plugins are temporarily disabled for maintenance"
-          className="nav-item cursor-not-allowed opacity-50"
+          className="adw-nav-row"
         >
-          <Package size={15} strokeWidth={1.7} className="shrink-0 text-faint" />
+          <Package size={16} className="shrink-0 text-muted" />
           Plugins
-          <span className="ml-auto rounded-full bg-warning/10 px-1.5 py-px text-[9px] font-medium text-warning">Maintenance</span>
+          <span className="adw-badge ml-auto text-warning">Maintenance</span>
         </button>
         <button
           type="button"
           onClick={() => {
-            setMobileOpen(false)
+            closeMobile()
             setMcpOpen(true)
           }}
-          className="nav-item"
+          className="adw-nav-row"
         >
-          <Plug size={15} strokeWidth={1.7} className="shrink-0 text-faint" />
+          <Plug size={16} className="shrink-0 text-muted" />
           MCP
         </button>
         <button
           type="button"
           onClick={() => {
-            setMobileOpen(false)
+            closeMobile()
             setDeployOpen(true)
           }}
-          className="nav-item"
+          className="adw-nav-row"
         >
-          <Rocket size={15} strokeWidth={1.7} className="shrink-0 text-faint" />
+          <Rocket size={16} className="shrink-0 text-muted" />
           Deploy
         </button>
-        <div className="relative">
-          <Search
-            size={15}
-            strokeWidth={1.7}
-            className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-faint"
-          />
-          <input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search"
-            className="mt-1 h-8 w-full rounded-lg border border-transparent bg-transparent pl-[34px] pr-2.5 text-[13px] text-ink outline-none transition-colors placeholder:text-muted hover:bg-raised/80 focus:border-line focus:bg-panel"
-            aria-label="Search conversations"
-          />
-        </div>
       </nav>
 
-      <div className="thin-scroll min-h-0 flex-1 overflow-y-auto px-2 pb-2 pt-5">
-        <div className="mb-5">
-          <div className="flex items-center justify-between px-2.5 pb-1.5">
-            <p className="eyebrow">Workspaces</p>
+      <div className="thin-scroll min-h-0 flex-1 overflow-y-auto px-2 pb-2 pt-4">
+        <section className="mb-4" aria-label="Workspaces">
+          <div className="flex items-center justify-between pb-1 pr-0.5">
+            <p className="adw-section-label">Workspaces</p>
             <button
               type="button"
               onClick={() => {
-                setMobileOpen(false)
+                closeMobile()
                 setWorkspaceOpen(true)
               }}
-              className="flex h-6 w-6 items-center justify-center rounded-md text-faint transition-colors hover:bg-raised hover:text-ink"
+              className="adw-icon-btn adw-icon-btn-sm"
               title="Open another folder"
               aria-label="Open another folder"
             >
-              <Plus size={13} />
+              <Plus size={16} />
             </button>
           </div>
           {workspaces.length === 0 ? (
             <button
               type="button"
               onClick={() => {
-                setMobileOpen(false)
+                closeMobile()
                 setWorkspaceOpen(true)
               }}
-              className="flex w-full items-center gap-2 rounded-lg border border-dashed border-line px-2.5 py-2.5 text-left text-[13px] text-muted transition-colors hover:border-faint/50 hover:text-ink"
+              className="adw-nav-row text-muted"
             >
-              <Folder size={15} strokeWidth={1.6} className="text-faint" />
+              <Folder size={16} className="shrink-0" />
               Open a project folder
             </button>
           ) : (
@@ -329,19 +308,17 @@ export function Sidebar() {
                       type="button"
                       onClick={() => void switchWorkspace(entry.path)}
                       title={entry.path}
-                      className={cn(
-                        'flex h-8 w-full items-center gap-2.5 rounded-lg px-2.5 pr-8 text-left text-[13px] transition-all duration-150 active:scale-[0.985]',
-                        active ? 'bg-raised text-ink' : 'text-muted hover:bg-raised/80 hover:text-ink',
-                      )}
+                      aria-current={active ? 'page' : undefined}
+                      className="adw-nav-row pr-9"
                     >
-                      <Folder size={15} strokeWidth={1.6} className={cn('shrink-0 transition-transform duration-200 group-hover/ws:-rotate-6 group-hover/ws:scale-110', active ? 'text-accent' : 'text-faint')} />
+                      <Folder size={16} className="shrink-0 text-muted" />
                       <span className="min-w-0 flex-1 truncate">{entry.name}</span>
                       {switching === entry.path ? (
-                        <LoaderCircle size={11} className="shrink-0 animate-spin text-faint" />
+                        <LoaderCircle size={12} className="shrink-0 animate-spin text-muted" />
                       ) : active ? (
-                        <Check size={11} className="shrink-0 text-accent" />
+                        <Check size={14} className="shrink-0 text-muted" />
                       ) : (
-                        <span className="shrink-0 text-[10px] tabular-nums text-faint transition-opacity group-hover/ws:opacity-0">
+                        <span className="shrink-0 text-[12px] tabular-nums text-muted group-hover/ws:opacity-0">
                           {formatRelativeTime(entry.lastOpened)}
                         </span>
                       )}
@@ -349,40 +326,38 @@ export function Sidebar() {
                     <button
                       type="button"
                       onClick={() => void deleteWorkspace(entry.path, entry.name)}
-                      className="absolute right-1 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-md text-faint opacity-0 transition-all hover:bg-danger/10 hover:text-danger focus:opacity-100 group-hover/ws:opacity-100"
+                      className="adw-icon-btn adw-icon-btn-sm absolute right-1 top-1/2 -translate-y-1/2 opacity-0 focus:opacity-100 group-hover/ws:opacity-100"
                       title="Remove workspace from the list"
                       aria-label={`Remove workspace ${entry.name}`}
                     >
-                      <Trash2 size={12} />
+                      <Trash2 size={14} />
                     </button>
                   </div>
                 )
               })}
             </div>
           )}
-        </div>
+        </section>
 
-        <div>
-          <div className="flex items-center justify-between px-2.5 pb-1.5">
-            <p className="eyebrow">Recents</p>
-            <span className="text-[11px] tabular-nums text-faint">{filtered.length}</span>
+        <section aria-label="Recent conversations">
+          <div className="flex items-center justify-between pb-1 pr-2.5">
+            <p className="adw-section-label">Recent</p>
+            <span className="adw-badge">{filtered.length}</span>
           </div>
           {groups.length === 0 && (
-            <div className="px-2 py-7 text-center">
-              <p className="text-[13px] font-medium text-muted">
-                {query ? 'No conversations match' : 'No conversations yet'}
-              </p>
-              <p className="mt-1 text-[11.5px] leading-relaxed text-faint">
+            <div className="px-2 py-6 text-center">
+              <p className="text-[14px] font-semibold text-muted">{query ? 'No conversations match' : 'No conversations yet'}</p>
+              <p className="mt-1 text-[12px] leading-relaxed text-muted">
                 {query ? 'Try a shorter search.' : 'Start with a task, a question or a file.'}
               </p>
             </div>
           )}
-          {groups.map((group, gi) => (
-            <div key={group.label} className="mb-3">
-              <p className="px-2.5 pb-1 pt-1 text-[11px] font-medium text-faint/80">{group.label}</p>
-              <div className="space-y-0.5">
-                {group.items.map((session, si) => (
-                  <div key={session.id} className="group/item relative animate-slideleft" style={{ animationDelay: `${Math.min(gi * 40 + si * 18, 320)}ms` }}>
+          {groups.map((group) => (
+            <div key={group.label} className="mb-2">
+              <p className="px-2.5 pb-1 pt-1 text-[12px] text-muted">{group.label}</p>
+              <ul className="space-y-0.5">
+                {group.items.map((session) => (
+                  <li key={session.id} className="group/item relative">
                     {editingId === session.id ? (
                       <input
                         value={draftTitle}
@@ -396,7 +371,7 @@ export function Sidebar() {
                           }
                         }}
                         autoFocus
-                        className="h-8 w-full rounded-lg border border-accent/50 bg-panel px-2.5 text-[13px] text-ink outline-none"
+                        className="adw-entry h-9"
                         aria-label="Rename conversation"
                       />
                     ) : (
@@ -406,16 +381,18 @@ export function Sidebar() {
                           onClick={() => openChat(session.id)}
                           onDoubleClick={() => beginRename(session.id, session.title)}
                           title={`${session.title} · ${formatRelativeTime(session.updatedAt)}`}
-                          className={cn('sidebar-item pr-9', activeId === session.id && 'sidebar-item-active')}
+                          aria-current={activeId === session.id ? 'page' : undefined}
+                          className="adw-nav-row pr-9"
                         >
-                          <span className={cn('min-w-0 flex-1 truncate', titling[session.id] && 'text-shimmer')}>{session.title}</span>
+                          <span className={cn('min-w-0 flex-1 truncate', titling[session.id] && 'opacity-60')}>{session.title}</span>
+                          {titling[session.id] && <LoaderCircle size={12} className="shrink-0 animate-spin text-muted" aria-label="Naming" />}
                           {streaming[session.id] && (
                             <span
-                              className="flex shrink-0 items-center gap-1 text-[10.5px] font-medium text-accent group-hover/item:hidden"
+                              className="flex shrink-0 items-center gap-1.5 text-[12px] text-link group-hover/item:hidden"
                               title="Agent is running"
                             >
-                              <span className="h-1.5 w-1.5 animate-breathe rounded-full bg-accent" />
-                              running
+                              <LoaderCircle size={12} className="animate-spin" />
+                              Running
                             </span>
                           )}
                         </button>
@@ -428,8 +405,8 @@ export function Sidebar() {
                               return
                             }
                             const rect = event.currentTarget.getBoundingClientRect()
-                            const width = 176
-                            const height = 166
+                            const width = 208
+                            const height = 232
                             const x = Math.max(8, Math.min(rect.right - width, window.innerWidth - width - 8))
                             const y =
                               rect.bottom + height + 8 > window.innerHeight
@@ -438,41 +415,43 @@ export function Sidebar() {
                             setMenu({ id: session.id, x, y })
                           }}
                           className={cn(
-                            'absolute right-1 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-faint transition-all hover:bg-panel hover:text-ink',
-                            menu?.id === session.id
-                              ? 'flex bg-panel text-ink opacity-100'
-                              : 'opacity-0 group-hover/item:opacity-100 focus:opacity-100',
+                            'adw-icon-btn adw-icon-btn-sm absolute right-1 top-1/2 -translate-y-1/2',
+                            menu?.id === session.id ? 'opacity-100' : 'opacity-0 focus:opacity-100 group-hover/item:opacity-100',
                           )}
                           aria-label={`Actions for ${session.title}`}
+                          aria-expanded={menu?.id === session.id}
                           title="Conversation actions"
                         >
-                          <MoreHorizontal size={14} />
+                          <MoreHorizontal size={16} />
                         </button>
                       </>
                     )}
-                  </div>
+                  </li>
                 ))}
-              </div>
+              </ul>
             </div>
           ))}
-        </div>
+        </section>
       </div>
 
-      <div className="p-2">
-        <div className="flex items-center gap-2.5 rounded-lg px-1.5 py-1.5 transition-colors hover:bg-raised/80">
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-ink text-[12px] font-semibold text-panel">
+      <div className="shrink-0 border-t border-line p-2">
+        <div className="flex items-center gap-2 rounded-[9px] px-1 py-1">
+          <span
+            aria-hidden="true"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ink/[.12] text-[14px] font-bold text-ink"
+          >
             {profileName.charAt(0).toUpperCase()}
-          </div>
+          </span>
           <button
             type="button"
             onClick={() => {
-              setMobileOpen(false)
+              closeMobile()
               openSettings('models')
             }}
-            className="min-w-0 flex-1 text-left"
+            className="min-w-0 flex-1 rounded-[6px] text-left"
           >
-            <p className="truncate text-[13px] font-medium leading-tight text-ink">{profileName}</p>
-            <p className="mt-0.5 truncate text-[11px] leading-tight text-faint">
+            <p className="truncate text-[14px] font-semibold leading-tight text-ink">{profileName}</p>
+            <p className="truncate text-[12px] leading-tight text-muted">
               {connected
                 ? `${getProviderName(settings.provider)}${settings.provider === 'ollama' ? ' · local' : ' · your key'}`
                 : 'Add a provider key'}
@@ -480,15 +459,15 @@ export function Sidebar() {
           </button>
           <button
             type="button"
-            className="icon-button h-8 w-8"
+            className="adw-icon-btn"
             onClick={() => {
-              setMobileOpen(false)
+              closeMobile()
               openSettings('appearance')
             }}
             title="Preferences"
             aria-label="Preferences"
           >
-            <Settings size={16} strokeWidth={1.7} />
+            <Settings size={16} />
           </button>
         </div>
       </div>
@@ -502,52 +481,34 @@ export function Sidebar() {
             className="fixed inset-0 z-[60] cursor-default bg-transparent"
             onClick={() => setMenu(null)}
           />
-          <div
-            className="surface-lift fixed z-[70] w-[184px] overflow-hidden rounded-xl border border-line p-1 shadow-float"
-            style={{ left: menu.x, top: menu.y }}
-          >
+          <div role="menu" className="adw-popover fixed z-[70] w-[208px]" style={{ left: menu.x, top: menu.y }}>
             {(() => {
               const session = sessions.find((item) => item.id === menu.id)
               if (!session) return null
               return (
                 <>
-                  <button
-                    type="button"
-                    onClick={() => beginRename(session.id, session.title)}
-                    className="flex h-7 w-full items-center gap-2 rounded-md px-2 text-left text-[11.5px] text-muted hover:bg-raised hover:text-ink"
-                  >
-                    <Pencil size={12} /> Rename
+                  <button type="button" role="menuitem" onClick={() => beginRename(session.id, session.title)} className="adw-menu-item">
+                    <Pencil size={16} className="text-muted" /> Rename
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => void aiRename(session.id)}
-                    className="flex h-7 w-full items-center gap-2 rounded-md px-2 text-left text-[11.5px] text-muted hover:bg-raised hover:text-ink"
-                  >
-                    <Sparkles size={12} /> Name with AI
+                  <button type="button" role="menuitem" onClick={() => void aiRename(session.id)} className="adw-menu-item">
+                    <Sparkles size={16} className="text-muted" /> Name with AI
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => exportChat(session.id)}
-                    className="flex h-7 w-full items-center gap-2 rounded-md px-2 text-left text-[11.5px] text-muted hover:bg-raised hover:text-ink"
-                  >
-                    <Download size={12} /> Export JSON
+                  <button type="button" role="menuitem" onClick={() => exportChat(session.id)} className="adw-menu-item">
+                    <Download size={16} className="text-muted" /> Export JSON
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => exportMarkdown(session.id)}
-                    className="flex h-7 w-full items-center gap-2 rounded-md px-2 text-left text-[11.5px] text-muted hover:bg-raised hover:text-ink"
-                  >
-                    <FileText size={12} /> Export Markdown
+                  <button type="button" role="menuitem" onClick={() => exportMarkdown(session.id)} className="adw-menu-item">
+                    <FileText size={16} className="text-muted" /> Export Markdown
                   </button>
-                  <div className="my-1 border-t border-line" />
+                  <div className="adw-menu-sep" />
                   <button
                     type="button"
+                    role="menuitem"
                     onClick={() => void removeChat(session.id, session.title)}
-                    className="flex h-7 w-full items-center gap-2 rounded-md px-2 text-left text-[11.5px] text-danger hover:bg-danger/[0.06]"
+                    className="adw-menu-item text-danger"
                   >
-                    <Trash2 size={12} /> Delete
+                    <Trash2 size={16} /> Delete
                   </button>
-                  <p className="px-2 pb-1 pt-1.5 text-[9px] text-faint">Updated {shortTime(session.updatedAt)}</p>
+                  <p className="px-3 pb-1 pt-1.5 text-[12px] text-muted">Updated {shortTime(session.updatedAt)}</p>
                 </>
               )
             })()}

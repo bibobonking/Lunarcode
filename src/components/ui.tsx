@@ -1,17 +1,10 @@
 import { useEffect, useRef, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
-import {
-  AlertTriangle,
-  Check,
-  CircleCheck,
-  CircleX,
-  Info,
-  LoaderCircle,
-  X,
-} from 'lucide-react'
+import { CircleCheck, CircleX, Info, LoaderCircle, X } from 'lucide-react'
 import { cn } from '../lib/utils'
 import { useUi } from '../store/ui'
 
+/* AdwDialog: centered on desktop, bottom sheet on narrow screens. Solid surface, no blur. */
 export function Modal({
   open,
   onClose,
@@ -83,13 +76,7 @@ export function Modal({
 
   return createPortal(
     <div className="fixed inset-0 z-[80] flex items-end justify-center p-0 sm:items-center sm:p-6">
-      <button
-        type="button"
-        aria-label="Close dialog"
-        tabIndex={-1}
-        onClick={onClose}
-        className="modal-scrim absolute inset-0 cursor-default bg-black/35 backdrop-blur-[3px] dark:bg-black/60"
-      />
+      <button type="button" aria-label="Close dialog" tabIndex={-1} onClick={onClose} className="adw-scrim cursor-default" />
       <div
         ref={panelRef}
         role="dialog"
@@ -97,8 +84,8 @@ export function Modal({
         aria-labelledby={labelledBy}
         tabIndex={-1}
         className={cn(
-          'modal-panel relative flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-2xl border border-line surface-lift shadow-float sm:max-h-[86dvh] sm:rounded-xl',
-          wide ? 'sm:w-[min(920px,94vw)]' : 'sm:w-[min(760px,94vw)]',
+          'adw-dialog max-h-[92dvh] w-full rounded-b-none sm:max-h-[86dvh] sm:rounded-b-[15px]',
+          wide ? 'sm:w-[min(920px,94vw)]' : 'sm:w-[min(640px,94vw)]',
           className,
         )}
       >
@@ -109,6 +96,7 @@ export function Modal({
   )
 }
 
+/* Dialog headerbar: centered title (+ optional subtitle), actions left of a flat close button. */
 export function ModalHeader({
   title,
   description,
@@ -123,16 +111,16 @@ export function ModalHeader({
   actions?: ReactNode
 }) {
   return (
-    <div className="flex items-start justify-between gap-4 border-b border-line px-5 py-4 sm:px-6">
-      <div className="min-w-0">
-        <h2 id={id} className="text-[15px] font-semibold tracking-[-0.02em] text-ink">
+    <div className="adw-headerbar shrink-0 gap-2 bg-dialog px-3">
+      <div className="min-w-0 flex-1 px-1">
+        <h2 id={id} className="adw-headerbar-title">
           {title}
         </h2>
-        {description && <p className="mt-1 text-[12.5px] leading-relaxed text-muted">{description}</p>}
+        {description && <p className="adw-headerbar-subtitle">{description}</p>}
       </div>
       <div className="flex shrink-0 items-center gap-1">
         {actions}
-        <button type="button" className="icon-button" onClick={onClose} aria-label="Close">
+        <button type="button" className="adw-icon-btn" onClick={onClose} aria-label="Close">
           <X size={16} />
         </button>
       </div>
@@ -140,10 +128,12 @@ export function ModalHeader({
   )
 }
 
-export function Spinner({ size = 14, className }: { size?: number; className?: string }) {
+/* AdwSpinner-style indicator. */
+export function Spinner({ size = 16, className }: { size?: number; className?: string }) {
   return <LoaderCircle size={size} className={cn('animate-spin text-current', className)} aria-hidden="true" />
 }
 
+/* AdwSwitch: 48×26 pill, 22px knob. */
 export function Switch({
   checked,
   onChange,
@@ -164,20 +154,56 @@ export function Switch({
       disabled={disabled}
       onClick={() => onChange(!checked)}
       className={cn(
-        'relative inline-flex h-[22px] w-[38px] shrink-0 items-center rounded-full border transition-colors duration-200 disabled:opacity-40',
-        checked ? 'border-accent bg-accent' : 'border-line bg-raised',
+        'relative inline-flex h-[26px] w-12 shrink-0 items-center rounded-full transition-colors duration-200 disabled:opacity-40',
+        checked ? 'bg-accent' : 'bg-ink/[.18]',
       )}
     >
       <span
         className={cn(
-          'pointer-events-none block h-[16px] w-[16px] rounded-full bg-white shadow-sm transition-transform duration-300 ease-spring',
-          checked ? 'translate-x-[19px]' : 'translate-x-[3px]',
+          'pointer-events-none block h-[22px] w-[22px] rounded-full bg-white shadow-[0_1px_2px_rgba(0,0,0,.3)] transition-transform duration-200 ease-out',
+          checked ? 'translate-x-[24px]' : 'translate-x-[2px]',
         )}
       />
     </button>
   )
 }
 
+/* Visual-only 18px radio / checkbox indicators for rows that already are the interactive control. */
+export function RadioMark({ checked, className }: { checked: boolean; className?: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        'flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full border-2 transition-colors',
+        checked ? 'border-accent bg-accent' : 'border-ink/30',
+        className,
+      )}
+    >
+      {checked && <span className="h-1.5 w-1.5 rounded-full bg-on-accent" />}
+    </span>
+  )
+}
+
+export function CheckMark({ checked, className }: { checked: boolean; className?: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        'flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-[6px] border-2 transition-colors',
+        checked ? 'border-accent bg-accent text-on-accent' : 'border-ink/30',
+        className,
+      )}
+    >
+      {checked && (
+        <svg viewBox="0 0 12 12" width="10" height="10" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M2.5 6.2 5 8.6 9.5 3.6" />
+        </svg>
+      )}
+    </span>
+  )
+}
+
+/* View switcher / linked toggle: flat buttons, neutral selected wash. */
 export function Segmented<T extends string>({
   options,
   value,
@@ -195,26 +221,21 @@ export function Segmented<T extends string>({
 }) {
   return (
     <div
-      className={cn(
-        'inline-flex items-center rounded-lg bg-raised p-0.5',
-        size === 'md' ? 'text-[12.5px]' : 'text-[11.5px]',
-        disabled && 'opacity-50',
-        className,
-      )}
+      role="group"
+      className={cn('inline-flex items-center gap-0.5 rounded-[9px] bg-ink/[.06] p-0.5', disabled && 'opacity-50', className)}
     >
       {options.map((option) => (
         <button
           key={option.value}
           type="button"
           title={option.title}
+          aria-pressed={value === option.value}
           disabled={disabled}
           onClick={() => onChange(option.value)}
           className={cn(
-            'rounded-md font-medium transition-all duration-200 disabled:cursor-not-allowed',
-            size === 'md' ? 'px-3 py-1.5' : 'px-2.5 py-1',
-            value === option.value
-              ? 'bg-panel text-ink shadow-[0_1px_2px_rgba(20,22,30,0.08)]'
-              : 'text-muted hover:text-ink',
+            'rounded-[7px] font-semibold transition-colors duration-150 disabled:cursor-not-allowed',
+            size === 'md' ? 'h-8 px-3 text-[14px]' : 'h-[26px] px-2.5 text-[13px]',
+            value === option.value ? 'bg-panel text-ink shadow-[0_0_0_1px_rgb(var(--line))]' : 'text-muted hover:bg-ink/[.06] hover:text-ink',
           )}
         >
           {option.label}
@@ -225,19 +246,114 @@ export function Segmented<T extends string>({
 }
 
 export function Kbd({ children }: { children: ReactNode }) {
+  return <kbd className="adw-kbd font-sans">{children}</kbd>
+}
+
+/* Preferences page building blocks. */
+export function PageGroup({
+  title,
+  description,
+  actions,
+  children,
+  className,
+}: {
+  title?: string
+  description?: string
+  actions?: ReactNode
+  children: ReactNode
+  className?: string
+}) {
   return (
-    <kbd className="rounded border border-line bg-raised px-1.5 py-0.5 font-sans text-[10px] font-medium text-faint">
+    <section className={cn('space-y-2', className)}>
+      {(title || actions) && (
+        <div className="flex items-end justify-between gap-3 px-1">
+          <div className="min-w-0">
+            {title && <h3 className="adw-heading">{title}</h3>}
+            {description && <p className="adw-caption mt-0.5">{description}</p>}
+          </div>
+          {actions}
+        </div>
+      )}
       {children}
-    </kbd>
+    </section>
+  )
+}
+
+export function BoxedList({ children, className }: { children: ReactNode; className?: string }) {
+  return <div className={cn('adw-boxed', className)}>{children}</div>
+}
+
+/* One boxed-list row: icon, title + subtitle on the left, control on the right. */
+export function ListRow({
+  title,
+  subtitle,
+  icon,
+  trailing,
+  onClick,
+  active,
+  disabled,
+  className,
+}: {
+  title: ReactNode
+  subtitle?: ReactNode
+  icon?: ReactNode
+  trailing?: ReactNode
+  onClick?: () => void
+  active?: boolean
+  disabled?: boolean
+  className?: string
+}) {
+  const body = (
+    <>
+      {icon && <span className="flex h-5 w-5 shrink-0 items-center justify-center text-muted">{icon}</span>}
+      <span className="min-w-0 flex-1">
+        <span className="adw-row-title block">{title}</span>
+        {subtitle && <span className="adw-row-subtitle block">{subtitle}</span>}
+      </span>
+      {trailing && <span className="flex shrink-0 items-center gap-2 text-muted">{trailing}</span>}
+    </>
+  )
+  if (onClick) {
+    return (
+      <button type="button" onClick={onClick} disabled={disabled} className={cn('adw-row disabled:opacity-45', active && 'is-active', className)}>
+        {body}
+      </button>
+    )
+  }
+  return <div className={cn('adw-row', active && 'is-active', disabled && 'opacity-45', className)}>{body}</div>
+}
+
+/* Welcome / empty / error status page. */
+export function StatusPage({
+  icon,
+  title,
+  description,
+  children,
+  className,
+}: {
+  icon?: ReactNode
+  title: string
+  description?: string
+  children?: ReactNode
+  className?: string
+}) {
+  return (
+    <div className={cn('flex flex-col items-center justify-center px-6 py-10 text-center', className)}>
+      {icon && <div className="mb-4 flex h-12 w-12 items-center justify-center text-muted">{icon}</div>}
+      <h2 className="text-[20px] font-bold leading-tight text-ink">{title}</h2>
+      {description && <p className="mt-2 max-w-md text-[14px] leading-relaxed text-muted">{description}</p>}
+      {children && <div className="mt-5 flex flex-wrap items-center justify-center gap-2">{children}</div>}
+    </div>
   )
 }
 
 const toneStyles = {
-  info: { icon: Info, className: 'text-accent' },
-  success: { icon: CircleCheck, className: 'text-success' },
-  error: { icon: CircleX, className: 'text-danger' },
+  info: { icon: Info, className: 'text-[#78aeed]' },
+  success: { icon: CircleCheck, className: 'text-[#57e389]' },
+  error: { icon: CircleX, className: 'text-[#ff7b63]' },
 }
 
+/* Bottom-center dark toast. */
 export function ToastHost() {
   const toast = useUi((state) => state.toast)
   const dismiss = useUi((state) => state.dismissToast)
@@ -252,20 +368,25 @@ export function ToastHost() {
   const tone = toneStyles[toast.tone]
   const Icon = tone.icon
   return createPortal(
-    <div
-      className="pointer-events-none fixed bottom-56 left-1/2 z-[100] flex w-[min(92vw,440px)] -translate-x-1/2 animate-scalein items-start gap-2.5 rounded-xl border border-line surface-lift px-3.5 py-3 text-[12.5px] text-ink shadow-float sm:bottom-48"
-      role="status"
-    >
-      <Icon size={16} className={cn('mt-0.5 shrink-0', tone.className)} />
-      <p className="flex-1 leading-relaxed">{toast.message}</p>
-      <button type="button" className="pointer-events-auto icon-button -mr-1 -mt-1 h-6 w-6" onClick={() => dismiss(toast.id)} aria-label="Dismiss">
-        <X size={13} />
-      </button>
+    <div className="pointer-events-none fixed inset-x-0 bottom-24 z-[100] flex justify-center px-4">
+      <div role="status" className="adw-toast flex max-w-[min(92vw,480px)] items-center gap-2.5">
+        <Icon size={16} className={cn('shrink-0', tone.className)} />
+        <p className="min-w-0 flex-1 text-[14px] leading-snug">{toast.message}</p>
+        <button
+          type="button"
+          className="-mr-1 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-[6px] text-white/70 hover:bg-white/10 hover:text-white"
+          onClick={() => dismiss(toast.id)}
+          aria-label="Dismiss"
+        >
+          <X size={14} />
+        </button>
+      </div>
     </div>,
     document.body,
   )
 }
 
+/* AdwMessageDialog: title, body, right-aligned Cancel + suggested/destructive action. */
 export function ConfirmDialog() {
   const confirm = useUi((state) => state.confirm)
   const resolve = useUi((state) => state.resolveConfirm)
@@ -273,35 +394,19 @@ export function ConfirmDialog() {
 
   return (
     <Modal open={Boolean(confirm)} onClose={() => resolve(false)} className="sm:w-[420px]">
-      <div className="p-5 sm:p-6">
-        <div className="flex items-start gap-3">
-          <span
-            className={cn(
-              'mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full',
-              danger ? 'bg-danger/10 text-danger' : 'bg-accent-soft text-accent',
-            )}
-          >
-            <AlertTriangle size={17} />
-          </span>
-          <div className="min-w-0">
-            <h2 className="text-[15px] font-semibold tracking-[-0.01em]">{confirm?.title}</h2>
-            <p className="mt-1.5 text-[12.5px] leading-relaxed text-muted">{confirm?.body}</p>
-          </div>
-        </div>
+      <div className="p-6">
+        <h2 className="text-[18px] font-bold leading-tight">{confirm?.title}</h2>
+        <p className="mt-2 text-[14px] leading-relaxed text-muted">{confirm?.body}</p>
         <div className="mt-6 flex justify-end gap-2">
-          <button type="button" className="chip" onClick={() => resolve(false)}>
+          <button type="button" className="adw-btn" onClick={() => resolve(false)}>
             Cancel
           </button>
           <button
             type="button"
             data-autofocus
             onClick={() => resolve(true)}
-            className={cn(
-              'inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-[12.5px] font-medium text-on-accent transition-all active:scale-95',
-              danger ? 'bg-danger hover:bg-danger/90' : 'bg-accent hover:bg-accent/90',
-            )}
+            className={cn('adw-btn', danger ? 'adw-btn-destructive' : 'adw-btn-suggested')}
           >
-            <Check size={14} />
             {confirm?.confirmLabel ?? 'Confirm'}
           </button>
         </div>

@@ -34,22 +34,21 @@ export function DiffView({ before, after, startLine = 1 }: { before: string; aft
 
   const shown = rows.slice(0, MAX_ROWS)
   return (
-    <div className="diff-view thin-scroll max-h-64 overflow-auto rounded-lg border border-line bg-canvas/60 font-mono text-[11px] leading-[1.6]">
-      {shown.map((row, index) =>
+    <div className="diff-view thin-scroll max-h-64 overflow-auto rounded-[9px] border border-line bg-raised font-mono text-[12px] leading-[1.6]">
+      {shown.map((row) =>
         row.gap ? (
-          <div key={row.key} className="px-2 text-center text-[10px] text-faint">⋯</div>
+          <div key={row.key} className="px-2 text-center text-[12px] text-faint">⋯</div>
         ) : (
           <div
             key={row.key}
-            style={{ animationDelay: `${Math.min(index * 14, 260)}ms` }}
             className={cn(
-              'diff-row flex min-w-max',
+              'flex min-w-max',
               row.type === 'add' && 'bg-success/[0.11] text-ink',
               row.type === 'del' && 'bg-danger/[0.10] text-ink',
               row.type === 'ctx' && 'text-faint',
             )}
           >
-            <span className="w-9 shrink-0 select-none pr-2 text-right text-[10px] tabular-nums text-faint/70">{row.no}</span>
+            <span className="w-9 shrink-0 select-none pr-2 text-right text-[12px] tabular-nums text-faint">{row.no}</span>
             <span
               className={cn(
                 'w-4 shrink-0 select-none text-center',
@@ -64,7 +63,7 @@ export function DiffView({ before, after, startLine = 1 }: { before: string; aft
         ),
       )}
       {rows.length > MAX_ROWS && (
-        <div className="px-3 py-1 text-[10px] text-faint">… {rows.length - MAX_ROWS} more rows</div>
+        <div className="px-3 py-1 text-[12px] text-faint">… {rows.length - MAX_ROWS} more rows</div>
       )}
     </div>
   )
@@ -84,7 +83,7 @@ export function DiffBadge({
   className?: string
 }) {
   return (
-    <span className={cn('diff-badge inline-flex items-center gap-1.5 font-mono text-[11px] tabular-nums', className)}>
+    <span className={cn('inline-flex items-center gap-1.5 font-mono text-[12px] tabular-nums', className)}>
       <span className="text-success">+{added}</span>
       <span className="text-danger">−{removed}</span>
       {line ? (

@@ -21,19 +21,11 @@ function Row({
   onClick: () => void
 }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left text-[12px] text-ink transition-colors hover:bg-raised"
-    >
-      <Icon size={14} className="shrink-0 text-faint" />
+    <button type="button" onClick={onClick} className="adw-menu-item">
+      <Icon size={16} className="shrink-0 text-muted" />
       <span className="min-w-0 flex-1 truncate">{label}</span>
-      {hint && <span className="shrink-0 text-[10.5px] text-faint">{hint}</span>}
-      {active !== undefined && (
-        <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-          {active && <Check size={13} className="text-accent" />}
-        </span>
-      )}
+      {hint && <span className="shrink-0 text-[12px] text-muted">{hint}</span>}
+      {active !== undefined && <span className="flex h-4 w-4 shrink-0 items-center justify-center">{active && <Check size={16} className="text-link" />}</span>}
     </button>
   )
 }
@@ -70,12 +62,12 @@ export function PlusMenu({ onAddFiles }: { onAddFiles: () => void }) {
         <button
           type="button"
           onClick={() => setOpen((value) => !value)}
-          className={cn('icon-button h-8 w-8', open && 'bg-raised text-ink')}
+          className={cn('adw-icon-btn', open && 'bg-ink/[.1]')}
           aria-label="Add files, skills and tools"
           aria-expanded={open}
           title="Add files, skills and tools"
         >
-          <Plus size={16} className={cn('transition-transform duration-200', open && 'rotate-45')} />
+          <Plus size={16} />
         </button>
       }
     >

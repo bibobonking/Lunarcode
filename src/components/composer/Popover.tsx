@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { useClickOutside } from '../../lib/hooks'
 import { cn } from '../../lib/utils'
+import { RadioMark } from '../ui'
 
 const EDGE = 12
 const GAP = 8
@@ -68,7 +69,7 @@ export function Popover({
           ref={panelRef}
           style={{ width, maxHeight: layout.height }}
           className={cn(
-            'surface-lift thin-scroll animate-scalein absolute z-40 max-w-[calc(100vw-24px)] overflow-y-auto overscroll-contain rounded-2xl border border-line p-1.5 shadow-float',
+            'adw-popover thin-scroll absolute z-40 max-w-[calc(100vw-24px)] overflow-y-auto overscroll-contain',
             layout.alignRight ? 'right-0' : 'left-0',
             layout.side === 'above' ? 'bottom-[calc(100%+8px)]' : 'top-[calc(100%+6px)]',
             className,
@@ -82,10 +83,39 @@ export function Popover({
 }
 
 export function MenuLabel({ children }: { children: ReactNode }) {
-  return <p className="px-2 pb-1 pt-1.5 text-[10px] font-medium uppercase tracking-[0.1em] text-faint">{children}</p>
+  return <p className="px-3 pb-1 pt-1.5 text-[12px] font-semibold text-muted">{children}</p>
 }
 
-/** A plain-text toolbar button: no border or fill until it is hovered or its panel is open. */
+/** A radio-style option row: label + hint with an 18px indicator. */
+export function MenuOption({
+  selected,
+  label,
+  hint,
+  onClick,
+}: {
+  selected: boolean
+  label: string
+  hint?: string
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      role="menuitemradio"
+      aria-checked={selected}
+      onClick={onClick}
+      className="flex w-full items-start gap-3 rounded-[9px] px-3 py-2 text-left transition-colors hover:bg-ink/[.08]"
+    >
+      <RadioMark checked={selected} className="mt-0.5" />
+      <span className="min-w-0">
+        <span className="block text-[14px] leading-snug text-ink">{label}</span>
+        {hint && <span className="block text-[12px] leading-snug text-muted">{hint}</span>}
+      </span>
+    </button>
+  )
+}
+
+/** A flat text toolbar button: no fill until hovered or its panel is open. */
 export function TextButton({
   children,
   open,
@@ -97,11 +127,7 @@ export function TextButton({
       type="button"
       aria-expanded={open}
       {...props}
-      className={cn(
-        'flex h-8 items-center gap-1 rounded-lg px-2 text-[12px] font-medium text-muted transition-colors hover:text-ink disabled:cursor-not-allowed disabled:opacity-45',
-        open && 'text-ink',
-        className,
-      )}
+      className={cn('adw-btn adw-btn-flat h-8 gap-1 px-2.5 text-[13px] text-muted hover:text-ink', open && 'bg-ink/[.1] text-ink', className)}
     >
       {children}
     </button>

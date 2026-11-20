@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ArrowRight } from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
 import type { FileDiff, ToolMedia, ToolMessage, ToolName } from '../types'
 import { toolLabel, toolSummary } from '../lib/tool-meta'
 import { resolveApproval } from '../core/services/approval'
@@ -8,6 +8,7 @@ import { cn } from '../lib/utils'
 import { diffLines, diffStats } from '../lib/diff'
 import { DiffBadge, DiffView } from './DiffView'
 import { QuestionCard } from './QuestionCard'
+import { Spinner } from './ui'
 
 const FILE_TOOLS = new Set(['write_file', 'edit_file', 'rewrite_file'])
 
@@ -91,7 +92,7 @@ function ToolMediaView({ item, index }: { item: ToolMedia; index: number }) {
           }
         }}
       >
-        <img src={src} alt={`Tool image ${index + 1}`} className="max-h-64 max-w-full rounded-md border border-line object-contain" />
+        <img src={src} alt={`Tool image ${index + 1}`} className="max-h-64 max-w-full rounded-[9px] border border-line object-contain" />
       </button>
     )
   }
@@ -108,7 +109,7 @@ function ToolMediaView({ item, index }: { item: ToolMedia; index: number }) {
           /* ignore */
         }
       }}
-      className="rounded-md border border-line px-2.5 py-1.5 text-[11.5px] text-muted transition-colors hover:text-ink"
+      className="adw-btn h-8 text-[12px]"
     >
       Open {item.name || 'document'} ({item.mimeType})
     </button>
@@ -157,28 +158,22 @@ function GenericToolCard({ message, compact = false }: { message: ToolMessage; c
         : status.label.toLowerCase()
 
   return (
-    <div className="animate-slideleft text-[12.5px]">
+    <div className="text-[13px]">
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className="group/row flex w-full min-w-0 items-baseline gap-1.5 py-[3px] text-left"
+        className="flex min-h-[32px] w-full min-w-0 items-center gap-1.5 rounded-[6px] px-1 text-left hover:bg-ink/[.05]"
         aria-expanded={open}
       >
-        <ArrowRight
-          size={12}
-          strokeWidth={2}
-          className={cn(
-            'relative top-[1px] shrink-0 self-center text-faint transition-transform duration-200 ease-out group-hover/row:text-ink',
-            open && 'rotate-90',
-          )}
-        />
-        <span className="shrink-0 font-medium text-ink">{toolLabel(message.call.name)}</span>
-        <span className="min-w-0 flex-1 truncate font-mono text-[11.5px] text-muted">{summary || '—'}</span>
+        <ChevronRight size={16} className={cn('shrink-0 text-muted transition-transform duration-150', open && 'rotate-90')} />
+        <span className="shrink-0 font-semibold text-ink">{toolLabel(message.call.name)}</span>
+        <span className="min-w-0 flex-1 truncate font-mono text-[12px] text-muted">{summary || '—'}</span>
         {isFileTool && diff && message.status === 'done' ? (
           <DiffBadge added={diff.added} removed={diff.removed} line={diff.line} column={diff.column} className="shrink-0" />
         ) : (
           trailing && (
-            <span className={cn('shrink-0 text-[11px]', message.status === 'running' ? 'text-shimmer' : message.status === 'done' ? 'text-faint' : status.className)}>
+            <span className={cn('flex shrink-0 items-center gap-1.5 text-[12px]', message.status === 'done' ? 'text-faint' : status.className)}>
+              {message.status === 'running' && <Spinner size={12} />}
               {trailing}
             </span>
           )
@@ -186,18 +181,18 @@ function GenericToolCard({ message, compact = false }: { message: ToolMessage; c
       </button>
 
       {message.status === 'awaiting' && !decided && (
-        <div className="animate-fade py-1 pl-[18px]">
-          <p className="text-[12px] leading-relaxed text-warning">{approvalCopy(message.call.name)}</p>
-          <p className="mt-1 flex items-center gap-4 text-[12px] font-medium">
+        <div className="mx-1 my-1 rounded-[9px] border border-warning/30 bg-warning/10 px-3 py-2">
+          <p className="text-[13px] leading-relaxed text-ink">{approvalCopy(message.call.name)}</p>
+          <div className="mt-2 flex items-center gap-2">
             <button
               type="button"
               onClick={() => {
                 setDecided('allow')
                 resolveApproval(message.call.id, true)
               }}
-              className="text-ink underline decoration-ink/30 underline-offset-[3px] transition-colors hover:decoration-ink"
+              className="adw-btn adw-btn-suggested h-8"
             >
-              Allow once →
+              Allow once
             </button>
             <button
               type="button"
@@ -205,22 +200,22 @@ function GenericToolCard({ message, compact = false }: { message: ToolMessage; c
                 setDecided('deny')
                 resolveApproval(message.call.id, false)
               }}
-              className="text-muted transition-colors hover:text-ink"
+              className="adw-btn h-8"
             >
               Deny
             </button>
-          </p>
+          </div>
         </div>
       )}
 
       {message.status === 'awaiting' && decided && (
-        <p className="animate-fade py-1 pl-[18px] text-[12px] text-muted">{decided === 'allow' ? 'Allowed — running…' : 'Denied.'}</p>
+        <p className="py-1 pl-7 text-[12px] text-muted">{decided === 'allow' ? 'Allowed — running…' : 'Denied.'}</p>
       )}
 
       {open && (
-        <div className="animate-fade space-y-2 pb-1.5 pl-[18px] pt-0.5">
+        <div className="space-y-2 pb-1.5 pl-7 pt-0.5">
           {command && (
-            <pre className="thin-scroll max-h-40 overflow-auto whitespace-pre-wrap break-words font-mono text-[11.5px] leading-relaxed text-ink">
+            <pre className="adw-recessed thin-scroll max-h-40 overflow-auto whitespace-pre-wrap break-words font-mono text-[12px] leading-relaxed text-ink">
               $ {command}
             </pre>
           )}
@@ -228,22 +223,22 @@ function GenericToolCard({ message, compact = false }: { message: ToolMessage; c
             <DiffView before={args.oldText} after={args.newText} startLine={diff?.line ?? 1} />
           )}
           {content && message.call.name !== 'edit_file' && (
-            <pre className="thin-scroll max-h-48 overflow-auto whitespace-pre-wrap break-words font-mono text-[11px] leading-relaxed text-muted">
+            <pre className="thin-scroll max-h-48 overflow-auto whitespace-pre-wrap break-words font-mono text-[12px] leading-relaxed text-muted">
               {content.length > 4000 ? `${content.slice(0, 4000)}\n… ${content.length - 4000} more characters` : content}
             </pre>
           )}
 
           {message.result !== undefined && (
             <div>
-              <p className="mb-1 flex items-center gap-3 text-[11px] text-faint">
+              <p className="mb-1 flex items-center gap-3 text-[12px] text-muted">
                 <span>{message.status === 'error' ? 'Error' : 'Output'}</span>
-                <button type="button" onClick={copyOutput} className="transition-colors hover:text-ink">
+                <button type="button" onClick={copyOutput} className="text-link hover:underline">
                   {copied ? 'Copied' : 'Copy'}
                 </button>
               </p>
               <pre
                 className={cn(
-                  'thin-scroll max-h-72 overflow-auto whitespace-pre-wrap break-words font-mono text-[11.5px] leading-[1.65]',
+                  'thin-scroll max-h-72 overflow-auto whitespace-pre-wrap break-words font-mono text-[12px] leading-[1.65]',
                   message.status === 'error' ? 'text-danger' : 'text-muted',
                 )}
               >
@@ -261,7 +256,7 @@ function GenericToolCard({ message, compact = false }: { message: ToolMessage; c
           )}
 
           {message.result === undefined && !command && !content && message.status !== 'awaiting' && (
-            <p className="text-[11.5px] text-muted">
+            <p className="text-[12px] text-muted">
               {message.status === 'running' ? 'Working…' : 'No result was recorded.'}
             </p>
           )}

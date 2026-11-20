@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Building2, MessageSquare, ScrollText } from 'lucide-react'
+import { ScrollText } from 'lucide-react'
 import type { ChatSession } from '../types'
 import { useSettings } from '../store/settings'
 import { useChats } from '../store/chats'
@@ -9,7 +9,7 @@ import { useWorkspace } from '../store/workspace'
 import { inheritedPrompt, resolveBasePrompt } from '../lib/system-prompt'
 import { useClickOutside } from '../lib/hooks'
 import { cn } from '../lib/utils'
-import { Segmented } from './ui'
+import { RadioMark, Segmented } from './ui'
 
 type Scope = 'session' | 'workspace'
 
@@ -29,25 +29,16 @@ function Choice({
   return (
     <button
       type="button"
+      role="radio"
+      aria-checked={active}
       onClick={onClick}
       disabled={disabled}
-      aria-pressed={active}
-      className={cn(
-        'flex w-full items-start gap-2.5 rounded-xl border px-3 py-2.5 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-50',
-        active ? 'border-accent/40 bg-accent-soft/60' : 'border-line hover:bg-raised/60',
-      )}
+      className="flex w-full items-start gap-3 rounded-[9px] px-3 py-2 text-left transition-colors hover:bg-ink/[.08] disabled:cursor-not-allowed disabled:opacity-50"
     >
-      <span
-        className={cn(
-          'mt-[3px] flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full border',
-          active ? 'border-accent' : 'border-faint',
-        )}
-      >
-        {active && <span className="h-1.5 w-1.5 rounded-full bg-accent" />}
-      </span>
+      <RadioMark checked={active} className="mt-0.5" />
       <span className="min-w-0">
-        <span className="block text-[12px] font-medium text-ink">{title}</span>
-        <span className="mt-0.5 block text-[10.5px] leading-snug text-muted">{description}</span>
+        <span className="block text-[14px] leading-snug text-ink">{title}</span>
+        <span className="block text-[12px] leading-snug text-muted">{description}</span>
       </span>
     </button>
   )
@@ -68,8 +59,7 @@ export function SystemPromptButton({ session }: { session: ChatSession | null })
   useClickOutside(panelRef, () => setOpen(false), open, triggerRef)
   const [position, setPosition] = useState<{ top: number; right: number }>({ top: 56, right: 12 })
 
-  // The top bar blurs its backdrop, which traps children in its own stacking context.
-  // Render the panel in a portal and place it from the trigger's rectangle.
+  // Render the popover in a portal and place it from the trigger's rectangle.
   useLayoutEffect(() => {
     if (!open) return
     const place = () => {
@@ -121,10 +111,10 @@ export function SystemPromptButton({ session }: { session: ChatSession | null })
         title={`System prompt · ${effective.source === 'session' ? 'custom for this session' : effective.source === 'workspace' ? 'custom for this workspace' : 'shared'}`}
         aria-label="Edit system prompt"
         aria-expanded={open}
-        className={cn('icon-button relative', open && 'bg-raised text-ink')}
+        className={cn('adw-icon-btn relative', open && 'bg-ink/[.1]')}
       >
-        <ScrollText size={16} strokeWidth={1.7} />
-        {customized && <span className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-accent" />}
+        <ScrollText size={16} />
+        {customized && <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-accent" aria-label="Customized" />}
       </button>
 
       {open &&
@@ -134,10 +124,10 @@ export function SystemPromptButton({ session }: { session: ChatSession | null })
           role="dialog"
           aria-label="System prompt"
           style={{ top: position.top, right: position.right }}
-          className="fixed z-[95] max-h-[calc(100dvh-80px)] w-[min(420px,92vw)] overflow-y-auto rounded-2xl border border-line bg-panel p-3.5 shadow-float"
+          className="adw-popover thin-scroll fixed z-[95] max-h-[calc(100dvh-80px)] w-[min(440px,92vw)] overflow-y-auto p-3"
         >
-          <div className="mb-2.5 flex items-center justify-between gap-3">
-            <p className="text-[12.5px] font-semibold text-ink">System prompt</p>
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <p className="adw-heading">System prompt</p>
             <Segmented<Scope>
               value={activeScope}
               onChange={setScope}
@@ -148,12 +138,11 @@ export function SystemPromptButton({ session }: { session: ChatSession | null })
             />
           </div>
 
-          <p className="mb-2 flex items-center gap-1.5 text-[10.5px] text-muted">
-            {isSession ? <MessageSquare size={11} /> : <Building2 size={11} />}
+          <p className="mb-2 text-[12px] text-muted">
             {isSession ? (session ? 'Applies to this conversation only.' : 'Send a message to start a conversation first.') : root ? `Applies to every conversation in ${workspaceName || 'this folder'}.` : 'Open a workspace folder first.'}
           </p>
 
-          <div className="space-y-1.5">
+          <div role="radiogroup" aria-label="Prompt source" className="space-y-0.5">
             <Choice
               active={!custom}
               disabled={unavailable}
@@ -182,12 +171,12 @@ export function SystemPromptButton({ session }: { session: ChatSession | null })
               rows={9}
               spellCheck={false}
               aria-label="Custom system prompt"
-              className="thin-scroll mt-2.5 w-full resize-y rounded-xl border border-line bg-canvas px-3 py-2 font-mono text-[11px] leading-relaxed text-ink outline-none focus:border-accent/50"
+              className="adw-entry thin-scroll mt-2 resize-y bg-raised font-mono text-[13px]"
               placeholder="You are…"
             />
           )}
 
-          <p className="mt-2 text-[10px] leading-relaxed text-faint">
+          <p className="mt-2 text-[12px] leading-relaxed text-muted">
             Order of precedence: session, then workspace, then shared. Skills, workspace context and mode rules are always added after it.
           </p>
         </div>,

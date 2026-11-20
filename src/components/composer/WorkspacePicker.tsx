@@ -4,6 +4,7 @@ import { useUi } from '../../store/ui'
 import { useWorkspace } from '../../store/workspace'
 import { Popover, MenuLabel, TextButton } from './Popover'
 import { cn } from '../../lib/utils'
+import { Spinner } from '../ui'
 
 /** The project folder, shown above the composer. Click to switch folders. */
 export function WorkspacePicker() {
@@ -47,53 +48,54 @@ export function WorkspacePicker() {
           title={info.available ? info.root : 'Choose a project folder'}
           className="max-w-[240px]"
         >
-          <FolderOpen size={13} className="shrink-0 text-faint" />
+          <FolderOpen size={16} className="shrink-0" />
           <span className="truncate">{info.available ? info.name : 'Select folder'}</span>
           {info.available && git.available && git.branch && (
-            <span className="flex shrink-0 items-center gap-0.5 text-faint">
-              <GitBranch size={11} />
+            <span className="flex shrink-0 items-center gap-1 text-muted">
+              <GitBranch size={14} />
               {git.branch}
             </span>
           )}
-          <ChevronDown size={11} className={cn('shrink-0 text-faint transition-transform', open && 'rotate-180')} />
+          <ChevronDown size={14} className={cn('shrink-0 transition-transform', open && 'rotate-180')} />
         </TextButton>
       }
     >
       <MenuLabel>Folders</MenuLabel>
       <div>
-        {recent.length === 0 && <p className="px-2 pb-2 text-[11.5px] text-faint">No folders yet.</p>}
+        {recent.length === 0 && <p className="px-3 pb-2 text-[12px] text-muted">No folders yet.</p>}
         {recent.map((workspace) => (
           <button
             key={workspace.path}
             type="button"
             onClick={() => void choose(workspace.path)}
             disabled={Boolean(switching)}
-            className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-raised disabled:opacity-60"
+            className="adw-menu-item h-auto min-h-[40px] py-1.5 disabled:opacity-60"
             title={workspace.path}
           >
             <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-              {workspace.path === info.root ? <Check size={12} className="text-accent" /> : <FolderOpen size={12} className="text-faint" />}
+              {workspace.path === info.root ? <Check size={16} className="text-link" /> : <FolderOpen size={16} className="text-muted" />}
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-[12px] font-medium text-ink">{workspace.name}</span>
-              <span className="block truncate text-[10px] text-faint">{workspace.path}</span>
+              <span className="block truncate text-[14px] leading-snug text-ink">{workspace.name}</span>
+              <span className="block truncate text-[12px] leading-snug text-muted">{workspace.path}</span>
             </span>
             {switching === workspace.path && (
-              <span className="h-3 w-3 shrink-0 animate-spin rounded-full border border-current border-t-transparent text-faint" />
+              <Spinner size={14} className="shrink-0 text-muted" />
             )}
           </button>
         ))}
       </div>
-      <div className="mt-1 border-t border-line pt-1">
+      <div className="adw-menu-sep" />
+      <div>
         <button
           type="button"
           onClick={() => {
             setOpen(false)
             setWorkspaceOpen(true)
           }}
-          className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[12px] text-muted transition-colors hover:bg-raised hover:text-ink"
+          className="adw-menu-item"
         >
-          <FolderOpen size={12} className="text-faint" />
+          <FolderOpen size={16} className="text-muted" />
           Open another folder…
         </button>
       </div>

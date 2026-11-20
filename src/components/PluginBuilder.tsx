@@ -121,27 +121,27 @@ export function PluginBuilder({ onInstalled }: { onInstalled?: (plugin: Installe
   const loaded = folder ? Object.keys(folder.files) : []
 
   return (
-    <details className="rounded-xl border border-line bg-raised/20">
-      <summary className="flex cursor-pointer items-center gap-2 px-3 py-2.5 text-[11.5px] font-medium text-ink">
+    <details className="rounded-[12px] border border-line bg-raised/20">
+      <summary className="flex cursor-pointer items-center gap-2 px-3 py-2.5 text-[12px] font-medium text-ink">
         <Hammer size={13} className="text-faint" />
         Build a plugin package from a folder
       </summary>
       <div className="space-y-2.5 border-t border-line px-3 py-3">
-        <p className="text-[10.5px] leading-relaxed text-faint">
+        <p className="text-[12px] leading-relaxed text-faint">
           Load a plugin folder, or the files themselves. One <code className="font-mono">.js</code> entry and one
           optional <code className="font-mono">.css</code> stylesheet become the package. A{' '}
           <code className="font-mono">manifest.json</code> in the folder fills these fields in; the fields win.
         </p>
 
-        <div className="flex items-center gap-2 rounded-lg border border-line bg-panel px-2.5 py-2">
+        <div className="flex items-center gap-2 rounded-[9px] border border-line bg-panel px-2.5 py-2">
           <Switch
             checked={apiVersion === 2}
             onChange={(on: boolean) => setApiVersion(on ? 2 : 1)}
             label="API v2"
           />
-          <span className="text-[10.5px] font-medium text-ink">API v2 — free plugin (full app access)</span>
+          <span className="text-[12px] font-medium text-ink">API v2 — free plugin (full app access)</span>
           {apiVersion === 2 && (
-            <span className="ml-auto text-[9.5px] text-accent">ctx = Cordis kernel scope</span>
+            <span className="ml-auto text-[12px] text-accent">ctx = Cordis kernel scope</span>
           )}
         </div>
 
@@ -149,7 +149,7 @@ export function PluginBuilder({ onInstalled }: { onInstalled?: (plugin: Installe
           <button
             type="button"
             onClick={() => folderRef.current?.click()}
-            className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-accent px-3 text-[10.5px] font-medium text-on-accent hover:bg-accent/90"
+            className="adw-btn adw-btn-suggested h-8"
           >
             <FolderTree size={12} />
             Load folder
@@ -157,7 +157,7 @@ export function PluginBuilder({ onInstalled }: { onInstalled?: (plugin: Installe
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
-            className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-line bg-panel px-3 text-[10.5px] font-medium text-ink hover:bg-raised"
+            className="inline-flex h-8 items-center gap-1.5 rounded-[9px] border border-line bg-panel px-3 text-[12px] font-medium text-ink hover:bg-raised"
           >
             <FileUp size={12} />
             Load files
@@ -190,15 +190,15 @@ export function PluginBuilder({ onInstalled }: { onInstalled?: (plugin: Installe
         </div>
 
         {folder && (
-          <div className="rounded-lg border border-line bg-panel/60 px-2.5 py-2">
-            <p className="text-[10.5px] text-muted">
+          <div className="rounded-[9px] border border-line bg-panel/60 px-2.5 py-2">
+            <p className="text-[12px] text-muted">
               <span className="font-medium text-ink">{loaded.length} file(s)</span> · entry{' '}
               <code className="font-mono">{folder.entry}</code> · stylesheet{' '}
               <code className="font-mono">{folder.stylesheet}</code>
             </p>
             <ul className="mt-1 space-y-0.5">
               {loaded.slice(0, 6).map((path) => (
-                <li key={path} className="truncate font-mono text-[9.5px] text-faint">
+                <li key={path} className="truncate font-mono text-[12px] text-faint">
                   {path} · {formatBytes(
                     typeof folder.files[path] === 'string'
                       ? new TextEncoder().encode(folder.files[path]).length
@@ -206,31 +206,31 @@ export function PluginBuilder({ onInstalled }: { onInstalled?: (plugin: Installe
                   )}
                 </li>
               ))}
-              {loaded.length > 6 && <li className="font-mono text-[9.5px] text-faint">+{loaded.length - 6} more</li>}
+              {loaded.length > 6 && <li className="font-mono text-[12px] text-faint">+{loaded.length - 6} more</li>}
             </ul>
           </div>
         )}
 
         <div className="grid gap-2 sm:grid-cols-3">
           <label className="block">
-            <span className="text-[10px] font-medium text-muted">Id</span>
+            <span className="text-[12px] font-medium text-muted">Id</span>
             <input className={fieldClass} value={id} onChange={(event) => setId(event.target.value)} />
           </label>
           <label className="block">
-            <span className="text-[10px] font-medium text-muted">Name</span>
+            <span className="text-[12px] font-medium text-muted">Name</span>
             <input className={fieldClass} value={name} onChange={(event) => setName(event.target.value)} />
           </label>
           <label className="block">
-            <span className="text-[10px] font-medium text-muted">Version</span>
+            <span className="text-[12px] font-medium text-muted">Version</span>
             <input className={fieldClass} value={version} onChange={(event) => setVersion(event.target.value)} />
           </label>
         </div>
 
         <div>
-          <span className="text-[10px] font-medium text-muted">Capabilities</span>
+          <span className="text-[12px] font-medium text-muted">Capabilities</span>
           <div className="mt-1 flex flex-wrap gap-1.5">
             {apiVersion === 2 ? (
-              <p className="text-[10px] text-faint">Not needed — API v2 plugin has full access via the Cordis context.</p>
+              <p className="text-[12px] text-faint">Not needed — API v2 plugin has full access via the Cordis context.</p>
             ) : CAPABILITIES.map((capability) => {
               const on = capabilities.includes(capability)
               return (
@@ -242,8 +242,9 @@ export function PluginBuilder({ onInstalled }: { onInstalled?: (plugin: Installe
                       on ? current.filter((entry) => entry !== capability) : [...current, capability],
                     )
                   }
-                  className={`rounded-full border px-2 py-1 font-mono text-[9.5px] ${
-                    on ? 'border-accent/40 bg-accent-soft text-ink' : 'border-line text-faint'
+                  aria-pressed={on}
+                  className={`rounded-[9px] border px-2 py-1 font-mono text-[12px] ${
+                    on ? 'border-accent bg-accent-soft text-ink' : 'border-line text-muted hover:bg-ink/[.05]'
                   }`}
                 >
                   {capability}
@@ -254,7 +255,7 @@ export function PluginBuilder({ onInstalled }: { onInstalled?: (plugin: Installe
         </div>
 
         <label className="block">
-          <span className="text-[10px] font-medium text-muted">Network domains (optional, comma separated)</span>
+          <span className="text-[12px] font-medium text-muted">Network domains (optional, comma separated)</span>
           <input
             className={fieldClass}
             value={domains}
@@ -267,14 +268,14 @@ export function PluginBuilder({ onInstalled }: { onInstalled?: (plugin: Installe
           <button
             type="button"
             onClick={download}
-            className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-accent px-3 text-[10.5px] font-medium text-on-accent hover:bg-accent/90"
+            className="adw-btn adw-btn-suggested h-8"
           >
             Download plugin package
           </button>
           <button
             type="button"
             onClick={() => void install()}
-            className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-line bg-panel px-3 text-[10.5px] font-medium text-ink hover:bg-raised"
+            className="inline-flex h-8 items-center gap-1.5 rounded-[9px] border border-line bg-panel px-3 text-[12px] font-medium text-ink hover:bg-raised"
           >
             Build and install
           </button>

@@ -4,20 +4,10 @@ import type { ToolMessage } from '../types'
 import { answerIsComplete, emptyAnswer, normalizeQuestions, readResult, type AskAnswer, type AskQuestion } from '../lib/ask-question'
 import { answerQuestions, dismissQuestions, useQuestions } from '../store/questions'
 import { cn } from '../lib/utils'
+import { RadioMark, CheckMark } from './ui'
 
 function Indicator({ checked, multi }: { checked: boolean; multi: boolean }) {
-  return (
-    <span
-      aria-hidden
-      className={cn(
-        'mt-[3px] grid h-[15px] w-[15px] shrink-0 place-items-center border transition-colors duration-150',
-        multi ? 'rounded-[4px]' : 'rounded-full',
-        checked ? 'border-accent bg-accent text-on-accent' : 'border-faint/60 bg-transparent',
-      )}
-    >
-      {checked && (multi ? <Check size={10} strokeWidth={3} /> : <span className="h-[5px] w-[5px] rounded-full bg-on-accent" />)}
-    </span>
-  )
+  return <span className="mt-0.5 shrink-0">{multi ? <CheckMark checked={checked} /> : <RadioMark checked={checked} />}</span>
 }
 
 function answerText(answer: AskAnswer): string {
@@ -32,12 +22,12 @@ function Summary({ message, questions }: { message: ToolMessage; questions: AskQ
   const skipped = result?.dismissed === true
   const interrupted = !result && message.status !== 'done'
   return (
-    <div className="animate-fade py-1 text-[12.5px]">
-      <p className="flex items-center gap-1.5 font-medium text-ink">
-        <CircleHelp size={13} className="text-faint" />
+    <div className="adw-boxed px-3 py-2 text-[13px]">
+      <p className="flex items-center gap-1.5 font-semibold text-ink">
+        <CircleHelp size={16} className="text-muted" />
         {skipped ? 'Questions skipped' : interrupted ? 'Question not answered' : questions.length === 1 ? 'Question answered' : `${questions.length} questions answered`}
       </p>
-      <ul className="mt-1.5 space-y-1.5 pl-[19px]">
+      <ul className="mt-1.5 space-y-1.5 pl-6">
         {questions.map((question, index) => {
           const answer = result?.answers[index]
           return (
@@ -121,14 +111,14 @@ export function QuestionCard({ message }: { message: ToolMessage }) {
     <div
       ref={root}
       onKeyDown={onKeyDown}
-      className="my-1.5 animate-scalein rounded-xl border border-line bg-raised/50 p-3.5 text-[12.5px] shadow-pill"
+      className="adw-boxed my-1.5 p-4 text-[13px]"
       role="group"
       aria-label="Question from the agent"
     >
-      <div className="flex items-center gap-2 text-[11px] font-medium text-warning">
-        <CircleHelp size={13} />
+      <div className="flex items-center gap-2 text-[12px] font-semibold text-warning">
+        <CircleHelp size={16} />
         <span>{questions.length > 1 ? `Question ${step + 1} of ${questions.length}` : 'Question'}</span>
-        <span className="ml-auto font-normal text-faint">The agent is waiting for you</span>
+        <span className="ml-auto font-normal text-muted">The agent is waiting for you</span>
       </div>
 
       {questions.length > 1 && (
@@ -141,23 +131,23 @@ export function QuestionCard({ message }: { message: ToolMessage }) {
               aria-selected={index === step}
               onClick={() => go(index)}
               className={cn(
-                'flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 text-[11.5px] transition-colors',
-                index === step ? 'border-accent bg-accent-soft text-ink' : 'border-line text-muted hover:text-ink',
+                'flex h-8 shrink-0 items-center gap-1 rounded-[9px] px-3 text-[12px] font-semibold transition-colors',
+                index === step ? 'bg-ink/[.11] text-ink' : 'text-muted hover:bg-ink/[.07] hover:text-ink',
               )}
             >
-              {answered[index] && <Check size={11} strokeWidth={2.6} className="text-success" />}
+              {answered[index] && <Check size={14} className="text-success" />}
               {item.header || `Q${index + 1}`}
             </button>
           ))}
         </div>
       )}
 
-      <p key={step} className="mt-3 animate-fade text-[13.5px] font-medium leading-snug text-ink">
+      <p key={step} className="mt-3 text-[14px] font-semibold leading-snug text-ink">
         {question.question}
       </p>
-      <p className="mt-0.5 text-[11px] text-faint">{question.multiSelect ? 'Select all that apply' : 'Select one'}</p>
+      <p className="mt-0.5 text-[12px] text-muted">{question.multiSelect ? 'Select all that apply' : 'Select one'}</p>
 
-      <div key={`o${step}`} className="mt-2.5 animate-fade space-y-1.5">
+      <div key={`o${step}`} className="mt-2.5 space-y-1.5">
         {question.options.map((option, index) => {
           const checked = answer.selected.includes(option.label)
           return (
@@ -168,16 +158,16 @@ export function QuestionCard({ message }: { message: ToolMessage }) {
               aria-checked={checked}
               onClick={() => choose(option.label)}
               className={cn(
-                'flex w-full items-start gap-2.5 rounded-lg border px-3 py-2 text-left transition-colors duration-150',
-                checked ? 'border-accent bg-accent-soft/70' : 'border-line hover:border-faint hover:bg-canvas/60',
+                'flex min-h-[44px] w-full items-start gap-2.5 rounded-[9px] border px-3 py-2 text-left transition-colors',
+                checked ? 'border-accent bg-accent-soft' : 'border-line hover:bg-ink/[.05]',
               )}
             >
               <Indicator checked={checked} multi={question.multiSelect} />
               <span className="min-w-0 flex-1">
                 <span className="block text-[13px] leading-snug text-ink">{option.label}</span>
-                {option.description && <span className="mt-0.5 block text-[11.5px] leading-snug text-muted">{option.description}</span>}
+                {option.description && <span className="mt-0.5 block text-[12px] leading-snug text-muted">{option.description}</span>}
               </span>
-              {index < 9 && <kbd className="mt-0.5 shrink-0 font-mono text-[10.5px] text-faint">{index + 1}</kbd>}
+              {index < 9 && <kbd className="mt-0.5 shrink-0 font-mono text-[12px] text-faint">{index + 1}</kbd>}
             </button>
           )
         })}
@@ -185,8 +175,8 @@ export function QuestionCard({ message }: { message: ToolMessage }) {
         {/* Always the last row of every question: the person can answer in their own words. */}
         <label
           className={cn(
-            'flex items-start gap-2.5 rounded-lg border px-3 py-2 transition-colors duration-150 focus-within:border-accent',
-            answer.custom.trim() ? 'border-accent bg-accent-soft/70' : 'border-dashed border-line',
+            'flex min-h-[44px] items-start gap-2.5 rounded-[9px] border px-3 py-2 transition-colors focus-within:border-accent',
+            answer.custom.trim() ? 'border-accent bg-accent-soft' : 'border-line',
           )}
         >
           <Indicator checked={Boolean(answer.custom.trim())} multi={question.multiSelect} />
@@ -205,20 +195,20 @@ export function QuestionCard({ message }: { message: ToolMessage }) {
         <button
           type="button"
           onClick={() => dismissQuestions(callId)}
-          className="text-[12px] text-muted transition-colors hover:text-ink"
+          className="adw-btn adw-btn-flat h-8"
         >
           Skip
         </button>
-        <span className="ml-auto text-[11px] text-faint">
+        <span className="ml-auto text-[12px] text-muted">
           {questions.length > 1 ? `${answeredCount}/${questions.length} answered` : ''}
         </span>
         {step > 0 && (
           <button
             type="button"
             onClick={() => go(step - 1)}
-            className="flex items-center gap-0.5 rounded-lg px-2 py-1.5 text-[12px] text-muted transition-colors hover:text-ink"
+            className="adw-btn h-8"
           >
-            <ChevronLeft size={13} /> Back
+            <ChevronLeft size={16} /> Back
           </button>
         )}
         {last ? (
@@ -226,7 +216,7 @@ export function QuestionCard({ message }: { message: ToolMessage }) {
             type="button"
             onClick={submit}
             disabled={!allAnswered}
-            className="rounded-lg bg-accent px-3.5 py-1.5 text-[12px] font-medium text-on-accent transition-opacity enabled:hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+            className="adw-btn adw-btn-suggested h-8"
           >
             Submit answers
           </button>
@@ -234,9 +224,9 @@ export function QuestionCard({ message }: { message: ToolMessage }) {
           <button
             type="button"
             onClick={() => go(step + 1)}
-            className="flex items-center gap-0.5 rounded-lg bg-accent px-3 py-1.5 text-[12px] font-medium text-on-accent transition-opacity hover:opacity-90"
+            className="adw-btn adw-btn-suggested h-8"
           >
-            Next <ChevronRight size={13} />
+            Next <ChevronRight size={16} />
           </button>
         )}
       </div>

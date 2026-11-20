@@ -310,17 +310,17 @@ export function CommandPalette() {
         type="button"
         aria-label="Close command palette"
         tabIndex={-1}
-        className="absolute inset-0 cursor-default bg-ink/20 backdrop-blur-[2px] dark:bg-black/45"
+        className="adw-scrim absolute inset-0 cursor-default"
         onClick={() => setOpen(false)}
       />
       <div
         role="dialog"
         aria-modal="true"
         aria-label="Search and commands"
-        className="modal-panel relative flex max-h-[min(72dvh,560px)] w-full max-w-[560px] flex-col overflow-hidden rounded-2xl border border-line surface-lift shadow-float"
+        className="adw-dialog relative flex max-h-[min(72dvh,560px)] w-full max-w-[560px] flex-col overflow-hidden"
       >
         <div className="flex h-12 shrink-0 items-center gap-2.5 border-b border-line px-3.5">
-          <Search size={15} className="shrink-0 text-faint" />
+          <Search size={16} className="shrink-0 text-muted" />
           <input
             ref={inputRef}
             value={query}
@@ -342,13 +342,13 @@ export function CommandPalette() {
               }
             }}
             placeholder="Search chats, files, settings, actions…"
-            className="h-full min-w-0 flex-1 bg-transparent text-[13px] text-ink outline-none placeholder:text-faint"
+            className="h-full min-w-0 flex-1 bg-transparent text-[14px] text-ink outline-none placeholder:text-faint"
             role="combobox"
             aria-expanded="true"
             aria-controls="palette-results"
             aria-activedescendant={filtered[activeIndex] ? `palette-${filtered[activeIndex].id}` : undefined}
           />
-          <kbd className="hidden rounded border border-line bg-raised px-1.5 py-0.5 text-[9px] text-faint sm:block">
+          <kbd className="adw-kbd hidden sm:inline-flex">
             Esc
           </kbd>
         </div>
@@ -356,8 +356,8 @@ export function CommandPalette() {
         <div id="palette-results" role="listbox" className="thin-scroll min-h-0 flex-1 overflow-y-auto p-1.5">
           {filtered.length === 0 && (
             <div className="px-4 py-10 text-center">
-              <p className="text-[12px] font-medium text-muted">No matches</p>
-              <p className="mt-1 text-[10.5px] text-faint">Try a chat title, a file name or “deploy”.</p>
+              <p className="text-[14px] font-semibold text-muted">No matches</p>
+              <p className="mt-1 text-[12px] text-faint">Try a chat title, a file name or “deploy”.</p>
             </div>
           )}
           {filtered.map((command, index) => {
@@ -366,7 +366,7 @@ export function CommandPalette() {
             return (
               <Fragment key={command.id}>
                 {showGroup && (
-                  <p className="px-2 pb-1 pt-2 text-[9.5px] font-medium uppercase tracking-[0.08em] text-faint">
+                  <p className="adw-section-label px-2 pb-1 pt-2">
                     {command.group}
                   </p>
                 )}
@@ -379,26 +379,26 @@ export function CommandPalette() {
                   onMouseMove={() => setActiveIndex(index)}
                   onClick={() => run(index)}
                   className={cn(
-                    'flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left transition-colors',
-                    activeIndex === index ? 'bg-raised' : 'hover:bg-raised/60',
+                    'flex w-full items-center gap-2.5 rounded-[9px] px-2 py-2 text-left transition-colors',
+                    activeIndex === index ? 'bg-ink/[.09]' : 'hover:bg-ink/[.05]',
                   )}
                 >
                   <span
                     className={cn(
-                      'flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-line bg-panel',
+                      'flex h-6 w-6 shrink-0 items-center justify-center',
                       activeIndex === index ? 'text-accent' : 'text-muted',
                     )}
                   >
-                    <Icon size={12} />
+                    <Icon size={16} />
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[11.5px] font-medium text-ink">{command.label}</span>
+                    <span className="block truncate text-[14px] text-ink">{command.label}</span>
                     {command.hint && (
-                      <span className="mt-0.5 block truncate text-[9.5px] text-faint">{command.hint}</span>
+                      <span className="mt-0.5 block truncate text-[12px] text-faint">{command.hint}</span>
                     )}
                   </span>
                   <ArrowUpRight
-                    size={11}
+                    size={16}
                     className={cn(
                       'shrink-0 text-faint transition-opacity',
                       activeIndex === index ? 'opacity-100' : 'opacity-0',
@@ -410,14 +410,14 @@ export function CommandPalette() {
           })}
         </div>
 
-        <div className="flex h-8 shrink-0 items-center justify-between border-t border-line bg-raised/30 px-3 text-[9px] text-faint">
+        <div className="flex h-8 shrink-0 items-center justify-between border-t border-line bg-raised px-3 text-[12px] text-faint">
           <span className="flex items-center gap-2">
             <span>
-              <kbd className="rounded border border-line bg-panel px-1">↑</kbd>{' '}
-              <kbd className="rounded border border-line bg-panel px-1">↓</kbd> navigate
+              <kbd className="adw-kbd !h-4 !min-w-0 px-1">↑</kbd>{' '}
+              <kbd className="adw-kbd !h-4 !min-w-0 px-1">↓</kbd> navigate
             </span>
             <span>
-              <kbd className="rounded border border-line bg-panel px-1">↵</kbd> open
+              <kbd className="adw-kbd !h-4 !min-w-0 px-1">↵</kbd> open
             </span>
           </span>
           <span>OpenSol</span>

@@ -57,14 +57,14 @@ interface LogLine {
 }
 
 const inputClass =
-  'h-9 w-full rounded-lg border border-line bg-panel px-2.5 font-mono text-[11px] text-ink outline-none transition-colors placeholder:text-faint focus:border-accent/50 disabled:opacity-60'
+  'adw-entry w-full font-mono text-[12px]'
 
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="mb-1.5 flex items-baseline gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-faint">
+      <p className="mb-1.5 flex items-baseline gap-1.5 text-[13px] font-semibold text-ink">
         {label}
-        {hint && <span className="font-normal normal-case tracking-normal">{hint}</span>}
+        {hint && <span className="font-normal text-muted">{hint}</span>}
       </p>
       {children}
     </div>
@@ -256,17 +256,15 @@ export function DeployModal() {
     <Modal open={open} onClose={close} labelledBy="deploy-title" wide className="h-[92dvh] p-0 sm:h-[min(90dvh,780px)]">
       <div className="flex shrink-0 items-center justify-between gap-4 border-b border-line px-5 py-3.5 sm:px-6">
         <div className="flex min-w-0 items-center gap-3">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent text-on-accent shadow-pill">
-            <Rocket size={17} />
-          </span>
+          <Rocket size={16} className="shrink-0 text-muted" />
           <div className="min-w-0">
-            <h2 id="deploy-title" className="font-display text-[19px] font-semibold leading-tight tracking-[-0.02em] text-ink">
+            <h2 id="deploy-title" className="text-[18px] font-bold leading-tight text-ink">
               Deploy
             </h2>
-            <p className="truncate text-[11.5px] text-muted">Build and publish a folder to a live URL. Tokens stay encrypted on this machine.</p>
+            <p className="truncate text-[12px] text-muted">Build and publish a folder to a live URL. Tokens stay encrypted on this machine.</p>
           </div>
         </div>
-        <button type="button" className="icon-button shrink-0" onClick={close} aria-label="Close deploy panel">
+        <button type="button" className="adw-icon-btn shrink-0" onClick={close} aria-label="Close deploy panel">
           <X size={16} />
         </button>
       </div>
@@ -288,14 +286,14 @@ export function DeployModal() {
                       disabled={running}
                       aria-pressed={active}
                       className={cn(
-                        'relative flex flex-col items-start gap-2 rounded-xl border p-2.5 text-left transition-all disabled:opacity-60',
-                        active ? 'border-accent/50 bg-accent-soft/50 shadow-pill' : 'border-line bg-panel hover:bg-raised/60',
+                        'relative flex flex-col items-start gap-2 rounded-[12px] border p-2.5 text-left transition-all disabled:opacity-60',
+                        active ? 'border-accent bg-accent-soft' : 'border-line hover:bg-ink/[.05]',
                       )}
                     >
-                      <span className="flex h-7 w-7 items-center justify-center rounded-lg text-white" style={{ backgroundColor: entry.tint }}>
+                      <span className="flex h-7 w-7 items-center justify-center rounded-[9px] text-white" style={{ backgroundColor: entry.tint }}>
                         <Icon size={14} />
                       </span>
-                      <span className="text-[11.5px] font-medium leading-tight text-ink">{entry.label}</span>
+                      <span className="text-[12px] font-medium leading-tight text-ink">{entry.label}</span>
                       <span
                         className={cn('absolute right-2 top-2 h-1.5 w-1.5 rounded-full', ready ? 'bg-success' : 'bg-warning')}
                         title={ready ? 'Credentials saved' : 'Needs credentials'}
@@ -304,12 +302,12 @@ export function DeployModal() {
                   )
                 })}
               </div>
-              <p className="mt-1.5 text-[10px] text-faint">{meta.blurb}</p>
+              <p className="mt-1.5 text-[12px] text-faint">{meta.blurb}</p>
             </Field>
 
             {!configured && (
-              <div className="rounded-xl border border-warning/25 bg-warning/[0.05] p-3">
-                <p className="flex items-start gap-1.5 text-[10.5px] leading-relaxed text-muted">
+              <div className="rounded-[12px] border border-warning/25 bg-warning/[0.05] p-3">
+                <p className="flex items-start gap-1.5 text-[12px] leading-relaxed text-muted">
                   <ShieldCheck size={12} className="mt-0.5 shrink-0 text-warning" />
                   {meta.label} needs {meta.needs}. Add it once in Settings → Deploy; it is encrypted and never shown again.
                 </p>
@@ -319,7 +317,7 @@ export function DeployModal() {
                     setOpen(false)
                     openSettings('deploy')
                   }}
-                  className="mt-2 inline-flex h-7 items-center rounded-lg bg-ink px-2.5 text-[10.5px] font-medium text-panel"
+                  className="adw-btn adw-btn-suggested mt-2 h-7"
                 >
                   Add {meta.label} credentials
                 </button>
@@ -337,7 +335,7 @@ export function DeployModal() {
                 aria-label="Project folder"
               />
               <div className="mt-1.5 flex items-center justify-between gap-2">
-                <p className="min-w-0 truncate text-[10px] text-faint">
+                <p className="min-w-0 truncate text-[12px] text-faint">
                   {workspaceAvailable ? `Open workspace: ${workspaceName}` : 'No workspace open.'}
                 </p>
                 {workspaceAvailable && path !== workspaceRoot && (
@@ -345,7 +343,7 @@ export function DeployModal() {
                     type="button"
                     onClick={() => setPath(workspaceRoot)}
                     disabled={running}
-                    className="inline-flex shrink-0 items-center gap-1 text-[10px] font-medium text-accent disabled:opacity-40"
+                    className="inline-flex shrink-0 items-center gap-1 text-[12px] font-medium text-accent disabled:opacity-40"
                   >
                     <FolderOpen size={10} /> Use workspace
                   </button>
@@ -353,9 +351,9 @@ export function DeployModal() {
               </div>
 
               {detected && (
-                <div className="mt-2 flex items-start gap-2.5 rounded-xl border border-line bg-raised/40 p-2.5">
+                <div className="mt-2 flex items-start gap-2.5 rounded-[12px] border border-line bg-raised/40 p-2.5">
                   <FolderIcon name={detected.outputDir || 'src'} open size={22} />
-                  <div className="min-w-0 flex-1 text-[10.5px] leading-relaxed">
+                  <div className="min-w-0 flex-1 text-[12px] leading-relaxed">
                     <p className="font-medium text-ink">
                       {detected.framework || 'Folder'}
                       {detected.packageManager && <span className="ml-1.5 font-normal text-faint">{detected.packageManager}</span>}
@@ -383,7 +381,7 @@ export function DeployModal() {
                 </div>
               )}
               {detectError && (
-                <p className="mt-2 flex items-start gap-1.5 text-[10.5px] leading-relaxed text-danger">
+                <p className="mt-2 flex items-start gap-1.5 text-[12px] leading-relaxed text-danger">
                   <AlertTriangle size={11} className="mt-0.5 shrink-0" />
                   {detectError}
                 </p>
@@ -432,7 +430,7 @@ export function DeployModal() {
                     type="button"
                     onClick={() => setBuildCommand(value)}
                     disabled={running}
-                    className="rounded-md border border-line px-1.5 py-0.5 text-[9.5px] text-faint transition-colors hover:text-ink"
+                    className="rounded-[6px] border border-line px-1.5 py-0.5 text-[12px] text-faint transition-colors hover:text-ink"
                   >
                     {value}
                   </button>
@@ -445,7 +443,7 @@ export function DeployModal() {
                       setOutputDir('')
                     }}
                     disabled={running}
-                    className="px-1.5 py-0.5 text-[9.5px] text-faint hover:text-danger"
+                    className="px-1.5 py-0.5 text-[12px] text-faint hover:text-danger"
                   >
                     reset to auto
                   </button>
@@ -453,7 +451,7 @@ export function DeployModal() {
               </div>
             </Field>
 
-            <div className="flex items-start gap-1.5 rounded-lg border border-line bg-raised/40 px-2.5 py-2 text-[10px] leading-relaxed text-faint">
+            <div className="flex items-start gap-1.5 rounded-[9px] border border-line bg-raised/40 px-2.5 py-2 text-[12px] leading-relaxed text-faint">
               <Terminal size={11} className="mt-0.5 shrink-0" />
               {tool?.installed
                 ? `${tool.label}${tool.version ? ` ${tool.version}` : ''} found on this machine.`
@@ -472,7 +470,7 @@ export function DeployModal() {
                   <li key={step.id} className="flex min-w-0 items-center gap-1.5">
                     <span
                       className={cn(
-                        'flex h-7 items-center gap-1.5 rounded-full border px-2.5 text-[10.5px] font-medium transition-colors',
+                        'flex h-7 items-center gap-1.5 rounded-[9px] border px-2.5 text-[12px] font-medium transition-colors',
                         state === 'active' && 'border-accent/40 bg-accent-soft text-accent',
                         state === 'done' && 'border-success/30 bg-success/10 text-success',
                         state === 'error' && 'border-danger/30 bg-danger/10 text-danger',
@@ -499,7 +497,7 @@ export function DeployModal() {
               <button
                 type="button"
                 onClick={() => abortRef.current?.abort()}
-                className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-line px-3 text-[11px] font-medium text-muted hover:text-ink"
+                className="inline-flex h-8 items-center gap-1.5 rounded-[9px] border border-line px-3 text-[12px] font-medium text-muted hover:text-ink"
               >
                 <Square size={9} fill="currentColor" /> Stop
               </button>
@@ -508,7 +506,7 @@ export function DeployModal() {
                 type="button"
                 onClick={() => void deploy()}
                 disabled={!configured || !path.trim()}
-                className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-accent px-3.5 text-[11.5px] font-medium text-on-accent transition-colors hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-40"
+                className="adw-btn adw-btn-suggested h-8 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <Play size={10} fill="currentColor" />
                 {result || error ? 'Deploy again' : 'Deploy'}
@@ -523,15 +521,15 @@ export function DeployModal() {
                   <Check size={17} />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[11px] font-medium text-muted">Live on {meta.label}</p>
+                  <p className="text-[12px] font-medium text-muted">Live on {meta.label}</p>
                   <a href={result.url} target="_blank" rel="noreferrer" className="block truncate text-[14px] font-semibold text-accent hover:underline">
                     {result.url}
                   </a>
                 </div>
-                <button type="button" onClick={copyUrl} className="icon-button h-8 w-8" title="Copy URL" aria-label="Copy URL">
+                <button type="button" onClick={copyUrl} className="adw-icon-btn h-8 w-8" title="Copy URL" aria-label="Copy URL">
                   {copied ? <Check size={13} className="text-success" /> : <Copy size={13} />}
                 </button>
-                <a href={result.url} target="_blank" rel="noreferrer" className="icon-button h-8 w-8" title="Open site" aria-label="Open site">
+                <a href={result.url} target="_blank" rel="noreferrer" className="adw-icon-btn h-8 w-8" title="Open site" aria-label="Open site">
                   <ExternalLink size={13} />
                 </a>
               </div>
@@ -539,7 +537,7 @@ export function DeployModal() {
           )}
 
           {error && (
-            <div className="flex shrink-0 items-start gap-2 border-b border-danger/20 bg-danger/[0.05] px-4 py-2.5 text-[11px] leading-relaxed text-danger">
+            <div className="flex shrink-0 items-start gap-2 border-b border-danger/20 bg-danger/[0.05] px-4 py-2.5 text-[12px] leading-relaxed text-danger">
               <AlertTriangle size={13} className="mt-0.5 shrink-0" />
               {error}
             </div>
@@ -548,16 +546,16 @@ export function DeployModal() {
           <div ref={logRef} className="thin-scroll min-h-0 flex-1 overflow-y-auto bg-canvas/40 px-4 py-3">
             {logs.length === 0 && !running ? (
               <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-2 px-6 text-center">
-                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-raised text-faint">
+                <span className="flex h-11 w-11 items-center justify-center rounded-[12px] bg-raised text-faint">
                   <PackageOpen size={18} />
                 </span>
                 <p className="text-[12px] font-medium text-muted">Ready when you are</p>
-                <p className="max-w-[280px] text-[10.5px] leading-relaxed text-faint">
+                <p className="max-w-[280px] text-[12px] leading-relaxed text-faint">
                   Leave the fields on auto: OpenSol installs dependencies, builds if there is no output folder yet, then publishes it. Tokens never appear in the log.
                 </p>
               </div>
             ) : (
-              <pre className="whitespace-pre-wrap break-words font-mono text-[10.5px] leading-[1.7] text-muted">
+              <pre className="whitespace-pre-wrap break-words font-mono text-[12px] leading-[1.7] text-muted">
                 {logs.map((line) => (
                   <span
                     key={line.id}
@@ -576,7 +574,7 @@ export function DeployModal() {
             )}
           </div>
 
-          <div className="flex h-9 shrink-0 items-center gap-2 border-t border-line px-4 text-[10px] text-faint">
+          <div className="flex h-9 shrink-0 items-center gap-2 border-t border-line px-4 text-[12px] text-faint">
             <ShieldCheck size={10} />
             Tokens encrypted at rest
             <span className="ml-auto truncate">{folderName || 'No folder'}</span>

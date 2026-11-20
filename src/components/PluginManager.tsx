@@ -59,13 +59,13 @@ function PluginPreview({ plugin }: { plugin: InstalledPlugin }) {
         type="button"
         disabled={loading}
         onClick={() => (html ? setHtml(null) : void start())}
-        className="inline-flex h-7 items-center gap-1.5 rounded-lg border border-line px-2.5 text-[10.5px] font-medium text-muted hover:text-ink disabled:opacity-40"
+        className="inline-flex h-7 items-center gap-1.5 rounded-[9px] border border-line px-2.5 text-[12px] font-medium text-muted hover:text-ink disabled:opacity-40"
       >
         <Eye size={11} />
         {html ? 'Stop preview' : 'Preview in sandbox'}
       </button>
       {html && (
-        <div className="w-full overflow-hidden rounded-lg border border-line">
+        <div className="w-full overflow-hidden rounded-[9px] border border-line">
           <iframe
             ref={frameRef}
             title={`${plugin.manifest.name} preview`}
@@ -73,7 +73,7 @@ function PluginPreview({ plugin }: { plugin: InstalledPlugin }) {
             srcDoc={html}
             className="h-52 w-full bg-panel"
           />
-          <div className="max-h-24 overflow-y-auto border-t border-line bg-raised/40 px-2.5 py-1.5 font-mono text-[9.5px] leading-relaxed text-faint">
+          <div className="max-h-24 overflow-y-auto border-t border-line bg-raised/40 px-2.5 py-1.5 font-mono text-[12px] leading-relaxed text-faint">
             {log.map((entry, index) => (
               <p key={index} className="truncate">
                 {entry}
@@ -162,9 +162,9 @@ export function PluginManager() {
 
   return (
     <>
-      <section className="rounded-xl border border-line bg-raised/20 p-3">
+      <section className="rounded-[12px] border border-line bg-raised/20 p-3">
         <h3 className="text-[12px] font-medium text-ink">Install a local plugin</h3>
-        <p className="mt-1 text-[10.5px] leading-relaxed text-faint">
+        <p className="mt-1 text-[12px] leading-relaxed text-faint">
           OpenSol installs <code className="font-mono">.plugin.json</code> packages you pick from this machine. New plugins
           start sandboxed and disabled until you review them.
         </p>
@@ -173,7 +173,7 @@ export function PluginManager() {
             type="button"
             disabled={busy}
             onClick={() => fileRef.current?.click()}
-            className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-accent px-3 text-[10.5px] font-medium text-on-accent hover:bg-accent/90 disabled:opacity-40"
+            className="adw-btn adw-btn-suggested h-8 disabled:opacity-40"
           >
             <FolderOpen size={12} />
             Choose plugin package
@@ -193,7 +193,7 @@ export function PluginManager() {
       </section>
 
       {plugins.length === 0 ? (
-        <p className="rounded-lg border border-line bg-raised/30 px-3 py-3 text-[10.5px] text-faint">
+        <p className="rounded-[9px] border border-line bg-raised/30 px-3 py-3 text-[12px] text-faint">
           No plugins installed.
         </p>
       ) : (
@@ -201,7 +201,7 @@ export function PluginManager() {
           {plugins.map((plugin) => {
             const expanded = open === plugin.id
             return (
-              <div key={plugin.id} className="overflow-hidden rounded-xl border border-line">
+              <div key={plugin.id} className="overflow-hidden rounded-[12px] border border-line">
                 <div className="flex items-center gap-2 px-3 py-2.5">
                   <Package size={14} className="shrink-0 text-faint" />
                   <button
@@ -209,8 +209,8 @@ export function PluginManager() {
                     onClick={() => setOpen(expanded ? null : plugin.id)}
                     className="min-w-0 flex-1 text-left"
                   >
-                    <span className="block truncate text-[11.5px] font-medium text-ink">{plugin.manifest.name}</span>
-                    <span className="block truncate text-[9.5px] text-faint">
+                    <span className="block truncate text-[12px] font-medium text-ink">{plugin.manifest.name}</span>
+                    <span className="block truncate text-[12px] text-faint">
                       {plugin.id} · v{plugin.manifest.version} ·{' '}
                       {plugin.safe ? 'Safe — runs unsandboxed' : 'Sandboxed'}
                     </span>
@@ -227,7 +227,7 @@ export function PluginManager() {
 
                 {expanded && (
                   <div className="space-y-2.5 border-t border-line px-3 py-3">
-                    <div className={cn('flex items-start gap-2 rounded-lg px-2.5 py-2 text-[10px] leading-relaxed', plugin.safe ? 'bg-warning/10 text-ink' : 'bg-raised/60 text-muted')}>
+                    <div className={cn('flex items-start gap-2 rounded-[9px] px-2.5 py-2 text-[12px] leading-relaxed', plugin.safe ? 'bg-warning/10 text-ink' : 'bg-raised/60 text-muted')}>
                       {plugin.safe ? <ShieldAlert size={13} className="mt-0.5 shrink-0 text-warning" /> : <ShieldCheck size={13} className="mt-0.5 shrink-0 text-faint" />}
                       <span>
                         {plugin.safe
@@ -237,13 +237,13 @@ export function PluginManager() {
                     </div>
 
                     <div>
-                      <p className="text-[10.5px] font-medium text-ink">Capabilities</p>
+                      <p className="text-[12px] font-medium text-ink">Capabilities</p>
                       <div className="mt-1.5 space-y-1">
                         {plugin.manifest.capabilities.length === 0 && (
-                          <p className="text-[10px] text-faint">This plugin requests no capabilities.</p>
+                          <p className="text-[12px] text-faint">This plugin requests no capabilities.</p>
                         )}
                         {plugin.manifest.capabilities.map((capability) => (
-                          <label key={capability} className="flex items-center gap-2 text-[10.5px] text-muted">
+                          <label key={capability} className="flex items-center gap-2 text-[12px] text-muted">
                             <input
                               type="checkbox"
                               className="accent-[rgb(var(--accent))]"
@@ -259,20 +259,20 @@ export function PluginManager() {
                               }
                             />
                             <span className="flex-1">{CAPABILITY_LABELS[capability]}</span>
-                            <code className="font-mono text-[9.5px] text-faint">{capability}</code>
+                            <code className="font-mono text-[12px] text-faint">{capability}</code>
                           </label>
                         ))}
                       </div>
                     </div>
 
                     <div>
-                      <p className="text-[10.5px] font-medium text-ink">Network domains</p>
+                      <p className="text-[12px] font-medium text-ink">Network domains</p>
                       {plugin.manifest.domains.length === 0 ? (
-                        <p className="mt-1 text-[10px] text-faint">This plugin declares no network access.</p>
+                        <p className="mt-1 text-[12px] text-faint">This plugin declares no network access.</p>
                       ) : (
                         <div className="mt-1.5 space-y-1">
                           {plugin.manifest.domains.map((domain) => (
-                            <label key={domain} className="flex items-center gap-2 text-[10.5px] text-muted">
+                            <label key={domain} className="flex items-center gap-2 text-[12px] text-muted">
                               <input
                                 type="checkbox"
                                 className="accent-[rgb(var(--accent))]"
@@ -287,7 +287,7 @@ export function PluginManager() {
                                   )
                                 }
                               />
-                              <code className="flex-1 font-mono text-[10px]">{domain}</code>
+                              <code className="flex-1 font-mono text-[12px]">{domain}</code>
                             </label>
                           ))}
                         </div>
@@ -300,7 +300,7 @@ export function PluginManager() {
                         type="button"
                         onClick={() => void trust(plugin)}
                         className={cn(
-                          'inline-flex h-7 items-center gap-1.5 rounded-lg border px-2.5 text-[10.5px] font-medium',
+                          'inline-flex h-7 items-center gap-1.5 rounded-[9px] border px-2.5 text-[12px] font-medium',
                           plugin.safe
                             ? 'border-line bg-panel text-muted hover:text-ink'
                             : 'border-warning/40 bg-warning/10 text-ink',
@@ -321,7 +321,7 @@ export function PluginManager() {
                           await removeInstalledPlugin(plugin.id)
                           setPlugins((current) => current.filter((entry) => entry.id !== plugin.id))
                         }}
-                        className="inline-flex h-7 items-center gap-1.5 rounded-lg border border-line px-2.5 text-[10.5px] font-medium text-muted hover:text-danger"
+                        className="inline-flex h-7 items-center gap-1.5 rounded-[9px] border border-line px-2.5 text-[12px] font-medium text-muted hover:text-danger"
                       >
                         <Trash2 size={11} />
                         Uninstall

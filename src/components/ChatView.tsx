@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { ArrowUp, Bug, Gamepad2, KeyRound, LayoutTemplate } from 'lucide-react'
+import { ArrowUp, Bug, ChevronRight, Gamepad2, KeyRound, LayoutTemplate } from 'lucide-react'
 import type { Attachment } from '../types'
 import { createId, useChats } from '../store/chats'
 import { activeModelId, hasCredentials, useSettings } from '../store/settings'
@@ -9,14 +9,14 @@ import { getProviderName } from '../data/providers'
 import { stopRun, runAgent } from '../agent'
 import { kernel } from '../core/kernel'
 import { getContextUsage } from '../lib/context'
-import { pixleMood } from '../lib/pixlesol'
 import { formatTokens } from '../lib/usage'
 import { groupConversationTurns } from '../lib/conversation'
-import { TopBar, type ChatViewMode } from './TopBar'
+import type { ChatViewMode } from './TopBar'
 import { Composer } from './Composer'
 import { TurnBlock } from './MessageItem'
 import { HomeDashboard, HomeGreeting } from './HomeDashboard'
 import { TrajectoryView } from './TrajectoryView'
+import { BoxedList, ListRow, PageGroup } from './ui'
 
 const STARTERS = [
   {
@@ -39,7 +39,7 @@ const STARTERS = [
   },
 ]
 
-export function ChatView() {
+export function ChatView({ view, onViewChange }: { view: ChatViewMode; onViewChange: (view: ChatViewMode) => void }) {
   const sessions = useChats((state) => state.sessions)
   const activeId = useChats((state) => state.activeId)
   const session = sessions.find((item) => item.id === activeId) ?? null
@@ -55,7 +55,6 @@ export function ChatView() {
   const askConfirm = useUi((state) => state.askConfirm)
   const activeModel = useActiveModel()
   const [draft, setDraft] = useState('')
-  const [view, setView] = useState<ChatViewMode>('chat')
   const scrollRef = useRef<HTMLDivElement>(null)
   const [atBottom, setAtBottom] = useState(true)
   const lastSessionRef = useRef<string | null>(activeId)
@@ -68,8 +67,6 @@ export function ChatView() {
   const selectedModel = activeModelId(settings)
   const turns = groupConversationTurns(messages)
   const context = getContextUsage(messages, activeModel)
-  const mood = pixleMood(messages, streaming)
-
   const scrollToBottom = (behavior: ScrollBehavior = 'auto') => {
     const node = scrollRef.current
     if (!node) return
@@ -80,7 +77,7 @@ export function ChatView() {
     if (lastSessionRef.current !== activeId) {
       lastSessionRef.current = activeId
       setAtBottom(true)
-      setView('chat')
+      onViewChange('chat')
       requestAnimationFrame(() => scrollToBottom('auto'))
       const current = useChats.getState().sessions.find((item) => item.id === activeId)
       if (current?.mode) setMode(current.mode)
@@ -238,28 +235,22 @@ export function ChatView() {
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-panel">
-      <TopBar session={session} view={view} onViewChange={setView} />
-
       {!session || messages.length === 0 ? (
-        <div className="thin-scroll relative min-h-0 flex-1 overflow-y-auto">
-          <div className="hero-wash pointer-events-none absolute inset-0" aria-hidden="true" />
-          <div className="bg-dots pointer-events-none absolute inset-0 opacity-70" aria-hidden="true" />
-          <div className="relative mx-auto flex min-h-full w-full max-w-[720px] flex-col justify-center px-4 py-10 sm:px-6">
-            <div className="animate-blurin">
-              <HomeGreeting />
-            </div>
+        <div className="thin-scroll min-h-0 flex-1 overflow-y-auto">
+          <div className="mx-auto flex min-h-full w-full max-w-[760px] flex-col justify-center gap-6 px-4 py-8 sm:px-6">
+            <HomeGreeting />
 
-            <div className="mt-8 w-full animate-rise [animation-delay:120ms]">
+            <div className="w-full space-y-3">
               {(!connected || !selectedModel) && (
-                <button
-                  type="button"
-                  onClick={() => openSettings('models')}
-                  className="mb-3 flex w-full items-center gap-2 rounded-xl border border-accent/30 bg-accent-soft px-4 py-2.5 text-left text-[12.5px] font-medium text-accent transition-all hover:border-accent/50"
-                >
-                  <KeyRound size={14} className="shrink-0" />
-                  <span className="flex-1">{connected ? 'Choose a model to start' : 'Connect a provider to start'}</span>
-                  <span className="text-[11px] font-normal opacity-70">Open settings →</span>
-                </button>
+                <BoxedList>
+                  <ListRow
+                    icon={<KeyRound size={16} />}
+                    title={connected ? 'Choose a model to start' : 'Connect a provider to start'}
+                    subtitle="Open settings"
+                    trailing={<ChevronRight size={16} />}
+                    onClick={() => openSettings('models')}
+                  />
+                </BoxedList>
               )}
               <Composer
                 value={draft}
@@ -272,26 +263,23 @@ export function ChatView() {
                 autoFocus
                 placeholder={connected ? 'How can I help you today?' : 'Add a provider key to start'}
               />
-              <div className="stagger mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
-                {STARTERS.map((starter) => (
-                  <button
-                    key={starter.label}
-                    type="button"
-                    onClick={() => useStarter(starter.prompt)}
-                    className="card-lift group/starter flex items-center gap-2.5 rounded-xl border border-line bg-panel px-3 py-2.5 text-left text-[12.5px] font-medium text-muted hover:text-ink"
-                  >
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-raised text-faint transition-colors duration-200 group-hover/starter:bg-accent-soft group-hover/starter:text-accent">
-                      <starter.icon size={14} strokeWidth={1.8} />
-                    </span>
-                    <span className="min-w-0 truncate">{starter.label}</span>
-                  </button>
-                ))}
-              </div>
             </div>
 
-            <div className="mt-10 animate-rise [animation-delay:420ms]">
-              <HomeDashboard />
-            </div>
+            <PageGroup title="Get started">
+              <BoxedList>
+                {STARTERS.map((starter) => (
+                  <ListRow
+                    key={starter.label}
+                    icon={<starter.icon size={16} />}
+                    title={starter.label}
+                    trailing={<ChevronRight size={16} />}
+                    onClick={() => useStarter(starter.prompt)}
+                  />
+                ))}
+              </BoxedList>
+            </PageGroup>
+
+            <HomeDashboard />
           </div>
         </div>
       ) : (
@@ -310,9 +298,9 @@ export function ChatView() {
                   }}
                   className="thin-scroll h-full overflow-y-auto"
                 >
-                  <div className="mx-auto w-full max-w-[760px] px-4 pb-12 pt-8 sm:px-6 sm:pt-10">
+                  <div className="mx-auto w-full max-w-[780px] px-4 pb-10 pt-6 sm:px-6">
                     {turns.map((turn, index) => (
-                      <div key={turn.id} className={index === 0 ? 'animate-rise' : 'mt-10 animate-rise'}>
+                      <div key={turn.id} className={index === 0 ? undefined : 'mt-8'}>
                         <TurnBlock
                           turn={turn}
                           sessionId={session.id}
@@ -332,20 +320,18 @@ export function ChatView() {
                       setAtBottom(true)
                       scrollToBottom('smooth')
                     }}
-                    className="surface-lift absolute bottom-4 left-1/2 -translate-x-1/2 animate-scalein rounded-full border border-line px-3.5 py-1.5 text-[11.5px] font-medium text-muted shadow-composer transition-colors hover:text-ink"
+                    className="adw-btn absolute bottom-4 left-1/2 -translate-x-1/2 border border-line bg-panel shadow-popover hover:bg-raised"
                   >
-                    <span className="inline-flex items-center gap-1.5">
-                      <ArrowUp size={11} />
-                      Jump to latest
-                    </span>
+                    <ArrowUp size={16} />
+                    Jump to latest
                   </button>
                 )}
               </>
             )}
           </div>
 
-          <div className="shrink-0 bg-panel px-3 pb-3 pt-1 sm:px-6 sm:pb-4">
-            <div className="mx-auto w-full max-w-[760px]">
+          <div className="shrink-0 border-t border-line bg-panel px-4 pb-3 pt-3 sm:px-6">
+            <div className="mx-auto w-full max-w-[780px]">
               <Composer
                 value={draft}
                 onChange={setDraft}
@@ -356,7 +342,6 @@ export function ChatView() {
                 placeholder={connected ? 'How can I help you today?' : 'Add a provider key to start'}
                 contextPct={context.pct}
                 contextTitle={`Context: ~${formatTokens(context.used)} / ${formatTokens(context.limit)} tokens`}
-                pixleMood={mood}
               />
             </div>
           </div>

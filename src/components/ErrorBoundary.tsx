@@ -38,32 +38,32 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, State> {
       <div className="flex h-dvh items-center justify-center bg-panel px-5 text-ink">
         <div className="w-full max-w-[460px]">
           <LogoMark size={34} />
-          <h1 className="mt-4 font-display text-[28px] font-normal tracking-[-0.02em]">Something broke on this screen</h1>
+          <h1 className="mt-4 text-[24px] font-bold">Something broke on this screen</h1>
           <p className="mt-2 text-[14px] leading-relaxed text-muted">
             Your conversations are saved on this computer. Try the screen again, or reload the app.
           </p>
-          <pre className="thin-scroll mt-4 max-h-40 overflow-auto rounded-xl border border-line bg-canvas p-3 font-mono text-[11.5px] leading-relaxed text-muted">
+          <pre className="thin-scroll mt-4 max-h-40 overflow-auto rounded-[12px] border border-line bg-canvas p-3 font-mono text-[12px] leading-relaxed text-muted">
             {this.state.error.message}
           </pre>
           <div className="mt-5 flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={() => this.setState({ error: null })}
-              className="inline-flex h-9 items-center rounded-full bg-accent px-4 text-[13px] font-medium text-on-accent transition hover:brightness-110"
+              className="adw-btn adw-btn-suggested"
             >
               Try again
             </button>
             <button
               type="button"
               onClick={() => window.location.reload()}
-              className="inline-flex h-9 items-center rounded-full border border-line px-4 text-[13px] font-medium text-ink transition-colors hover:bg-raised"
+              className="adw-btn"
             >
               Reload app
             </button>
             <button
               type="button"
               onClick={() => void this.copy()}
-              className="inline-flex h-9 items-center rounded-full px-3 text-[13px] text-muted transition-colors hover:text-ink"
+              className="adw-btn adw-btn-flat"
             >
               {this.state.copied ? 'Copied' : 'Copy details'}
             </button>

@@ -81,14 +81,13 @@ const TABS: readonly TabDef[] = [
   { id: 'about', label: 'About', icon: Info, description: 'Local storage, history and reset controls.' },
 ]
 
-const fieldClass =
-  'h-8 w-full rounded-lg border border-line bg-panel px-2.5 text-[12px] text-ink outline-none transition-colors placeholder:text-faint focus:border-accent/50 disabled:opacity-50'
+const fieldClass = 'adw-entry w-full'
 
 function Label({ children, hint }: { children: ReactNode; hint?: string }) {
   return (
     <div className="mb-1 flex items-baseline justify-between gap-3">
-      <span className="text-[11px] font-medium text-ink">{children}</span>
-      {hint && <span className="text-[9.5px] text-faint">{hint}</span>}
+      <span className="text-[13px] font-semibold text-ink">{children}</span>
+      {hint && <span className="text-[12px] text-muted">{hint}</span>}
     </div>
   )
 }
@@ -105,18 +104,15 @@ function SettingsSection({
   action?: ReactNode
 }) {
   return (
-    <section className="settings-card mx-5 my-4 sm:mx-8">
-      <div className="flex items-start justify-between gap-3">
+    <section className="mx-5 my-5 sm:mx-8">
+      <div className="mb-2 flex items-start justify-between gap-3 px-1">
         <div className="min-w-0">
-          <h3 className="flex items-center gap-2 font-display text-[14px] font-semibold tracking-[-0.01em] text-ink">
-            <span className="h-3.5 w-[3px] rounded-full bg-accent" />
-            {title}
-          </h3>
-          {description && <p className="mt-1.5 max-w-[620px] text-[11.5px] leading-relaxed text-muted">{description}</p>}
+          <h3 className="adw-heading">{title}</h3>
+          {description && <p className="mt-1 max-w-[620px] text-[13px] leading-relaxed text-muted">{description}</p>}
         </div>
         {action && <div className="shrink-0">{action}</div>}
       </div>
-      <div className="mt-4">{children}</div>
+      <div className="adw-boxed p-4">{children}</div>
     </section>
   )
 }
@@ -146,16 +142,16 @@ function PasswordInput({
         autoComplete="off"
         spellCheck={false}
         aria-label={label}
-        className={cn(fieldClass, 'pr-8 font-mono text-[11px]')}
+        className={cn(fieldClass, 'pr-10 font-mono text-[12px]')}
       />
       <button
         type="button"
         onClick={() => setVisible((current) => !current)}
-        className="absolute right-1.5 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded text-faint hover:text-ink"
+        className="adw-icon-btn adw-icon-btn-sm absolute right-1 top-1/2 -translate-y-1/2"
         aria-label={visible ? 'Hide secret' : 'Show secret'}
         tabIndex={-1}
       >
-        {visible ? <EyeOff size={12} /> : <Eye size={12} />}
+        {visible ? <EyeOff size={16} /> : <Eye size={16} />}
       </button>
     </div>
   )
@@ -271,21 +267,21 @@ function ProviderCard({
   }
 
   return (
-    <div className={cn('rounded-xl border transition-colors', open ? 'border-line bg-raised/25' : 'border-line bg-panel')}>
+    <div className={cn('rounded-[12px] border transition-colors', open ? 'border-line bg-raised/25' : 'border-line bg-panel')}>
       <button type="button" onClick={onToggle} className="flex w-full items-center gap-3 px-3 py-2.5 text-left">
-        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-line bg-panel font-display text-[12px] font-semibold text-muted">
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[9px] border border-line bg-raised text-[12px] font-bold text-muted">
           {preset.name.slice(0, 1)}
         </span>
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-2">
             <span className="text-[12px] font-medium text-ink">{preset.name}</span>
             {isActive && (
-              <span className="rounded bg-accent-soft px-1.5 py-0.5 text-[8.5px] font-medium text-accent">Active</span>
+              <span className="rounded bg-accent-soft px-1.5 py-0.5 text-[12px] font-medium text-accent">Active</span>
             )}
           </span>
           <span
             className={cn(
-              'mt-0.5 flex items-center gap-1 text-[9.5px]',
+              'mt-0.5 flex items-center gap-1 text-[12px]',
               configured ? 'text-success' : 'text-faint',
             )}
           >
@@ -302,7 +298,7 @@ function ProviderCard({
           </span>
         </span>
         {!open && (
-          <span className="hidden max-w-[170px] truncate text-[9.5px] text-faint sm:block">
+          <span className="hidden max-w-[170px] truncate text-[12px] text-faint sm:block">
             {isActive && activeModel
               ? currentModel?.name ?? activeModel
               : models.length
@@ -331,7 +327,7 @@ function ProviderCard({
                   type="button"
                   onClick={() => void saveKey()}
                   disabled={!keyDraft.trim() || saving}
-                  className="inline-flex h-8 shrink-0 items-center gap-1 rounded-lg bg-ink px-2.5 text-[10px] font-medium text-panel disabled:opacity-40"
+                  className="adw-btn adw-btn-suggested shrink-0"
                 >
                   {saving ? <Spinner size={10} /> : <LockKeyhole size={10} />}
                   Save
@@ -341,7 +337,7 @@ function ProviderCard({
                 <button
                   type="button"
                   onClick={() => void clearKey()}
-                  className="mt-1.5 text-[9.5px] font-medium text-faint transition-colors hover:text-danger"
+                  className="mt-1.5 text-[12px] font-medium text-faint transition-colors hover:text-danger"
                 >
                   Remove saved key
                 </button>
@@ -356,25 +352,25 @@ function ProviderCard({
               onChange={(event) => updateProvider(providerId, { baseUrl: event.target.value })}
               placeholder={preset.baseUrl || 'https://example.com/v1'}
               spellCheck={false}
-              className={cn(fieldClass, 'font-mono text-[11px]')}
+              className={cn(fieldClass, 'font-mono text-[12px]')}
             />
-            <p className="mt-1 text-[9px] leading-relaxed text-faint">
+            <p className="mt-1 text-[12px] leading-relaxed text-faint">
               {providerId === 'custom'
                 ? 'Point this at an OpenAI-compatible endpoint or proxy you control.'
                 : `Leave blank for ${preset.baseUrl || 'the provider default'}. Useful for a gateway or local proxy.`}
             </p>
           </div>
 
-          {preset.note && <p className="mb-2.5 text-[9.5px] leading-relaxed text-faint">{preset.note}</p>}
+          {preset.note && <p className="mb-2.5 text-[12px] leading-relaxed text-faint">{preset.note}</p>}
 
           <div>
             <div className="mb-1 flex items-center justify-between gap-2">
-              <span className="text-[11px] font-medium text-ink">Model</span>
+              <span className="text-[12px] font-medium text-ink">Model</span>
               <button
                 type="button"
                 onClick={() => void fetchModels(providerId, true)}
                 disabled={!configured || loading}
-                className="inline-flex items-center gap-1 text-[9.5px] font-medium text-faint transition-colors hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
+                className="inline-flex items-center gap-1 text-[12px] font-medium text-faint transition-colors hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {loading ? <Spinner size={10} /> : <RefreshCw size={10} />}
                 {loading ? 'Loading' : 'Refresh live models'}
@@ -382,11 +378,11 @@ function ProviderCard({
             </div>
 
             {error && (
-              <p className="mb-1.5 rounded-md border border-danger/20 bg-danger/[0.04] px-2 py-1.5 text-[9.5px] leading-relaxed text-danger">
+              <p className="mb-1.5 rounded-[6px] border border-danger/20 bg-danger/[0.04] px-2 py-1.5 text-[12px] leading-relaxed text-danger">
                 {error}
               </p>
             )}
-            {note && !error && <p className="mb-1.5 text-[9px] leading-relaxed text-faint">{note}</p>}
+            {note && !error && <p className="mb-1.5 text-[12px] leading-relaxed text-faint">{note}</p>}
 
             {models.length > 0 ? (
               <>
@@ -395,7 +391,7 @@ function ProviderCard({
                   onChange={(event) => {
                     if (event.target.value) selectModel(providerId, event.target.value)
                   }}
-                  className={cn(fieldClass, 'font-mono text-[11px]')}
+                  className={cn(fieldClass, 'font-mono text-[12px]')}
                   aria-label={`${preset.name} model`}
                 >
                   <option value="">Choose a model…</option>
@@ -409,13 +405,13 @@ function ProviderCard({
                     </option>
                   ))}
                 </select>
-                <p className="mt-1 text-[9px] text-faint">
+                <p className="mt-1 text-[12px] text-faint">
                   {models.length} usable chat model{models.length === 1 ? '' : 's'}
                   {source === 'catalog' ? ' from the models.dev fallback' : ' loaded live from the provider'}.
                 </p>
               </>
             ) : (
-              <p className="text-[9.5px] leading-relaxed text-faint">
+              <p className="text-[12px] leading-relaxed text-faint">
                 {loading
                   ? 'Loading the provider’s current models…'
                   : !configured
@@ -435,7 +431,7 @@ function ProviderCard({
                 placeholder="or enter a model ID"
                 spellCheck={false}
                 aria-label={`${preset.name} model ID`}
-                className={cn(fieldClass, 'font-mono text-[10.5px]')}
+                className={cn(fieldClass, 'font-mono text-[12px]')}
               />
               <button
                 type="button"
@@ -446,7 +442,7 @@ function ProviderCard({
                   setManual('')
                 }}
                 disabled={!manual.trim()}
-                className="inline-flex h-8 shrink-0 items-center rounded-lg border border-line px-2.5 text-[10px] font-medium text-ink disabled:opacity-40"
+                className="inline-flex h-8 shrink-0 items-center rounded-[9px] border border-line px-2.5 text-[12px] font-medium text-ink disabled:opacity-40"
               >
                 Use ID
               </button>
@@ -454,7 +450,7 @@ function ProviderCard({
           </div>
 
           <div className="mt-2.5 flex items-center justify-between gap-3">
-            <p className="text-[9px] leading-relaxed text-faint">
+            <p className="text-[12px] leading-relaxed text-faint">
               {preset.keyless
                 ? 'No key is stored for this provider.'
                 : configured
@@ -465,7 +461,7 @@ function ProviderCard({
               <button
                 type="button"
                 onClick={() => void activate()}
-                className="shrink-0 text-[9.5px] font-medium text-accent hover:underline"
+                className="shrink-0 text-[12px] font-medium text-accent hover:underline"
               >
                 Use {preset.name}
               </button>
@@ -505,17 +501,17 @@ function ModelsTab() {
                 setRefreshing(false)
               }
             }}
-            className="inline-flex h-7 items-center gap-1 rounded-lg border border-line px-2 text-[10px] font-medium text-muted hover:text-ink"
+            className="inline-flex h-7 items-center gap-1 rounded-[9px] border border-line px-2 text-[12px] font-medium text-muted hover:text-ink"
           >
             {refreshing ? <Spinner size={10} /> : <RefreshCw size={10} />}
             Refresh
           </button>
         }
       >
-        <div className="mb-3 flex items-start gap-2 rounded-lg border border-line bg-raised/50 px-3 py-2.5">
+        <div className="mb-3 flex items-start gap-2 rounded-[9px] border border-line bg-raised/50 px-3 py-2.5">
           <ShieldCheck size={14} className="mt-0.5 shrink-0 text-success" />
-          <p className="text-[10.5px] leading-relaxed text-muted">
-            Keys are encrypted with AES-256-GCM under <code className="font-mono text-[10px]">~/.maxcode</code>. The
+          <p className="text-[12px] leading-relaxed text-muted">
+            Keys are encrypted with AES-256-GCM under <code className="font-mono text-[12px]">~/.maxcode</code>. The
             browser only receives a masked hint; the daemon decrypts a key in memory for the provider request.
           </p>
         </div>
@@ -538,17 +534,17 @@ function ModelsTab() {
         {active ? (
           <div className="space-y-2.5">
             {efforts.length > 0 ? (
-              <div className="flex items-center justify-between gap-4 rounded-lg border border-line bg-raised/30 px-3 py-2.5">
+              <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-[11.5px] font-medium text-ink">Effort</p>
-                  <p className="mt-0.5 text-[9.5px] text-faint">
+                  <p className="text-[12px] font-medium text-ink">Effort</p>
+                  <p className="mt-0.5 text-[12px] text-faint">
                     Options come from {active.name || active.id} · {active.apiKind}
                   </p>
                 </div>
                 <select
                   value={chosenEffort}
                   onChange={(event) => update({ effort: event.target.value as Effort })}
-                  className="h-8 rounded-lg border border-line bg-panel px-2 text-[11px] text-ink outline-none"
+                  className="h-8 rounded-[9px] border border-line bg-panel px-2 text-[12px] text-ink outline-none"
                   aria-label="Reasoning effort"
                 >
                   {efforts.map((effort) => (
@@ -559,13 +555,13 @@ function ModelsTab() {
                 </select>
               </div>
             ) : (
-              <p className="rounded-lg border border-line bg-raised/30 px-3 py-2.5 text-[10px] leading-relaxed text-faint">
+              <p className="rounded-[9px] border border-line bg-raised/30 px-3 py-2.5 text-[12px] leading-relaxed text-faint">
                 {reasoningSummary(active)}
               </p>
             )}
           </div>
         ) : (
-          <p className="rounded-lg border border-line bg-raised/30 px-3 py-3 text-[10.5px] leading-relaxed text-faint">
+          <p className="rounded-[9px] border border-line bg-raised/30 px-3 py-3 text-[12px] leading-relaxed text-faint">
             Choose a model in the composer to see the reasoning controls this provider actually advertises.
           </p>
         )}
@@ -575,8 +571,8 @@ function ModelsTab() {
         title="Advanced request settings"
         description="Defaults for every provider. The adapter ignores fields the selected model cannot accept."
       >
-        <details className="group/advanced rounded-xl border border-line bg-raised/20">
-          <summary className="flex cursor-pointer list-none items-center justify-between px-3 py-2.5 text-[11.5px] font-medium text-ink [&::-webkit-details-marker]:hidden">
+        <details className="group/advanced rounded-[12px] border border-line bg-raised/20">
+          <summary className="flex cursor-pointer list-none items-center justify-between px-3 py-2.5 text-[12px] font-medium text-ink [&::-webkit-details-marker]:hidden">
             Request controls and system prompt
             <ChevronDown size={13} className="text-faint transition-transform group-open/advanced:rotate-180" />
           </summary>
@@ -617,11 +613,11 @@ function ModelsTab() {
             </div>
             <div className="mt-3">
               <div className="mb-1 flex items-center justify-between gap-3">
-                <span className="text-[11px] font-medium text-ink">System prompt</span>
+                <span className="text-[12px] font-medium text-ink">System prompt</span>
                 <button
                   type="button"
                   onClick={() => update({ systemPrompt: DEFAULT_SYSTEM_PROMPT })}
-                  className="inline-flex items-center gap-1 text-[9.5px] font-medium text-faint hover:text-ink"
+                  className="inline-flex items-center gap-1 text-[12px] font-medium text-faint hover:text-ink"
                 >
                   <RotateCcw size={10} /> Restore default
                 </button>
@@ -631,9 +627,9 @@ function ModelsTab() {
                 onChange={(event) => update({ systemPrompt: event.target.value })}
                 rows={9}
                 spellCheck={false}
-                className="thin-scroll w-full resize-y rounded-lg border border-line bg-panel px-2.5 py-2 font-mono text-[10.5px] leading-relaxed text-ink outline-none focus:border-accent/50"
+                className="thin-scroll w-full resize-y rounded-[9px] border border-line bg-panel px-2.5 py-2 font-mono text-[12px] leading-relaxed text-ink outline-none focus:border-accent/50"
               />
-              <p className="mt-1 text-[9px] leading-relaxed text-faint">
+              <p className="mt-1 text-[12px] leading-relaxed text-faint">
                 The installed skill list and the current workspace/git context are appended after this prompt.
               </p>
             </div>
@@ -699,8 +695,8 @@ function ToolsTab() {
       <div className="space-y-5">
         {TOOL_ORDER.map((group) => (
           <div key={group.title}>
-            <p className="mb-2 text-[10px] font-medium text-faint">{group.title}</p>
-            <div className="overflow-hidden rounded-xl border border-line">
+            <p className="mb-2 text-[12px] font-medium text-faint">{group.title}</p>
+            <div className="overflow-hidden rounded-[12px] border border-line">
               {group.tools.map((tool, index) => {
                 const config = settings.tools[tool]
                 const Icon = TOOL_ICONS[tool]
@@ -714,20 +710,20 @@ function ToolsTab() {
                       !config.enabled && 'opacity-60',
                     )}
                   >
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-line bg-panel text-muted">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[9px] border border-line bg-panel text-muted">
                       <Icon size={13} />
                     </span>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <p className="text-[11.5px] font-medium text-ink">{copy.label}</p>
-                        <span className="font-mono text-[8.5px] text-faint">{tool}</span>
+                        <p className="text-[12px] font-medium text-ink">{copy.label}</p>
+                        <span className="font-mono text-[12px] text-faint">{tool}</span>
                       </div>
-                      <p className="mt-0.5 text-[9.5px] leading-relaxed text-muted">{copy.description}</p>
+                      <p className="mt-0.5 text-[12px] leading-relaxed text-muted">{copy.description}</p>
                       {group.title === 'Web' && !settings.webSearchEnabled && (
                         <button
                           type="button"
                           onClick={() => openSettings('search')}
-                          className="mt-1 text-[9.5px] font-medium text-warning hover:underline"
+                          className="mt-1 text-[12px] font-medium text-warning hover:underline"
                         >
                           Web access is off. Turn it on in Search.
                         </button>
@@ -757,7 +753,7 @@ function ToolsTab() {
           </div>
         ))}
       </div>
-      <div className="mt-3 flex items-start gap-1.5 rounded-lg border border-line bg-raised/40 px-3 py-2.5 text-[9.5px] leading-relaxed text-faint">
+      <div className="mt-3 flex items-start gap-1.5 rounded-[9px] border border-line bg-raised/40 px-3 py-2.5 text-[12px] leading-relaxed text-faint">
         <ShieldCheck size={11} className="mt-0.5 shrink-0" />
         Shell and Git approval are on by default. Approvals apply to the open workspace only; the daemon rejects paths
         outside it with <code className="font-mono">..</code> or absolute escapes.
@@ -850,10 +846,10 @@ function SearchTab() {
         title="Web access"
         description="When enabled, the agent may search and read public pages. The daemon performs the requests; this page never sees the raw results."
       >
-        <div className="flex items-center justify-between gap-4 rounded-lg border border-line bg-raised/30 px-3 py-2.5">
+        <div className="flex items-center justify-between gap-4">
           <div>
-            <p className="text-[11.5px] font-medium text-ink">Allow web tools</p>
-            <p className="mt-0.5 text-[9.5px] text-faint">
+            <p className="text-[12px] font-medium text-ink">Allow web tools</p>
+            <p className="mt-0.5 text-[12px] text-faint">
               Adds web_search and read_url when they are also enabled under Tools.
             </p>
           </div>
@@ -878,24 +874,24 @@ function SearchTab() {
                   setTestResult(null)
                 }}
                 className={cn(
-                  'rounded-lg border p-3 text-left transition-colors',
-                  selected ? 'border-accent/35 bg-accent-soft/40' : 'border-line bg-panel hover:bg-raised/40',
+                  'rounded-[12px] border p-3 text-left transition-colors',
+                  selected ? 'border-accent bg-accent-soft' : 'border-line hover:bg-ink/[.05]',
                 )}
               >
                 <span className="flex items-center justify-between gap-2">
-                  <span className="text-[11.5px] font-medium text-ink">{option.name}</span>
+                  <span className="text-[12px] font-medium text-ink">{option.name}</span>
                   <span
                     className={cn(
-                      'flex h-3.5 w-3.5 items-center justify-center rounded-full border',
+                      'flex h-4 w-4 items-center justify-center rounded-full border',
                       selected ? 'border-accent bg-accent text-on-accent' : 'border-line',
                     )}
                   >
-                    {selected && <Check size={8} strokeWidth={3} />}
+                    {selected && <Check size={12} strokeWidth={3} />}
                   </span>
                 </span>
-                <span className="mt-1 block text-[9.5px] leading-relaxed text-muted">{option.description}</span>
+                <span className="mt-1 block text-[12px] leading-relaxed text-muted">{option.description}</span>
                 {option.keyless && (
-                  <span className="mt-1.5 inline-block rounded bg-raised px-1.5 py-0.5 text-[8.5px] font-medium text-faint">
+                  <span className="mt-1.5 inline-block rounded bg-raised px-1.5 py-0.5 text-[12px] font-medium text-faint">
                     No key
                   </span>
                 )}
@@ -928,7 +924,7 @@ function SearchTab() {
                 type="button"
                 onClick={() => void save()}
                 disabled={!keyDraft.trim() || saving}
-                className="inline-flex h-8 shrink-0 items-center gap-1 rounded-lg bg-ink px-2.5 text-[10px] font-medium text-panel disabled:opacity-40"
+                className="adw-btn adw-btn-suggested shrink-0"
               >
                 {saving ? <Spinner size={10} /> : <LockKeyhole size={10} />}
                 Save
@@ -938,12 +934,12 @@ function SearchTab() {
               <button
                 type="button"
                 onClick={() => void clear()}
-                className="mt-1.5 text-[9.5px] font-medium text-faint hover:text-danger"
+                className="mt-1.5 text-[12px] font-medium text-faint hover:text-danger"
               >
                 Remove saved key
               </button>
             )}
-            <p className="mt-1 text-[9px] leading-relaxed text-faint">
+            <p className="mt-1 text-[12px] leading-relaxed text-faint">
               One key is stored. If you switch providers, replace the key with one issued by the new provider.
             </p>
           </div>
@@ -954,18 +950,18 @@ function SearchTab() {
             type="button"
             onClick={() => void test()}
             disabled={testing || (!keyless && !configured)}
-            className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-line bg-panel px-2.5 text-[10.5px] font-medium text-ink transition-colors hover:bg-raised disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex h-8 items-center gap-1.5 rounded-[9px] border border-line bg-panel px-2.5 text-[12px] font-medium text-ink transition-colors hover:bg-raised disabled:cursor-not-allowed disabled:opacity-40"
           >
             {testing ? <Spinner size={12} /> : <Search size={12} />}
             {testing ? 'Testing…' : 'Test search'}
           </button>
-          {!keyless && !configured && <span className="text-[9.5px] text-faint">Add a key to test.</span>}
+          {!keyless && !configured && <span className="text-[12px] text-faint">Add a key to test.</span>}
         </div>
 
         {testResult && (
           <div
             className={cn(
-              'mt-2.5 rounded-lg border px-3 py-2 text-[10px] leading-relaxed',
+              'mt-2.5 rounded-[9px] border px-3 py-2 text-[12px] leading-relaxed',
               testResult.ok
                 ? 'border-success/25 bg-success/[0.04] text-success'
                 : 'border-warning/30 bg-warning/[0.04] text-warning',
@@ -1085,13 +1081,13 @@ function SkillsTab() {
       title="Installed skills"
       description={`${active} of ${skills.length} enabled. The model sees each skill's name and description, then loads the full SKILL.md and bundled files on demand with the skill tool.`}
     >
-      <div className="mb-3 rounded-xl border border-line p-3">
+      <div className="mb-3 rounded-[12px] border border-line p-3">
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={() => folderRef.current?.click()}
             disabled={busy !== null}
-            className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-ink px-2.5 text-[10.5px] font-medium text-panel disabled:opacity-50"
+            className="adw-btn adw-btn-suggested"
           >
             {busy === 'folder' ? <Spinner size={12} /> : <FolderUp size={12} />} Upload skill folder
           </button>
@@ -1108,7 +1104,7 @@ function SkillsTab() {
               event.target.value = ''
             }}
           />
-          <span className="text-[10px] text-faint">A folder with a SKILL.md, plus optional scripts/ and references/.</span>
+          <span className="text-[12px] text-faint">A folder with a SKILL.md, plus optional scripts/ and references/.</span>
         </div>
         <form
           className="mt-2.5 flex flex-wrap items-center gap-2"
@@ -1123,7 +1119,7 @@ function SkillsTab() {
               value={npmSpec}
               onChange={(event) => setNpmSpec(event.target.value)}
               placeholder="npm package, e.g. @scope/my-skills"
-              className={cn(fieldClass, 'pl-7 font-mono text-[11px]')}
+              className={cn(fieldClass, 'pl-7 font-mono text-[12px]')}
               aria-label="npm package"
               spellCheck={false}
             />
@@ -1131,43 +1127,43 @@ function SkillsTab() {
           <button
             type="submit"
             disabled={busy !== null || !npmSpec.trim()}
-            className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-line bg-panel px-2.5 text-[10.5px] font-medium text-ink hover:bg-raised disabled:opacity-50"
+            className="inline-flex h-8 items-center gap-1.5 rounded-[9px] border border-line bg-panel px-2.5 text-[12px] font-medium text-ink hover:bg-raised disabled:opacity-50"
           >
             {busy === 'npm' ? <Spinner size={12} /> : <Download size={12} />} Install from npm
           </button>
         </form>
-        <p className="mt-2 text-[9.5px] leading-relaxed text-faint">
+        <p className="mt-2 text-[12px] leading-relaxed text-faint">
           npm installs run with scripts disabled; OpenSol only copies the SKILL.md folders the package ships. Skill scripts run
           only when the model calls the shell tool, and that still asks for approval.
         </p>
       </div>
 
-      {error && <p className="mb-2 text-[10.5px] text-danger">{error}</p>}
+      {error && <p className="mb-2 text-[12px] text-danger">{error}</p>}
 
       {skills.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-line px-4 py-8 text-center">
+        <div className="rounded-[12px] border border-dashed border-line px-4 py-8 text-center">
           <Sparkles size={16} className="mx-auto text-faint" />
           <p className="mt-2 text-[12px] font-medium text-ink">{loading ? 'Loading skills…' : 'No skills installed'}</p>
-          <p className="mt-1 text-[10.5px] text-muted">Upload a skill folder or install one from npm to give the agent new abilities.</p>
+          <p className="mt-1 text-[12px] text-muted">Upload a skill folder or install one from npm to give the agent new abilities.</p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-line">
+        <div className="overflow-hidden rounded-[12px] border border-line">
           {skills.map((skill, index) => (
             <div key={skill.name} className={cn('px-3 py-3', index !== 0 && 'border-t border-line')}>
               <div className="flex items-start gap-2.5">
-                <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-accent-soft text-accent">
+                <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-[6px] bg-accent-soft text-accent">
                   <Sparkles size={11} />
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <p className="font-mono text-[11.5px] font-medium text-ink">{skill.name}</p>
-                    <span className="rounded bg-raised px-1.5 py-0.5 text-[8px] font-medium text-faint">{formatSkillSource(skill.source)}</span>
-                    <span className="text-[8.5px] text-faint">
+                    <p className="font-mono text-[12px] font-medium text-ink">{skill.name}</p>
+                    <span className="rounded bg-raised px-1.5 py-0.5 text-[12px] font-medium text-faint">{formatSkillSource(skill.source)}</span>
+                    <span className="text-[12px] text-faint">
                       {skill.fileCount} file{skill.fileCount === 1 ? '' : 's'} · {formatBytes(skill.size)}
                     </span>
                   </div>
-                  <p className="mt-0.5 text-[9.5px] leading-relaxed text-muted">{skill.description || 'No description.'}</p>
-                  <p className="mt-0.5 truncate font-mono text-[8.5px] text-faint" title={skill.path}>
+                  <p className="mt-0.5 text-[12px] leading-relaxed text-muted">{skill.description || 'No description.'}</p>
+                  <p className="mt-0.5 truncate font-mono text-[12px] text-faint" title={skill.path}>
                     {skill.path}
                   </p>
                 </div>
@@ -1175,7 +1171,7 @@ function SkillsTab() {
                   <button
                     type="button"
                     onClick={() => void askRemove(skill)}
-                    className="icon-button h-7 w-7 hover:text-danger"
+                    className="adw-icon-btn adw-icon-btn-sm hover:!text-danger"
                     aria-label={`Delete ${skill.name}`}
                     title="Delete skill"
                   >
@@ -1296,27 +1292,27 @@ function DeployCredentialCard({ providerId }: { providerId: DeployProviderId }) 
   const Icon = meta.icon
 
   return (
-    <div className="rounded-xl border border-line bg-panel">
+    <div className="rounded-[12px] border border-line bg-panel">
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
         className="flex w-full items-center gap-3 px-3 py-2.5 text-left"
       >
-        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-line bg-raised/60 text-muted">
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[9px] border border-line bg-raised/60 text-muted">
           <Icon size={13} />
         </span>
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-2">
-            <span className="text-[11.5px] font-medium text-ink">{meta.label}</span>
+            <span className="text-[12px] font-medium text-ink">{meta.label}</span>
             {secret?.configured ? (
-              <span className="flex items-center gap-1 text-[9px] text-success">
+              <span className="flex items-center gap-1 text-[12px] text-success">
                 <span className="h-1 w-1 rounded-full bg-success" /> configured
               </span>
             ) : (
-              <span className="text-[9px] text-faint">not configured</span>
+              <span className="text-[12px] text-faint">not configured</span>
             )}
           </span>
-          <span className="mt-0.5 block text-[9px] text-faint">
+          <span className="mt-0.5 block text-[12px] text-faint">
             {tool?.installed ? `${tool.label} ${tool.version || 'installed'}` : 'Uses npx on deploy'}
             {secret?.hint ? ` · token ${secret.hint}` : ''}
           </span>
@@ -1325,7 +1321,7 @@ function DeployCredentialCard({ providerId }: { providerId: DeployProviderId }) 
       </button>
       {open && (
         <div className="border-t border-line px-3 py-3">
-          <p className="mb-2.5 text-[9.5px] leading-relaxed text-faint">{meta.description}</p>
+          <p className="mb-2.5 text-[12px] leading-relaxed text-faint">{meta.description}</p>
           {secretField && (
             <div className="mb-2.5">
               <Label hint={secret?.configured ? 'Saved; leave blank to keep' : 'Required'}>{secretField.label}</Label>
@@ -1346,7 +1342,7 @@ function DeployCredentialCard({ providerId }: { providerId: DeployProviderId }) 
                   onChange={(event) => setDrafts((current) => ({ ...current, [field.key]: event.target.value }))}
                   placeholder={field.placeholder}
                   spellCheck={false}
-                  className={cn(fieldClass, 'font-mono text-[10.5px]')}
+                  className={cn(fieldClass, 'font-mono text-[12px]')}
                 />
               </div>
             ))}
@@ -1356,18 +1352,18 @@ function DeployCredentialCard({ providerId }: { providerId: DeployProviderId }) 
               <button
                 type="button"
                 onClick={() => void clearCreds()}
-                className="text-[9.5px] font-medium text-faint hover:text-danger"
+                className="text-[12px] font-medium text-faint hover:text-danger"
               >
                 Remove credentials
               </button>
             ) : (
-              <span className="text-[9px] text-faint">Values are encrypted at rest.</span>
+              <span className="text-[12px] text-faint">Values are encrypted at rest.</span>
             )}
             <button
               type="button"
               onClick={() => void saveCreds()}
               disabled={saving}
-              className="inline-flex h-7 items-center gap-1 rounded-lg bg-ink px-2.5 text-[10px] font-medium text-panel disabled:opacity-40"
+              className="adw-btn adw-btn-suggested"
             >
               {saving ? <Spinner size={10} /> : <Check size={10} />}
               Save
@@ -1390,7 +1386,7 @@ function DeployTab() {
         description="Tokens are encrypted by the local daemon and passed to the deploy CLI through environment variables. They are never written to logs or returned to this page."
       >
         {secretsError && (
-          <p className="mb-3 rounded-lg border border-warning/30 bg-warning/[0.04] px-3 py-2 text-[10px] text-warning">
+          <p className="mb-3 rounded-[9px] border border-warning/30 bg-warning/[0.04] px-3 py-2 text-[12px] text-warning">
             {secretsError}
           </p>
         )}
@@ -1405,7 +1401,7 @@ function DeployTab() {
         title="Command-line tools"
         description="OpenSol uses an installed CLI when available and falls back to npx. Node.js must be on PATH."
       >
-        <div className="overflow-hidden rounded-xl border border-line">
+        <div className="overflow-hidden rounded-[12px] border border-line">
           {(Object.keys(DEPLOY_META) as DeployProviderId[]).map((provider, index) => {
             const tool = deployTools?.[provider]
             const meta = DEPLOY_META[provider]
@@ -1414,17 +1410,17 @@ function DeployTab() {
                 key={provider}
                 className={cn('flex items-center gap-3 px-3 py-2.5', index !== 0 && 'border-t border-line')}
               >
-                <Terminal size={13} className="shrink-0 text-faint" />
+                <Terminal size={16} className="shrink-0 text-muted" />
                 <div className="min-w-0 flex-1">
-                  <p className="text-[11px] font-medium text-ink">{meta.short}</p>
-                  <p className="truncate font-mono text-[9px] text-faint">
+                  <p className="adw-row-title">{meta.short}</p>
+                  <p className="adw-row-subtitle truncate font-mono">
                     {tool?.bin ?? '—'} {tool?.installed ? `· ${tool.version || 'installed'}` : '· not installed, uses npx'}
                   </p>
                 </div>
                 <span
                   className={cn(
-                    'shrink-0 rounded-full border px-1.5 py-0.5 text-[8.5px] font-medium',
-                    tool?.installed ? 'border-success/25 text-success' : 'border-line text-faint',
+                    'adw-badge shrink-0',
+                    tool?.installed && 'text-success',
                   )}
                 >
                   {tool?.installed ? 'installed' : 'npx fallback'}
@@ -1436,9 +1432,9 @@ function DeployTab() {
         <button
           type="button"
           onClick={() => useUi.getState().setDeployOpen(true)}
-          className="mt-3 inline-flex h-8 items-center gap-1.5 rounded-lg bg-accent px-3 text-[10.5px] font-medium text-on-accent hover:bg-accent/90"
+          className="adw-btn adw-btn-suggested mt-3"
         >
-          <Rocket size={12} /> Open deploy panel
+          <Rocket size={16} /> Open deploy panel
         </button>
       </SettingsSection>
     </>
@@ -1480,18 +1476,19 @@ function GeneralTab() {
   }
 
   return (
-    <div className="px-5 py-2 sm:px-7">
-      <div className="settings-row">
+    <div className="mx-5 my-5 sm:mx-8">
+      <div className="adw-boxed">
+      <div className="adw-row flex-wrap justify-between gap-3">
         <div className="min-w-0">
-          <p className="settings-label">Permission</p>
-          <p className="settings-hint">Choose the default permission mode for new sessions.</p>
+          <p className="adw-row-title">Permission</p>
+          <p className="adw-row-subtitle">Choose the default permission mode for new sessions.</p>
         </div>
         <select
           value={permission}
           onChange={(event) =>
             update({ tools: permissionTools(settings.tools, event.target.value as typeof permission) })
           }
-          className={cn('settings-select w-full sm:w-[210px]')}
+          className={cn('adw-select w-full sm:w-[210px]')}
           aria-label="Default permission mode"
         >
           {PERMISSION_MODES.map((entry) => (
@@ -1502,10 +1499,10 @@ function GeneralTab() {
         </select>
       </div>
 
-      <div className="settings-row">
+      <div className="adw-row flex-wrap justify-between gap-3">
         <div className="min-w-0">
-          <p className="settings-label">Appearance</p>
-          <p className="settings-hint">Follow the system or pick a fixed theme.</p>
+          <p className="adw-row-title">Appearance</p>
+          <p className="adw-row-subtitle">Follow the system or pick a fixed theme.</p>
         </div>
         <div className="w-full sm:w-[360px]">
           <div className="grid grid-cols-3 gap-2">
@@ -1518,14 +1515,12 @@ function GeneralTab() {
                   type="button"
                   onClick={() => update({ theme: theme.id })}
                   className={cn(
-                    'flex flex-col items-center gap-1.5 rounded-xl border px-2 py-2.5 transition-colors',
-                    selected
-                      ? 'border-accent/60 bg-panel text-ink ring-2 ring-accent/10'
-                      : 'border-line text-muted hover:border-faint/50 hover:text-ink',
+                    'flex flex-col items-center gap-1.5 rounded-[12px] border px-2 py-2.5 transition-colors',
+                    selected ? 'border-accent bg-accent-soft text-ink' : 'border-line text-muted hover:bg-ink/[.05] hover:text-ink',
                   )}
                 >
                   <Icon size={16} />
-                  <span className="text-[11px] font-medium">{theme.label}</span>
+                  <span className="text-[12px] font-medium">{theme.label}</span>
                 </button>
               )
             })}
@@ -1533,23 +1528,23 @@ function GeneralTab() {
           <button
             type="button"
             onClick={() => openSettings('appearance')}
-            className="mt-2 text-[11px] font-medium text-muted transition-colors hover:text-ink"
+            className="adw-btn adw-btn-flat mt-2 h-8 px-2 text-[13px] text-link"
           >
-            More themes and theme previews →
+            More themes and theme previews
           </button>
         </div>
       </div>
 
-      <div className="settings-row">
+      <div className="adw-row flex-wrap justify-between gap-3">
         <div className="min-w-0">
-          <p className="settings-label">Font size</p>
-          <p className="settings-hint">Only affects conversation content.</p>
+          <p className="adw-row-title">Font size</p>
+          <p className="adw-row-subtitle">Only affects conversation content.</p>
         </div>
         <div className="flex items-center gap-2">
           <select
             value={settings.chatFontSize}
             onChange={(event) => update({ chatFontSize: Number(event.target.value) })}
-            className={cn('settings-select w-[84px] text-center')}
+            className={cn('adw-select w-[84px] text-center')}
             aria-label="Conversation font size"
           >
             {Array.from({ length: 9 }, (_, index) => index + 12).map((size) => (
@@ -1558,19 +1553,19 @@ function GeneralTab() {
               </option>
             ))}
           </select>
-          <span className="text-[11px] text-faint">px</span>
+          <span className="text-[12px] text-faint">px</span>
         </div>
       </div>
 
-      <div className="settings-row">
+      <div className="adw-row flex-wrap justify-between gap-3">
         <div className="min-w-0">
-          <p className="settings-label">Work details</p>
-          <p className="settings-hint">Choose how much detail to show for tool calls.</p>
+          <p className="adw-row-title">Work details</p>
+          <p className="adw-row-subtitle">Choose how much detail to show for tool calls.</p>
         </div>
         <select
           value={settings.workDetail}
           onChange={(event) => update({ workDetail: event.target.value === 'concise' ? 'concise' : 'detailed' })}
-          className={cn('settings-select w-full sm:w-[180px]')}
+          className={cn('adw-select w-full sm:w-[180px]')}
           aria-label="Work details"
         >
           <option value="concise">Concise</option>
@@ -1578,15 +1573,15 @@ function GeneralTab() {
         </select>
       </div>
 
-      <div className="settings-row">
+      <div className="adw-row flex-wrap justify-between gap-3">
         <div className="min-w-0">
-          <p className="settings-label">When to collapse work details</p>
-          <p className="settings-hint">Choose when to automatically collapse work details.</p>
+          <p className="adw-row-title">When to collapse work details</p>
+          <p className="adw-row-subtitle">Choose when to automatically collapse work details.</p>
         </div>
         <select
           value={settings.autoCollapseWork ? 'completion' : 'never'}
           onChange={(event) => update({ autoCollapseWork: event.target.value === 'completion' })}
-          className={cn('settings-select w-full sm:w-[180px]')}
+          className={cn('adw-select w-full sm:w-[180px]')}
           aria-label="When to collapse work details"
         >
           <option value="completion">On completion</option>
@@ -1594,10 +1589,10 @@ function GeneralTab() {
         </select>
       </div>
 
-      <div className="settings-row">
+      <div className="adw-row flex-wrap justify-between gap-3">
         <div className="min-w-0">
-          <p className="settings-label">Let AI name sessions</p>
-          <p className="settings-hint">After the first answer, the model writes a short title for the session. Names you type yourself are never replaced.</p>
+          <p className="adw-row-title">Let AI name sessions</p>
+          <p className="adw-row-subtitle">After the first answer, the model writes a short title for the session. Names you type yourself are never replaced.</p>
         </div>
         <Switch
           checked={settings.aiSessionTitles}
@@ -1606,18 +1601,18 @@ function GeneralTab() {
         />
       </div>
 
-      <div className="settings-row">
+      <div className="adw-row flex-wrap justify-between gap-3">
         <div className="min-w-0">
-          <p className="settings-label">Show mascot</p>
-          <p className="settings-hint">The pixel mascot on the home screen and above the message box. Off by default.</p>
+          <p className="adw-row-title">Show mascot</p>
+          <p className="adw-row-subtitle">The OpenSol mark above the greeting on the home screen. Off by default.</p>
         </div>
         <Switch checked={settings.showMascot} onChange={(showMascot) => update({ showMascot })} label="Show mascot" />
       </div>
 
-      <div className="settings-row">
+      <div className="adw-row flex-wrap justify-between gap-3">
         <div className="min-w-0">
-          <p className="settings-label">Show token estimates</p>
-          <p className="settings-hint">When a provider does not report usage, show a rough output estimate.</p>
+          <p className="adw-row-title">Show token estimates</p>
+          <p className="adw-row-subtitle">When a provider does not report usage, show a rough output estimate.</p>
         </div>
         <Switch
           checked={settings.showTokenEstimate}
@@ -1626,23 +1621,24 @@ function GeneralTab() {
         />
       </div>
 
-      <div className="settings-row">
+      <div className="adw-row flex-wrap justify-between gap-3">
         <div className="min-w-0">
-          <p className="settings-label">Local configuration</p>
-          <p className="settings-hint">Settings, conversations and encrypted keys live in this folder.</p>
+          <p className="adw-row-title">Local configuration</p>
+          <p className="adw-row-subtitle">Settings, conversations and encrypted keys live in this folder.</p>
         </div>
         <button
           type="button"
           onClick={() => void copyConfig()}
-          className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-line bg-panel px-3 text-[11.5px] font-medium text-ink transition-colors hover:bg-raised"
+          className="adw-btn"
           title={settings.daemon?.dataDir ?? '~/.maxcode'}
         >
-          <HardDrive size={13} />
+          <HardDrive size={16} />
           Copy data folder path
         </button>
       </div>
 
-      <p className="py-4 text-[10.5px] text-faint">Changes are saved automatically to this computer.</p>
+      </div>
+      <p className="mt-3 px-1 text-[12px] text-muted">Changes are saved automatically to this computer.</p>
     </div>
   )
 }
@@ -1651,23 +1647,27 @@ function AppearanceTab() {
   const settings = useSettings()
   const update = useSettings((state) => state.update)
   const themes = [
-    { id: 'light' as const, label: 'Light', className: 'bg-[#fcfcfc]', line: 'bg-[#e2e2e5]' },
-    { id: 'dark' as const, label: 'Dark', className: 'bg-[#09090b]', line: 'bg-[#2a2a31]' },
-    { id: 'night-owl' as const, label: 'Night Owl', className: 'bg-[#011627]', line: 'bg-[#1a3e5a]' },
-    { id: 'claude-code' as const, label: 'Claude Code', className: 'bg-[#262624]', line: 'bg-[#42423e]' },
-    { id: 'flame' as const, label: 'Flame', className: 'bg-[#130d0c]', line: 'bg-[#3e2621]' },
+    { id: 'light' as const, label: 'Light', className: 'bg-[#fafafb]', line: 'bg-[#e0e0e3]', bar: 'bg-[#ffffff]', accent: 'bg-[#3584e4]' },
+    { id: 'dark' as const, label: 'Dark', className: 'bg-[#222226]', line: 'bg-[#3e3e42]', bar: 'bg-[#1d1d20]', accent: 'bg-[#3584e4]' },
+    { id: 'night-owl' as const, label: 'Dark — Teal', className: 'bg-[#222226]', line: 'bg-[#3e3e42]', bar: 'bg-[#1d1d20]', accent: 'bg-[#2190a4]' },
+    { id: 'claude-code' as const, label: 'Dark — Purple', className: 'bg-[#222226]', line: 'bg-[#3e3e42]', bar: 'bg-[#1d1d20]', accent: 'bg-[#9141ac]' },
+    { id: 'flame' as const, label: 'Dark — Orange', className: 'bg-[#222226]', line: 'bg-[#3e3e42]', bar: 'bg-[#1d1d20]', accent: 'bg-[#ed5b00]' },
     {
       id: 'system' as const,
       label: 'System',
-      className: 'bg-gradient-to-br from-[#fcfcfc] to-[#09090b]',
+      className: 'bg-[#fafafb]',
       line: 'bg-[#8a8a92]',
+      bar: 'bg-[#222226]',
+      accent: 'bg-[#3584e4]',
     },
     // Themes contributed by Safe plugins.
     ...pluginRuntime().themes().map((theme) => ({
       id: theme.id,
       label: theme.label,
-      className: 'bg-gradient-to-br from-accent-soft to-panel',
+      className: 'bg-raised',
       line: 'bg-line',
+      bar: 'bg-panel',
+      accent: 'bg-accent',
     })),
   ]
 
@@ -1682,19 +1682,23 @@ function AppearanceTab() {
                 key={theme.id}
                 type="button"
                 onClick={() => update({ theme: theme.id })}
+                aria-pressed={selected}
                 className={cn(
-                  'rounded-xl border p-2 text-left transition-all',
-                  selected ? 'border-accent ring-2 ring-accent/10' : 'border-line hover:border-faint/50',
+                  'rounded-[12px] border p-2 text-left transition-colors',
+                  selected ? 'border-accent bg-accent-soft' : 'border-line hover:bg-ink/[.05]',
                 )}
               >
-                <span className={cn('block h-14 w-full overflow-hidden rounded-lg border border-line/60 p-2', theme.className)}>
-                  <span className={cn('block h-1.5 w-8 rounded-full', theme.line)} />
-                  <span className={cn('mt-1.5 block h-1.5 w-12 rounded-full opacity-60', theme.line)} />
-                  <span className="mt-3 block h-2 w-5 rounded-full bg-accent" />
+                <span className={cn('block h-16 w-full overflow-hidden rounded-[9px] border border-line', theme.className)}>
+                  <span className={cn('block h-3 w-full', theme.bar)} />
+                  <span className="block p-2">
+                    <span className={cn('block h-1.5 w-8 rounded-[3px]', theme.line)} />
+                    <span className={cn('mt-1.5 block h-1.5 w-12 rounded-[3px]', theme.line)} />
+                    <span className={cn('mt-2 block h-2 w-5 rounded-[3px]', theme.accent)} />
+                  </span>
                 </span>
                 <span className="mt-1.5 flex items-center justify-between px-0.5">
-                  <span className="text-[10.5px] font-medium text-ink">{theme.label}</span>
-                  {selected && <Check size={11} className="text-accent" />}
+                  <span className="text-[13px] font-semibold text-ink">{theme.label}</span>
+                  {selected && <Check size={16} className="text-accent" />}
                 </span>
               </button>
             )
@@ -1703,10 +1707,10 @@ function AppearanceTab() {
       </SettingsSection>
 
       <SettingsSection title="Interface">
-        <div className="flex items-center justify-between gap-4 rounded-lg border border-line bg-raised/30 px-3 py-2.5">
+        <div className="flex items-center justify-between gap-4">
           <div>
-            <p className="text-[11.5px] font-medium text-ink">Show token estimates</p>
-            <p className="mt-0.5 text-[9.5px] text-faint">
+            <p className="adw-row-title">Show token estimates</p>
+            <p className="adw-row-subtitle">
               When a provider does not report usage, show a rough output estimate.
             </p>
           </div>
@@ -1719,16 +1723,16 @@ function AppearanceTab() {
       </SettingsSection>
 
       <SettingsSection title="Shortcuts">
-        <div className="space-y-1.5 text-[10.5px]">
+        <div className="space-y-1 text-[13px]">
           {[
             ['Search and commands', '⌘ K / Ctrl K'],
             ['Send message', 'Enter'],
             ['New line', 'Shift Enter'],
             ['Save file in the editor', '⌘ S / Ctrl S'],
           ].map(([label, shortcut]) => (
-            <div key={label} className="flex items-center justify-between rounded-lg px-1 py-1">
+            <div key={label} className="flex items-center justify-between px-1 py-1">
               <span className="text-muted">{label}</span>
-              <kbd className="rounded border border-line bg-raised px-1.5 py-0.5 font-sans text-[9.5px] text-faint">
+              <kbd className="adw-kbd">
                 {shortcut}
               </kbd>
             </div>
@@ -1782,11 +1786,11 @@ function AboutTab() {
           <LogoMark size={46} />
           <div>
             <div className="flex flex-wrap items-baseline gap-2">
-              <h3 className="font-display text-[20px] font-semibold tracking-[-0.03em] text-ink">OpenSol</h3>
-              <span className="text-[10px] text-faint">v{daemon?.version ?? '1.0.0'}</span>
+              <h3 className="text-[20px] font-bold text-ink">OpenSol</h3>
+              <span className="text-[12px] text-faint">v{daemon?.version ?? '1.0.0'}</span>
             </div>
-            <p className="mt-0.5 text-[10.5px] font-medium text-muted">An OpenSoftX product</p>
-            <p className="mt-2 max-w-[520px] text-[10.5px] leading-relaxed text-muted">
+            <p className="mt-0.5 text-[12px] font-medium text-muted">An OpenSoftX product</p>
+            <p className="mt-2 max-w-[520px] text-[12px] leading-relaxed text-muted">
               A local-first coding agent with a real workspace, shell, git, web research, subagents and deploy flows.
               No OpenSol account and no OpenSoftX server. Your keys never leave this machine.
             </p>
@@ -1798,16 +1802,16 @@ function AboutTab() {
             ['Messages', String(messageCount)],
             ['Workspace files', workspace.available ? String(fileCount) : 'None'],
           ].map(([label, value]) => (
-            <div key={label} className="rounded-lg border border-line bg-raised/30 px-3 py-2">
-              <p className="text-[9px] text-faint">{label}</p>
-              <p className="mt-0.5 text-[15px] font-semibold tracking-[-0.02em] text-ink">{value}</p>
+            <div key={label} className="rounded-[9px] border border-line bg-raised/30 px-3 py-2">
+              <p className="text-[12px] text-faint">{label}</p>
+              <p className="mt-0.5 text-[15px] font-bold text-ink">{value}</p>
             </div>
           ))}
         </div>
       </SettingsSection>
 
       <SettingsSection title="Local data" description="Everything is stored under ~/.maxcode. Clearing that folder removes OpenSol’s local state.">
-        <div className="space-y-1.5 rounded-lg border border-line bg-raised/30 px-3 py-2.5 text-[10px]">
+        <div className="space-y-1.5 rounded-[9px] border border-line bg-raised/30 px-3 py-2.5 text-[12px]">
           <p className="flex items-center justify-between gap-3">
             <span className="text-faint">Data folder</span>
             <span className="min-w-0 truncate font-mono text-ink" title={daemon?.dataDir}>
@@ -1835,14 +1839,14 @@ function AboutTab() {
           <button
             type="button"
             onClick={exportChats}
-            className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-line bg-panel px-2.5 text-[10.5px] font-medium text-ink hover:bg-raised"
+            className="inline-flex h-8 items-center gap-1.5 rounded-[9px] border border-line bg-panel px-2.5 text-[12px] font-medium text-ink hover:bg-raised"
           >
             <ArrowDownToLine size={12} /> Export conversations
           </button>
           <button
             type="button"
             onClick={() => importRef.current?.click()}
-            className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-line bg-panel px-2.5 text-[10.5px] font-medium text-ink hover:bg-raised"
+            className="inline-flex h-8 items-center gap-1.5 rounded-[9px] border border-line bg-panel px-2.5 text-[12px] font-medium text-ink hover:bg-raised"
           >
             <Upload size={12} /> Import conversations
           </button>
@@ -1879,12 +1883,12 @@ function AboutTab() {
               })
             }
             disabled={busy === 'history'}
-            className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-line bg-panel px-2.5 text-[10.5px] font-medium text-ink hover:bg-raised disabled:opacity-40"
+            className="inline-flex h-8 items-center gap-1.5 rounded-[9px] border border-line bg-panel px-2.5 text-[12px] font-medium text-ink hover:bg-raised disabled:opacity-40"
           >
             {busy === 'history' ? <Spinner size={12} /> : <Trash2 size={12} />} Clear history
           </button>
         </div>
-        <p className="mt-3 flex items-center gap-2 text-[9.5px] text-faint">
+        <p className="mt-3 flex items-center gap-2 text-[12px] text-faint">
           <HardDrive size={11} />
           {formatBytes(new Blob([JSON.stringify(sessions)]).size)} of conversation history
           <span className="text-line">·</span>
@@ -1895,10 +1899,10 @@ function AboutTab() {
 
       <SettingsSection title="Danger zone">
         <div className="space-y-2">
-          <div className="flex flex-col gap-2 rounded-lg border border-line px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-2 rounded-[9px] border border-line px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-[11px] font-medium text-ink">Restore default settings</p>
-              <p className="mt-0.5 text-[9.5px] text-muted">Reset prompt, modes, tool permissions and skills. Keys and chats stay.</p>
+              <p className="text-[12px] font-medium text-ink">Restore default settings</p>
+              <p className="mt-0.5 text-[12px] text-muted">Reset prompt, modes, tool permissions and skills. Keys and chats stay.</p>
             </div>
             <button
               type="button"
@@ -1910,15 +1914,15 @@ function AboutTab() {
                 })
               }
               disabled={busy === 'settings'}
-              className="inline-flex h-7 shrink-0 items-center gap-1 self-start rounded-lg border border-line px-2.5 text-[10px] font-medium text-muted hover:border-warning/30 hover:text-warning disabled:opacity-40 sm:self-auto"
+              className="inline-flex h-7 shrink-0 items-center gap-1 self-start rounded-[9px] border border-line px-2.5 text-[12px] font-medium text-muted hover:border-warning/30 hover:text-warning disabled:opacity-40 sm:self-auto"
             >
               {busy === 'settings' ? <Spinner size={11} /> : <RotateCcw size={11} />} Restore defaults
             </button>
           </div>
-          <div className="flex flex-col gap-2 rounded-lg border border-danger/20 bg-danger/[0.02] px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-2 rounded-[9px] border border-danger/20 bg-danger/[0.02] px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-[11px] font-medium text-ink">Reset OpenSol</p>
-              <p className="mt-0.5 text-[9.5px] text-muted">
+              <p className="text-[12px] font-medium text-ink">Reset OpenSol</p>
+              <p className="mt-0.5 text-[12px] text-muted">
                 Delete conversations, encrypted keys, skills, settings and the remembered workspace.
               </p>
             </div>
@@ -1932,7 +1936,7 @@ function AboutTab() {
                 })
               }
               disabled={busy === 'all'}
-              className="inline-flex h-7 shrink-0 items-center gap-1 self-start rounded-lg bg-danger px-2.5 text-[10px] font-medium text-on-accent hover:bg-danger/90 disabled:opacity-40 sm:self-auto"
+              className="inline-flex h-7 shrink-0 items-center gap-1 self-start rounded-[9px] bg-danger px-2.5 text-[12px] font-medium text-on-accent hover:bg-danger/90 disabled:opacity-40 sm:self-auto"
             >
               {busy === 'all' ? <Spinner size={11} /> : <Trash2 size={11} />} Reset everything
             </button>
@@ -1955,13 +1959,11 @@ function McpLauncher() {
   const waiting = servers.filter((server) => server.status === 'needs_auth').length
   return (
     <div className="space-y-5 px-5 py-6 sm:px-8">
-      <div className="settings-card flex flex-wrap items-center gap-4">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent">
-          <Link2 size={18} />
-        </span>
+      <div className="adw-boxed flex flex-wrap items-center gap-4 p-4">
+        <Link2 size={16} className="shrink-0 text-muted" />
         <div className="min-w-0 flex-1">
-          <p className="settings-label">MCP panel</p>
-          <p className="settings-hint">
+          <p className="adw-row-title">MCP panel</p>
+          <p className="adw-row-subtitle">
             {!loaded
               ? 'Loading…'
               : servers.length === 0
@@ -1972,7 +1974,7 @@ function McpLauncher() {
         <button
           type="button"
           onClick={() => setMcpOpen(true)}
-          className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-ink px-4 text-[12px] font-medium text-panel transition-transform active:scale-95"
+          className="adw-btn adw-btn-suggested shrink-0"
         >
           Open MCP panel
         </button>
@@ -2011,24 +2013,18 @@ export function SettingsModal() {
       open={open}
       onClose={close}
       labelledBy="settings-title"
-      className="settings-shell h-[94dvh] p-0 sm:h-[min(88dvh,780px)] sm:w-[min(1040px,96vw)] sm:!rounded-[28px]"
+      className="h-[94dvh] p-0 sm:h-[min(88dvh,780px)] sm:w-[min(1040px,96vw)]"
     >
       <div className="flex min-h-0 flex-1 flex-col sm:flex-row">
-        <aside className="relative hidden w-[232px] shrink-0 flex-col bg-canvas sm:flex">
-          <div className="settings-glow pointer-events-none absolute inset-x-0 top-0 h-48" />
-          <div className="relative px-6 pb-4 pt-6">
-            <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-faint">OpenSol · v3.2.4</p>
-            <h2 id="settings-title" className="mt-1.5 font-display text-[26px] font-semibold leading-none tracking-[-0.035em] text-ink">
-              Settings
+        <aside className="hidden w-[240px] shrink-0 flex-col border-r border-line bg-sidebar sm:flex">
+          <div className="px-4 pb-3 pt-4">
+            <h2 id="settings-title" className="text-[18px] font-bold text-ink">
+              Preferences
             </h2>
+            <p className="text-[12px] text-muted">OpenSol · v3.2.4</p>
           </div>
-          <nav className="relative flex-1 overflow-y-auto px-3 pb-3">
-            <span
-              aria-hidden
-              className="settings-pill absolute left-3 right-3 top-0 h-10 rounded-2xl bg-panel shadow-pill ring-1 ring-line transition-transform duration-500 ease-spring"
-              style={{ transform: `translateY(${activeIndex * 42}px)` }}
-            />
-            {TABS.map((item, index) => {
+          <nav className="flex-1 space-y-0.5 overflow-y-auto px-2 pb-3" aria-label="Preferences">
+            {TABS.map((item) => {
               const Icon = item.icon
               const active = tab === item.id
               return (
@@ -2038,38 +2034,33 @@ export function SettingsModal() {
                   onClick={() => openSettings(item.id as typeof tab)}
                   disabled={item.disabled}
                   title={item.description}
-                  className={cn(
-                    'group/tab relative mb-[2px] flex h-10 w-full items-center gap-3 rounded-2xl px-3 text-left text-[12.5px] transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-45',
-                    active ? 'font-semibold text-ink' : 'text-muted hover:text-ink',
-                  )}
+                  aria-current={active ? 'page' : undefined}
+                  className="adw-nav-row disabled:cursor-not-allowed disabled:opacity-45"
                 >
-                  <span className={cn('w-4 font-mono text-[9.5px] tabular-nums transition-colors', active ? 'text-accent' : 'text-faint')}>
-                    {String(index + 1).padStart(2, '0')}
-                  </span>
-                  <Icon size={14} className={cn('transition-transform duration-300 group-hover/tab:scale-110', active ? 'text-accent' : 'text-faint')} />
-                  {item.label}
+                  <Icon size={16} className="shrink-0" />
+                  <span className="min-w-0 flex-1 truncate text-left">{item.label}</span>
+                  {item.disabled && <span className="adw-badge">Maintenance</span>}
                 </button>
               )
             })}
           </nav>
-          <div className="relative px-6 py-4">
-            <p className="flex items-center gap-1.5 text-[10px] text-faint">
-              <LockKeyhole size={10} /> Keys encrypted on this machine
-            </p>
-          </div>
+          <p className="flex items-center gap-1.5 px-4 py-3 text-[12px] text-muted">
+            <LockKeyhole size={12} /> Keys encrypted on this machine
+          </p>
         </aside>
 
-        <div className="relative flex min-h-0 min-w-0 flex-1 flex-col bg-panel sm:border-l sm:border-line">
-          <div className="thin-scroll flex shrink-0 gap-1.5 overflow-x-auto border-b border-line px-3 py-2.5 sm:hidden">
+        <div className="relative flex min-h-0 min-w-0 flex-1 flex-col bg-panel">
+          <div className="thin-scroll flex shrink-0 gap-1 overflow-x-auto border-b border-line px-3 py-2 sm:hidden">
             {TABS.map((item) => (
               <button
                 key={item.id}
                 type="button"
                 onClick={() => openSettings(item.id as typeof tab)}
                 disabled={item.disabled}
+                aria-pressed={tab === item.id}
                 className={cn(
-                  'shrink-0 rounded-full px-3 py-1.5 disabled:opacity-45 text-[11px] font-medium transition-all duration-200',
-                  tab === item.id ? 'bg-ink text-panel' : 'bg-raised text-muted',
+                  'h-8 shrink-0 rounded-[9px] px-3 text-[13px] font-semibold disabled:opacity-45',
+                  tab === item.id ? 'bg-ink/[.11] text-ink' : 'text-muted hover:bg-ink/[.07]',
                 )}
               >
                 {item.label}
@@ -2077,32 +2068,27 @@ export function SettingsModal() {
             ))}
           </div>
 
-          <header className="flex shrink-0 items-start justify-between gap-4 px-5 pb-3 pt-5 sm:px-8 sm:pt-7">
-            <div key={tab} className="settings-title-in min-w-0">
-              <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-accent">
-                {String(activeIndex + 1).padStart(2, '0')} / {String(TABS.length).padStart(2, '0')}
-              </p>
-              <h3 className="mt-1 font-display text-[28px] font-semibold leading-none tracking-[-0.035em] text-ink">{current.label}</h3>
-              <p className="mt-2 max-w-[560px] text-[12.5px] leading-relaxed text-muted">{current.description}</p>
+          <header className="adw-headerbar shrink-0 border-b border-line">
+            <div className="min-w-0 flex-1">
+              <h3 className="adw-headerbar-title truncate">{current.label}</h3>
+              <p className="adw-headerbar-subtitle truncate">{current.description}</p>
             </div>
-            <div className="flex shrink-0 items-center gap-1.5">
-              <button
-                type="button"
-                onClick={() => void copyConfig()}
-                className="hidden h-8 items-center gap-1.5 rounded-full border border-line bg-panel px-3 text-[11px] font-medium text-ink transition-all hover:bg-raised active:scale-95 sm:inline-flex"
-                title={daemon?.dataDir ?? '~/.opensol'}
-              >
-                <HardDrive size={12} />
-                Data folder
-              </button>
-              <button type="button" className="icon-button h-8 w-8 rounded-full" onClick={close} aria-label="Close settings">
-                <X size={16} />
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => void copyConfig()}
+              className="adw-btn hidden h-8 sm:inline-flex"
+              title={daemon?.dataDir ?? '~/.opensol'}
+            >
+              <HardDrive size={16} />
+              Data folder
+            </button>
+            <button type="button" className="adw-icon-btn" onClick={close} aria-label="Close settings">
+              <X size={16} />
+            </button>
           </header>
 
           <div ref={contentRef} className="thin-scroll min-h-0 flex-1 overflow-y-auto pb-6">
-            <div key={tab} className="settings-enter">
+            <div key={tab}>
               {tab === 'general' && <GeneralTab />}
               {tab === 'models' && <ModelsTab />}
               {tab === 'tools' && <ToolsTab />}

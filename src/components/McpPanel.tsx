@@ -37,9 +37,9 @@ import {
 import { Modal, Segmented, Spinner, Switch } from './ui'
 
 const field =
-  'h-9 w-full rounded-xl border border-line bg-panel px-3 text-[12px] text-ink outline-none transition-all placeholder:text-faint focus:border-accent/50 focus:shadow-[0_0_0_3px_rgb(var(--accent)/0.10)] disabled:opacity-50'
+  'adw-entry w-full'
 
-const area = field.replace('h-9 ', '')
+const area = 'adw-entry h-auto w-full py-2'
 
 const TRANSPORTS: Array<{ value: McpTransport; label: string; hint: string }> = [
   { value: 'stdio', label: 'Local · stdio', hint: 'Runs a command on this computer' },
@@ -65,9 +65,9 @@ function StatusDot({ status }: { status: McpServer['status'] }) {
     <span
       className={cn(
         'h-2 w-2 shrink-0 rounded-full',
-        status === 'connected' && 'bg-success shadow-[0_0_0_3px_rgb(var(--success)/0.18)]',
-        status === 'connecting' && 'animate-breathe bg-warning',
-        status === 'needs_auth' && 'bg-warning shadow-[0_0_0_3px_rgb(var(--warning)/0.18)]',
+        status === 'connected' && 'bg-success',
+        status === 'connecting' && 'bg-warning',
+        status === 'needs_auth' && 'bg-warning',
         status === 'error' && 'bg-danger',
         (status === 'disconnected' || status === 'disabled') && 'bg-faint/60',
       )}
@@ -204,49 +204,41 @@ export function McpPanel() {
       open={open}
       onClose={close}
       labelledBy="mcp-title"
-      className="settings-shell h-[94dvh] p-0 sm:h-[min(88dvh,780px)] sm:w-[min(1080px,96vw)] sm:!rounded-[28px]"
+      className="h-[94dvh] p-0 sm:h-[min(88dvh,780px)] sm:w-[min(1080px,96vw)]"
     >
-      <header className="relative flex shrink-0 items-end gap-3 border-b border-line bg-canvas px-5 pb-4 pt-5 sm:px-7">
-        <div className="settings-glow pointer-events-none absolute inset-x-0 top-0 h-32" />
-        <div className="relative min-w-0 flex-1">
-          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-faint">Model Context Protocol</p>
-          <h2 id="mcp-title" className="mt-1 font-display text-[26px] font-semibold leading-none tracking-[-0.035em] text-ink">
+      <header className="adw-headerbar shrink-0 border-b border-line">
+        <div className="min-w-0 flex-1">
+          <h2 id="mcp-title" className="adw-headerbar-title truncate">
             MCP servers
           </h2>
-          <p className="mt-1.5 text-[11.5px] text-muted">
+          <p className="adw-headerbar-subtitle truncate">
             {servers.length === 0
               ? 'Give the agent new tools from local programs or remote services.'
               : `${connectedCount} of ${servers.length} connected · ${toolCount} tool${toolCount === 1 ? '' : 's'} available to the agent`}
           </p>
         </div>
-        <div className="relative flex shrink-0 items-center gap-1.5">
-          <button type="button" className="chip hidden h-8 rounded-full px-3.5 text-[11.5px] sm:inline-flex" onClick={() => show({ kind: 'import' })}>
-            <FileJson size={13} /> Import JSON
-          </button>
-          <button
-            type="button"
-            className="inline-flex h-8 items-center gap-1.5 rounded-full bg-ink px-3.5 text-[11.5px] font-medium text-panel transition-transform active:scale-95"
-            onClick={() => show({ kind: 'new', draft: { ...EMPTY_DRAFT } })}
-          >
-            <Plus size={13} /> Add server
-          </button>
-          <button type="button" className="icon-button h-8 w-8 rounded-full" onClick={close} aria-label="Close MCP panel">
-            <X size={16} />
-          </button>
-        </div>
+        <button type="button" className="adw-btn hidden h-8 sm:inline-flex" onClick={() => show({ kind: 'import' })}>
+          <FileJson size={16} /> Import JSON
+        </button>
+        <button type="button" className="adw-btn adw-btn-suggested h-8" onClick={() => show({ kind: 'new', draft: { ...EMPTY_DRAFT } })}>
+          <Plus size={16} /> Add server
+        </button>
+        <button type="button" className="adw-icon-btn" onClick={close} aria-label="Close MCP panel">
+          <X size={16} />
+        </button>
       </header>
 
       <div className="flex min-h-0 flex-1">
         {/* Server list */}
-        <aside className={cn('thin-scroll min-h-0 w-full shrink-0 overflow-y-auto bg-canvas/60 p-3 md:block md:w-[300px] md:border-r md:border-line', mobileDetail ? 'hidden' : 'block')}>
-          {error && <p className="mb-2 rounded-xl border border-danger/25 bg-danger/[0.05] px-3 py-2 text-[11.5px] text-danger">{error}</p>}
+        <aside className={cn('thin-scroll min-h-0 w-full shrink-0 overflow-y-auto bg-sidebar p-3 md:block md:w-[300px] md:border-r md:border-line', mobileDetail ? 'hidden' : 'block')}>
+          {error && <p className="mb-2 rounded-[12px] border border-danger/30 bg-danger/10 px-3 py-2 text-[12px] text-danger">{error}</p>}
           {!loaded && (
             <p className="flex items-center gap-2 px-2 py-3 text-[12px] text-faint">
               <Spinner size={12} /> Loading servers…
             </p>
           )}
           {loaded && servers.length === 0 && (
-            <p className="rounded-2xl border border-dashed border-line px-4 py-8 text-center text-[12px] text-muted">No servers yet.</p>
+            <p className="rounded-[12px] border border-dashed border-line px-4 py-8 text-center text-[12px] text-muted">No servers yet.</p>
           )}
           <ul className="space-y-1">
             {servers.map((server) => {
@@ -256,24 +248,24 @@ export function McpPanel() {
                   <button
                     type="button"
                     onClick={() => show({ kind: 'server', id: server.id })}
+                    aria-current={active ? 'true' : undefined}
                     className={cn(
-                      'flex w-full items-center gap-3 rounded-2xl border px-3 py-2.5 text-left transition-all',
-                      active ? 'border-line bg-panel shadow-pill' : 'border-transparent hover:bg-raised/70',
+                      'adw-nav-row h-auto min-h-[52px] gap-3 py-2',
                     )}
                   >
                     <StatusDot status={server.status} />
                     <span className="min-w-0 flex-1">
-                      <span className="flex items-center gap-1.5 text-[13px] font-medium text-ink">
+                      <span className="flex items-center gap-1.5 text-[14px] font-semibold text-ink">
                         <span className="truncate">{server.name}</span>
                         {server.oauth?.enabled && (
                           <KeyRound size={11} className={cn('shrink-0', server.oauth.authorized ? 'text-success' : 'text-warning')} aria-label="OAuth" />
                         )}
                       </span>
-                      <span className={cn('mt-0.5 block truncate text-[11px]', server.status === 'needs_auth' ? 'text-warning' : server.status === 'error' ? 'text-danger' : 'text-muted')}>
+                      <span className={cn('mt-0.5 block truncate text-[12px]', server.status === 'needs_auth' ? 'text-warning' : server.status === 'error' ? 'text-danger' : 'text-muted')}>
                         {statusText(server)}
                       </span>
                     </span>
-                    <span className="flex shrink-0 items-center gap-1 rounded-full bg-raised px-2 py-0.5 font-mono text-[9.5px] text-faint">
+                    <span className="flex shrink-0 items-center gap-1 rounded-[9px] bg-raised px-2 py-0.5 font-mono text-[12px] text-faint">
                       <TransportIcon transport={server.transport} size={10} />
                       {TRANSPORT_LABEL[server.transport]}
                     </span>
@@ -282,7 +274,7 @@ export function McpPanel() {
               )
             })}
           </ul>
-          <button type="button" className="chip mt-3 h-8 w-full justify-center rounded-xl text-[11.5px] sm:hidden" onClick={() => show({ kind: 'import' })}>
+          <button type="button" className="adw-btn mt-3 h-8 w-full sm:hidden" onClick={() => show({ kind: 'import' })}>
             <FileJson size={13} /> Import JSON
           </button>
         </aside>
@@ -290,7 +282,7 @@ export function McpPanel() {
         {/* Detail */}
         <section className={cn('min-w-0 flex-1 flex-col bg-panel md:flex', mobileDetail ? 'flex' : 'hidden')}>
           <button type="button" className="flex h-10 shrink-0 items-center gap-1 border-b border-line px-3 text-[12px] text-muted md:hidden" onClick={() => setMobileDetail(false)}>
-            <ChevronLeft size={15} /> All servers
+            <ChevronLeft size={16} /> All servers
           </button>
           <div className="thin-scroll min-h-0 flex-1 overflow-y-auto">
             {!loaded ? null : current.kind === 'new' ? (
@@ -363,7 +355,7 @@ function ServerDetail({
     <div className="space-y-5 px-5 py-5 sm:px-7 sm:py-6">
       <div className="flex flex-wrap items-start gap-3">
         <div className="min-w-0 flex-1">
-          <h3 className="flex items-center gap-2.5 font-display text-[22px] font-semibold leading-tight tracking-[-0.03em] text-ink">
+          <h3 className="flex items-center gap-2.5 text-[22px] font-semibold leading-tight text-ink">
             <StatusDot status={server.status} />
             <span className="truncate">{server.name}</span>
           </h3>
@@ -374,21 +366,21 @@ function ServerDetail({
         <div className="flex shrink-0 items-center gap-1.5">
           {live ? (
             <>
-              <button type="button" className="icon-button h-8 w-8" title="Reload tools" aria-label="Reload tools" onClick={() => onAct('refresh')}>
+              <button type="button" className="adw-icon-btn h-8 w-8" title="Reload tools" aria-label="Reload tools" onClick={() => onAct('refresh')}>
                 <RefreshCw size={14} className={cn(server.status === 'connecting' && 'animate-spin')} />
               </button>
-              <button type="button" className="icon-button h-8 w-8" title="Disconnect" aria-label="Disconnect" onClick={() => onAct('disconnect')}>
+              <button type="button" className="adw-icon-btn h-8 w-8" title="Disconnect" aria-label="Disconnect" onClick={() => onAct('disconnect')}>
                 <Unplug size={14} />
               </button>
             </>
           ) : (
             server.status !== 'needs_auth' && (
-              <button type="button" className="chip h-8 rounded-full px-3.5 text-[11.5px]" disabled={!server.enabled} onClick={() => onAct('connect')}>
+              <button type="button" className="adw-btn h-8" disabled={!server.enabled} onClick={() => onAct('connect')}>
                 <Plug size={13} /> Connect
               </button>
             )
           )}
-          <button type="button" className="icon-button h-8 w-8" title="Edit connection" aria-label="Edit connection" onClick={onEdit}>
+          <button type="button" className="adw-icon-btn h-8 w-8" title="Edit connection" aria-label="Edit connection" onClick={onEdit}>
             <Pencil size={14} />
           </button>
           <Switch checked={server.enabled} onChange={(enabled) => onPatch({ enabled })} label={`Enable ${server.name}`} />
@@ -398,23 +390,23 @@ function ServerDetail({
       {server.oauth?.enabled && (
         <div
           className={cn(
-            'flex flex-wrap items-center gap-3 rounded-2xl border px-4 py-3.5',
+            'flex flex-wrap items-center gap-3 rounded-[12px] border px-4 py-3.5',
             server.oauth.authorized ? 'border-success/25 bg-success/[0.05]' : 'border-warning/30 bg-warning/[0.06]',
           )}
         >
-          <span className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl', server.oauth.authorized ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning')}>
+          <span className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-[12px]', server.oauth.authorized ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning')}>
             {server.oauth.authorized ? <ShieldCheck size={17} /> : <KeyRound size={17} />}
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-[12.5px] font-medium text-ink">{server.oauth.authorized ? 'Signed in with OAuth' : 'Sign-in required'}</p>
-            <p className="mt-0.5 text-[11.5px] leading-relaxed text-muted">
+            <p className="text-[13px] font-medium text-ink">{server.oauth.authorized ? 'Signed in with OAuth' : 'Sign-in required'}</p>
+            <p className="mt-0.5 text-[12px] leading-relaxed text-muted">
               {server.oauth.authorized
                 ? 'Tokens are stored encrypted by the local daemon and refreshed automatically.'
                 : 'Approve access in your browser. OpenSol registers itself with the server and keeps the tokens encrypted on this machine.'}
             </p>
           </div>
           {server.oauth.authorized ? (
-            <button type="button" className="chip h-8 rounded-full px-3.5 text-[11.5px]" onClick={onSignOut}>
+            <button type="button" className="adw-btn h-8" onClick={onSignOut}>
               <LogOut size={13} /> Sign out
             </button>
           ) : (
@@ -422,7 +414,7 @@ function ServerDetail({
               type="button"
               disabled={signingIn || !server.enabled}
               onClick={onAuthorize}
-              className="inline-flex h-8 items-center gap-1.5 rounded-full bg-accent px-4 text-[11.5px] font-medium text-on-accent transition-transform active:scale-95 disabled:opacity-40"
+              className="adw-btn adw-btn-suggested h-8 disabled:opacity-40"
             >
               {signingIn ? <Spinner size={12} /> : <ExternalLink size={12} />} Authorize
             </button>
@@ -431,20 +423,20 @@ function ServerDetail({
       )}
 
       {server.status === 'error' && server.error && (
-        <p className="rounded-xl border border-danger/25 bg-danger/[0.05] px-3 py-2 text-[11.5px] leading-relaxed text-danger">{server.error}</p>
+        <p className="rounded-[12px] border border-danger/30 bg-danger/10 px-3 py-2 text-[12px] leading-relaxed text-danger">{server.error}</p>
       )}
 
-      <div className="grid gap-3 rounded-2xl border border-line p-4 sm:grid-cols-[1fr_auto] sm:items-center">
+      <div className="grid gap-3 rounded-[12px] border border-line p-4 sm:grid-cols-[1fr_auto] sm:items-center">
         <div className="min-w-0">
-          <p className="flex items-center gap-1.5 text-[11px] font-medium text-muted">
+          <p className="flex items-center gap-1.5 text-[12px] font-medium text-muted">
             <TransportIcon transport={server.transport} /> {TRANSPORTS.find((item) => item.value === server.transport)?.label}
           </p>
-          <p className="mt-1 break-all font-mono text-[11px] text-ink">
+          <p className="mt-1 break-all font-mono text-[12px] text-ink">
             {server.transport === 'stdio' ? `${server.command} ${(server.args ?? []).join(' ')}` : server.url}
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-[11px] text-muted">Tool calls</span>
+          <span className="text-[12px] text-muted">Tool calls</span>
           <Segmented
             options={[
               { value: 'ask', label: 'Ask first' },
@@ -462,7 +454,7 @@ function ServerDetail({
             <p className="mr-auto text-[12px] font-medium text-ink">
               Tools <span className="font-normal text-faint">{server.tools.length - server.disabledTools.length}/{server.tools.length} on</span>
             </p>
-            <button type="button" className="text-[11px] font-medium text-muted transition-colors hover:text-ink" onClick={() => onPatch({ disabledTools: allOff ? [] : server.tools.map((tool) => tool.name) })}>
+            <button type="button" className="text-[12px] font-medium text-muted transition-colors hover:text-ink" onClick={() => onPatch({ disabledTools: allOff ? [] : server.tools.map((tool) => tool.name) })}>
               {allOff ? 'Enable all' : 'Disable all'}
             </button>
           </div>
@@ -472,17 +464,17 @@ function ServerDetail({
               <input className={cn(field, 'pl-8')} placeholder="Filter tools" value={query} onChange={(event) => setQuery(event.target.value)} />
             </div>
           )}
-          <ul className="divide-y divide-line rounded-xl border border-line">
+          <ul className="divide-y divide-line rounded-[12px] border border-line">
             {tools.map((tool) => {
               const off = server.disabledTools.includes(tool.name)
               return (
                 <li key={tool.name} className="flex items-center gap-3 px-3 py-2">
                   <Wrench size={12} className={cn('shrink-0', off ? 'text-faint' : 'text-accent')} />
                   <div className="min-w-0 flex-1">
-                    <p className={cn('truncate font-mono text-[11.5px]', off ? 'text-faint line-through' : 'text-ink')}>{tool.name}</p>
-                    {tool.description && <p className="truncate text-[10.5px] text-muted">{tool.description}</p>}
+                    <p className={cn('truncate font-mono text-[12px]', off ? 'text-faint line-through' : 'text-ink')}>{tool.name}</p>
+                    {tool.description && <p className="truncate text-[12px] text-muted">{tool.description}</p>}
                   </div>
-                  {tool.readOnly && <span className="rounded-full bg-success/10 px-1.5 py-px text-[9px] text-success">read-only</span>}
+                  {tool.readOnly && <span className="rounded-[9px] bg-success/10 px-1.5 py-px text-[12px] text-success">read-only</span>}
                   <Switch
                     checked={!off}
                     label={`Enable ${tool.name}`}
@@ -491,13 +483,13 @@ function ServerDetail({
                 </li>
               )
             })}
-            {tools.length === 0 && <li className="px-3 py-4 text-center text-[11.5px] text-faint">No tools match.</li>}
+            {tools.length === 0 && <li className="px-3 py-4 text-center text-[12px] text-faint">No tools match.</li>}
           </ul>
         </div>
       )}
 
       <div className="flex justify-end">
-        <button type="button" onClick={onRemove} className="inline-flex items-center gap-1.5 text-[11.5px] font-medium text-faint transition-colors hover:text-danger">
+        <button type="button" onClick={onRemove} className="inline-flex items-center gap-1.5 text-[12px] font-medium text-faint transition-colors hover:text-danger">
           <Trash2 size={12} /> Remove server
         </button>
       </div>
@@ -535,21 +527,21 @@ function ServerForm({
         if (draftIsValid(draft) && !busy) onSubmit(draft)
       }}
     >
-      <h3 className="font-display text-[22px] font-semibold leading-tight tracking-[-0.03em] text-ink">{title}</h3>
+      <h3 className="text-[22px] font-semibold leading-tight text-ink">{title}</h3>
 
       {presets && (
         <div>
-          <p className="mb-2 text-[11px] font-medium text-muted">Start from a template</p>
+          <p className="mb-2 text-[12px] font-medium text-muted">Start from a template</p>
           <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
             {MCP_PRESETS.map((preset) => (
               <button
                 key={preset.label}
                 type="button"
                 onClick={() => setDraft({ ...EMPTY_DRAFT, ...preset.draft })}
-                className="rounded-xl border border-line px-3 py-2 text-left transition-all hover:border-accent/40 hover:bg-raised/60 active:scale-[0.98]"
+                className="rounded-[12px] border border-line px-3 py-2 text-left transition-all hover:border-accent/40 hover:bg-raised/60 active:scale-[0.98]"
               >
                 <span className="block text-[12px] font-medium text-ink">{preset.label}</span>
-                <span className="mt-0.5 block truncate text-[10.5px] text-muted">{preset.description}</span>
+                <span className="mt-0.5 block truncate text-[12px] text-muted">{preset.description}</span>
               </button>
             ))}
           </div>
@@ -560,7 +552,7 @@ function ServerForm({
         <input data-autofocus className={field} placeholder="Name (e.g. GitHub)" value={draft.name} onChange={(event) => set({ name: event.target.value })} />
         <div>
           <Segmented options={TRANSPORTS.map(({ value, label }) => ({ value, label }))} value={draft.transport} onChange={(transport) => set({ transport })} size="md" />
-          <p className="mt-1.5 text-[11px] text-faint">{TRANSPORTS.find((item) => item.value === draft.transport)?.hint}</p>
+          <p className="mt-1.5 text-[12px] text-faint">{TRANSPORTS.find((item) => item.value === draft.transport)?.hint}</p>
         </div>
       </div>
 
@@ -571,25 +563,25 @@ function ServerForm({
             <input className={cn(field, 'font-mono')} placeholder="arguments" value={draft.args} onChange={(event) => set({ args: event.target.value })} />
           </div>
           <textarea className={cn(area, 'h-20 resize-none py-2 font-mono')} placeholder={'Environment, one per line\nAPI_KEY=…'} value={draft.env} onChange={(event) => set({ env: event.target.value })} />
-          <p className="text-[11px] leading-relaxed text-faint">Local servers run as a process on this computer with your permissions, so only add servers you trust.</p>
+          <p className="text-[12px] leading-relaxed text-faint">Local servers run as a process on this computer with your permissions, so only add servers you trust.</p>
         </>
       ) : (
         <>
           <input className={cn(field, 'font-mono')} placeholder={draft.transport === 'sse' ? 'https://example.com/sse' : 'https://example.com/mcp'} value={draft.url} onChange={(event) => set({ url: event.target.value })} />
-          <div className="rounded-2xl border border-line p-3.5">
+          <div className="rounded-[12px] border border-line p-3.5">
             <div className="flex items-center gap-3">
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[9px] bg-accent-soft text-accent">
                 <KeyRound size={14} />
               </span>
               <div className="min-w-0 flex-1">
-                <p className="text-[12.5px] font-medium text-ink">Sign in with OAuth</p>
-                <p className="text-[11px] text-muted">For services that ask you to approve access in the browser (Linear, Notion, Sentry…).</p>
+                <p className="text-[13px] font-medium text-ink">Sign in with OAuth</p>
+                <p className="text-[12px] text-muted">For services that ask you to approve access in the browser (Linear, Notion, Sentry…).</p>
               </div>
               <Switch checked={draft.oauth} onChange={(oauth) => set({ oauth })} label="Sign in with OAuth" />
             </div>
             {draft.oauth && (
               <div className="mt-3 border-t border-line pt-3">
-                <button type="button" className="text-[11px] font-medium text-muted transition-colors hover:text-ink" onClick={() => setAdvanced((value) => !value)}>
+                <button type="button" className="text-[12px] font-medium text-muted transition-colors hover:text-ink" onClick={() => setAdvanced((value) => !value)}>
                   {advanced ? 'Hide' : 'Show'} advanced client settings
                 </button>
                 {advanced && (
@@ -597,7 +589,7 @@ function ServerForm({
                     <input className={cn(field, 'font-mono')} placeholder="Client ID (optional)" value={draft.clientId} onChange={(event) => set({ clientId: event.target.value })} />
                     <input className={cn(field, 'font-mono')} type="password" autoComplete="off" placeholder="Client secret (optional)" value={draft.clientSecret} onChange={(event) => set({ clientSecret: event.target.value })} />
                     <input className={cn(field, 'font-mono sm:col-span-2')} placeholder="Scopes (optional, space separated)" value={draft.scope} onChange={(event) => set({ scope: event.target.value })} />
-                    <p className="text-[10.5px] leading-relaxed text-faint sm:col-span-2">
+                    <p className="text-[12px] leading-relaxed text-faint sm:col-span-2">
                       Leave the client empty to register automatically. Redirect URI to allow: <span className="font-mono">{`${window.location.origin}/oauth/mcp/callback`}</span>
                     </p>
                   </div>
@@ -611,14 +603,14 @@ function ServerForm({
 
       <div className="flex justify-end gap-2 pt-1">
         {onCancel && (
-          <button type="button" className="chip h-8 rounded-full px-4" onClick={onCancel}>
+          <button type="button" className="adw-btn h-8" onClick={onCancel}>
             Cancel
           </button>
         )}
         <button
           type="submit"
           disabled={busy || !draftIsValid(draft)}
-          className="inline-flex h-8 items-center gap-1.5 rounded-full bg-accent px-4 text-[11.5px] font-medium text-on-accent transition-transform active:scale-95 disabled:opacity-40"
+          className="adw-btn adw-btn-suggested h-8 disabled:opacity-40"
         >
           {busy && <Spinner size={11} />} {submitLabel}
         </button>
@@ -641,22 +633,22 @@ function ImportView({ busy, onCancel, onImport }: { busy: boolean; onCancel: () 
   return (
     <div className="space-y-4 px-5 py-5 sm:px-7 sm:py-6">
       <div>
-        <h3 className="font-display text-[22px] font-semibold leading-tight tracking-[-0.03em] text-ink">Import from JSON</h3>
+        <h3 className="text-[22px] font-semibold leading-tight text-ink">Import from JSON</h3>
         <p className="mt-1 text-[12px] leading-relaxed text-muted">
           Paste the <span className="font-mono">mcpServers</span> block from Claude Desktop, Cursor or VS Code. Local commands and remote URLs (HTTP or SSE) both work.
         </p>
       </div>
       <textarea
         data-autofocus
-        className={cn(area, 'h-48 resize-none py-2.5 font-mono text-[11.5px]')}
+        className={cn(area, 'h-48 resize-none py-2.5 font-mono text-[12px]')}
         placeholder={'{\n  "mcpServers": {\n    "github": { "url": "https://api.githubcopilot.com/mcp/" },\n    "files": { "command": "npx", "args": ["-y", "@modelcontextprotocol/server-filesystem", "."] }\n  }\n}'}
         value={text}
         onChange={(event) => setText(event.target.value)}
         spellCheck={false}
       />
-      {result?.error && <p className="rounded-xl border border-danger/25 bg-danger/[0.05] px-3 py-2 text-[11.5px] text-danger">{result.error}</p>}
+      {result?.error && <p className="rounded-[12px] border border-danger/30 bg-danger/10 px-3 py-2 text-[12px] text-danger">{result.error}</p>}
       {result && result.servers.length > 0 && (
-        <ul className="divide-y divide-line rounded-xl border border-line">
+        <ul className="divide-y divide-line rounded-[12px] border border-line">
           {result.servers.map((server) => (
             <li key={server.name} className="flex items-center gap-3 px-3 py-2">
               <span className="text-faint">
@@ -664,25 +656,25 @@ function ImportView({ busy, onCancel, onImport }: { busy: boolean; onCancel: () 
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-[12px] font-medium text-ink">{server.name}</span>
-                <span className="block truncate font-mono text-[10.5px] text-muted">{server.transport === 'stdio' ? `${server.command} ${(server.args ?? []).join(' ')}` : server.url}</span>
+                <span className="block truncate font-mono text-[12px] text-muted">{server.transport === 'stdio' ? `${server.command} ${(server.args ?? []).join(' ')}` : server.url}</span>
               </span>
-              {server.oauth?.enabled && <span className="rounded-full bg-accent-soft px-2 py-px text-[9.5px] text-accent">OAuth</span>}
+              {server.oauth?.enabled && <span className="rounded-[9px] bg-accent-soft px-2 py-px text-[12px] text-accent">OAuth</span>}
             </li>
           ))}
         </ul>
       )}
-      {result && result.skipped.length > 0 && <p className="text-[11px] text-faint">Skipped (no command or url): {result.skipped.join(', ')}</p>}
+      {result && result.skipped.length > 0 && <p className="text-[12px] text-muted">Skipped (no command or url): {result.skipped.join(', ')}</p>}
       <div className="flex justify-end gap-2">
-        <button type="button" className="chip h-8 rounded-full px-4" onClick={onCancel}>
+        <button type="button" className="adw-btn" onClick={onCancel}>
           Cancel
         </button>
         <button
           type="button"
           disabled={busy || !result || result.servers.length === 0}
           onClick={() => result && onImport(result.servers)}
-          className="inline-flex h-8 items-center gap-1.5 rounded-full bg-accent px-4 text-[11.5px] font-medium text-on-accent transition-transform active:scale-95 disabled:opacity-40"
+          className="adw-btn adw-btn-suggested"
         >
-          {busy && <Spinner size={11} />} Import {result && result.servers.length > 0 ? `${result.servers.length} server${result.servers.length === 1 ? '' : 's'}` : ''}
+          {busy && <Spinner size={16} />} Import {result && result.servers.length > 0 ? `${result.servers.length} server${result.servers.length === 1 ? '' : 's'}` : ''}
         </button>
       </div>
     </div>

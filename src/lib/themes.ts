@@ -15,9 +15,9 @@ export interface ThemeMeta {
 export const THEMES: ThemeMeta[] = [
   { id: 'light', label: 'Light', dark: false },
   { id: 'dark', label: 'Dark', dark: true },
-  { id: 'night-owl', label: 'Night Owl', dark: true },
-  { id: 'claude-code', label: 'Claude Code', dark: true },
-  { id: 'flame', label: 'Flame', dark: true },
+  { id: 'night-owl', label: 'Dark — Teal', dark: true },
+  { id: 'claude-code', label: 'Dark — Purple', dark: true },
+  { id: 'flame', label: 'Dark — Orange', dark: true },
 ]
 
 const SLUG = /^[a-z0-9][a-z0-9:_-]{0,79}$/

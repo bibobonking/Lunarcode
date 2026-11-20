@@ -59,11 +59,9 @@ export function PreviewPane() {
   if (pages.length === 0) {
     return (
       <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 px-8 text-center">
-        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-raised text-faint">
-          <Monitor size={18} />
-        </span>
-        <p className="text-[13px] font-medium text-ink">Nothing to preview yet</p>
-        <p className="max-w-[260px] text-[11.5px] leading-relaxed text-muted">
+        <Monitor size={32} className="text-muted" />
+        <p className="text-[18px] font-bold text-ink">Nothing to preview yet</p>
+        <p className="max-w-[280px] text-[14px] leading-relaxed text-muted">
           Ask OpenSol to build a page or a game. The first HTML file it writes shows up here and reloads as it changes.
         </p>
       </div>
@@ -76,7 +74,7 @@ export function PreviewPane() {
         <select
           value={page}
           onChange={(event) => setSelected(event.target.value)}
-          className="h-8 min-w-0 flex-1 truncate rounded-lg border border-line bg-transparent px-2 font-mono text-[11.5px] text-ink outline-none focus:border-accent/50"
+          className="adw-select min-w-0 flex-1 truncate font-mono text-[12px]"
           aria-label="Page to preview"
         >
           {pages.map((entry) => (
@@ -85,7 +83,7 @@ export function PreviewPane() {
             </option>
           ))}
         </select>
-        <div className="flex items-center rounded-lg bg-raised/70 p-0.5">
+        <div className="flex items-center rounded-[9px] bg-ink/[.07] p-0.5">
           {DEVICES.map((entry) => (
             <button
               key={entry.id}
@@ -95,17 +93,17 @@ export function PreviewPane() {
               title={entry.label}
               aria-label={entry.label}
               className={cn(
-                'flex h-7 w-7 items-center justify-center rounded-md transition-colors',
-                device === entry.id ? 'bg-panel text-ink shadow-pill' : 'text-muted hover:text-ink',
+                'flex h-7 w-7 items-center justify-center rounded-[6px] transition-colors',
+                device === entry.id ? 'bg-panel text-ink' : 'text-muted hover:text-ink',
               )}
             >
-              <entry.icon size={14} strokeWidth={1.7} />
+              <entry.icon size={16} />
             </button>
           ))}
         </div>
         <button
           type="button"
-          className="icon-button h-8 w-8"
+          className="adw-icon-btn"
           onClick={() => {
             void fetchToken()
             setNonce((value) => value + 1)
@@ -113,37 +111,37 @@ export function PreviewPane() {
           title="Reload preview"
           aria-label="Reload preview"
         >
-          <RefreshCw size={14} strokeWidth={1.7} />
+          <RefreshCw size={16} />
         </button>
         <button
           type="button"
-          className="icon-button h-8 w-8"
+          className="adw-icon-btn"
           disabled={!src}
           onClick={() => window.open(src, '_blank', 'noopener')}
           title="Open in a new tab"
           aria-label="Open in a new tab"
         >
-          <ExternalLink size={14} strokeWidth={1.7} />
+          <ExternalLink size={16} />
         </button>
       </div>
 
-      <div className="relative min-h-0 flex-1 overflow-auto bg-raised/40 p-2">
+      <div className="relative min-h-0 flex-1 overflow-auto bg-raised p-2">
         {error && (
-          <div className="mx-auto mt-6 max-w-[300px] rounded-xl border border-danger/25 bg-danger/[0.05] px-3.5 py-3 text-center">
-            <p className="text-[12px] font-medium text-ink">The preview could not start</p>
-            <p className="mt-1 text-[11.5px] leading-relaxed text-muted">{error}</p>
+          <div className="mx-auto mt-6 max-w-[300px] rounded-[12px] border border-danger/30 bg-danger/10 px-4 py-3 text-center">
+            <p className="text-[14px] font-semibold text-ink">The preview could not start</p>
+            <p className="mt-1 text-[12px] leading-relaxed text-muted">{error}</p>
             <button
               type="button"
               onClick={() => void fetchToken()}
-              className="mt-2 text-[11.5px] font-medium text-accent hover:underline"
+              className="adw-btn mt-2 h-8"
             >
               Try again
             </button>
           </div>
         )}
         {!error && !src && (
-          <p className="flex items-center justify-center gap-2 py-8 text-[11.5px] text-faint">
-            <Spinner size={12} /> Starting preview…
+          <p className="flex items-center justify-center gap-2 py-8 text-[14px] text-muted">
+            <Spinner size={16} /> Starting preview…
           </p>
         )}
         {src && (
@@ -152,13 +150,13 @@ export function PreviewPane() {
             title={`Preview of ${page}`}
             src={src}
             sandbox="allow-scripts allow-forms allow-modals allow-popups allow-pointer-lock"
-            className="mx-auto block h-full min-h-[320px] max-w-full rounded-lg border border-line bg-white shadow-pill"
+            className="mx-auto block h-full min-h-[320px] max-w-full rounded-[9px] border border-line bg-white"
             style={{ width }}
           />
         )}
       </div>
 
-      <p className="shrink-0 border-t border-line px-3 py-1.5 text-[11px] text-faint">
+      <p className="shrink-0 border-t border-line px-3 py-1.5 text-[12px] text-muted">
         Runs in a sandbox: it can load your files and public CDNs, but cannot reach OpenSol or your keys.
       </p>
     </div>

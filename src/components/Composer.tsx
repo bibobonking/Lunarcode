@@ -8,7 +8,7 @@ import {
   type DragEvent,
   type KeyboardEvent,
 } from 'react'
-import { Check, FileText, ListChecks, Sparkles, ShieldCheck, Slash, Square, Upload, X } from 'lucide-react'
+import { FileText, ShieldCheck, Square, Upload, X } from 'lucide-react'
 import type { Attachment } from '../types'
 import { activeModelId, hasCredentials, useSettings } from '../store/settings'
 import { useActiveModel, useProviderModels } from '../store/models'
@@ -18,11 +18,10 @@ import { effortOptions } from '../lib/reasoning'
 import { PERMISSION_MODES, permissionLabel, permissionMode, permissionTools } from '../lib/permissions'
 import { cn, formatBytes, readFileAsDataUrl, readFileAsText } from '../lib/utils'
 import { ModelDeck, ModelDeckTrigger } from './ModelDeck'
-import { PixleSol } from './PixleSol'
-import { Popover, MenuLabel, TextButton } from './composer/Popover'
+import { Popover, MenuLabel, MenuOption, TextButton } from './composer/Popover'
+import { Spinner } from './ui'
 import { PlusMenu } from './composer/PlusMenu'
 import { WorkspacePicker } from './composer/WorkspacePicker'
-import type { PixleMood } from '../lib/pixlesol'
 
 const TEXT_EXTENSIONS = /\.(txt|md|markdown|ts|tsx|js|jsx|mjs|cjs|json|css|scss|html|vue|svelte|py|go|rs|rb|java|kt|cs|c|h|cpp|hpp|php|swift|sh|bash|zsh|yml|yaml|toml|ini|sql|csv|xml|gitignore|env)$/i
 const MAX_ATTACHMENTS = 6
@@ -59,7 +58,6 @@ export function Composer({
   placeholder = 'How can I help you today?',
   contextPct,
   contextTitle,
-  pixleMood,
 }: {
   value: string
   onChange: (value: string) => void
@@ -72,7 +70,6 @@ export function Composer({
   placeholder?: string
   contextPct?: number
   contextTitle?: string
-  pixleMood?: PixleMood
 }) {
   const settings = useSettings()
   const update = useSettings((state) => state.update)
@@ -322,44 +319,33 @@ export function Composer({
 
   const disabledSend = (!value.trim() && attachments.length === 0) || submitting || streaming
   const contextTone =
-    contextPct === undefined
-      ? ''
-      : contextPct >= 95
-        ? 'text-danger'
-        : contextPct >= 70
-          ? 'text-warning'
-          : 'text-faint'
+    contextPct === undefined ? '' : contextPct >= 95 ? 'text-danger' : contextPct >= 70 ? 'text-warning' : 'text-muted'
 
   return (
     <div className="relative w-full">
       <ModelDeck open={pickerOpen && connected} onClose={() => setPickerOpen(false)} />
 
       {commandMatches.length > 0 && (
-        <div className="absolute bottom-[calc(100%+8px)] left-0 z-40 w-[min(94vw,360px)] overflow-hidden rounded-xl border border-line surface-lift shadow-float">
-          <div className="flex items-center gap-1.5 border-b border-line px-3 py-2 text-[10px] font-medium uppercase tracking-[0.12em] text-faint">
-            <Slash size={10} /> Commands
-          </div>
+        <div role="listbox" aria-label="Commands" className="adw-popover absolute bottom-[calc(100%+8px)] left-0 z-40 w-[min(94vw,380px)]">
+          <MenuLabel>Commands</MenuLabel>
           {commandMatches.map((command, index) => (
             <button
               key={command.name}
               type="button"
+              role="option"
+              aria-selected={index === commandIndex}
               onMouseDown={(event) => event.preventDefault()}
               onClick={() => chooseCommand(command.name, command.takesArgs)}
-              className={cn(
-                'flex w-full items-center gap-2 px-3 py-2 text-left',
-                index === commandIndex ? 'bg-accent-soft' : 'hover:bg-raised',
-              )}
+              className="adw-menu-item gap-3"
             >
-              <span className={cn('font-mono text-[10.5px]', index === commandIndex ? 'text-accent' : 'text-ink')}>
-                {command.usage}
-              </span>
-              <span className="min-w-0 flex-1 truncate text-[10px] text-faint">{command.description}</span>
+              <span className="shrink-0 font-mono text-[13px]">{command.usage}</span>
+              <span className="min-w-0 flex-1 truncate text-[12px] text-muted">{command.description}</span>
             </button>
           ))}
         </div>
       )}
 
-      <div className="mb-1 flex flex-wrap items-center gap-x-1 px-0.5">
+      <div className="mb-1 flex flex-wrap items-center gap-x-1">
         <WorkspacePicker />
       </div>
 
@@ -374,81 +360,68 @@ export function Composer({
         }}
         onDrop={onDrop}
         className={cn(
-          'surface-lift composer-shadow relative rounded-xl border transition-all duration-200',
-          focused || dragging ? 'border-accent/35' : 'border-line',
-          streaming && 'composer-glow border-accent/30',
-          dragging && 'ring-4 ring-accent/10',
+          'relative rounded-[12px] border bg-panel transition-colors duration-150',
+          focused || dragging ? 'border-accent ring-2 ring-accent/30' : 'border-line',
         )}
       >
-        {focused && !dragging && (
-          <div className="pointer-events-none absolute inset-0 rounded-xl ring-4 ring-accent/[0.03]" aria-hidden="true" />
-        )}
-
-        <div className="relative px-3 pb-0 pt-2">
-          {attachments.length > 0 && (
-            <div className="flex flex-wrap gap-2 px-1 pb-2">
-              {attachments.map((attachment) =>
-                attachment.kind === 'image' ? (
-                  <div key={attachment.id} className="relative">
-                    <img
-                      src={attachment.dataUrl}
-                      alt={attachment.name}
-                      className="h-14 w-14 rounded-lg border border-line object-cover"
-                    />
+        {attachments.length > 0 && (
+          <ul className="flex flex-wrap gap-2 px-3 pt-3" aria-label="Attachments">
+            {attachments.map((attachment) => (
+              <li key={attachment.id}>
+                {attachment.kind === 'image' ? (
+                  <div className="relative">
+                    <img src={attachment.dataUrl} alt={attachment.name} className="h-14 w-14 rounded-[9px] border border-line object-cover" />
                     <button
                       type="button"
                       onClick={() => setAttachments((current) => current.filter((item) => item.id !== attachment.id))}
-                      className="absolute -right-1.5 -top-1.5 flex h-[18px] w-[18px] items-center justify-center rounded-full border border-line bg-panel text-muted shadow-sm transition-colors hover:text-ink"
+                      className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full border border-line bg-panel text-muted hover:text-ink"
                       aria-label={`Remove ${attachment.name}`}
                     >
-                      <X size={10} />
+                      <X size={12} />
                     </button>
                   </div>
                 ) : (
-                  <span
-                    key={attachment.id}
-                    className="inline-flex h-8 max-w-[220px] items-center gap-1.5 rounded-lg border border-line bg-raised/70 pl-2 pr-1 text-[10.5px] text-muted"
-                  >
-                    <FileText size={11} className="shrink-0" />
+                  <span className="inline-flex h-8 max-w-[240px] items-center gap-1.5 rounded-[6px] border border-line bg-raised pl-2 pr-1 text-[12px] text-ink">
+                    <FileText size={14} className="shrink-0 text-muted" />
                     <span className="min-w-0 flex-1 truncate">{attachment.name}</span>
-                    <span className="shrink-0 text-faint">{formatBytes(attachment.size)}</span>
+                    <span className="shrink-0 text-muted">{formatBytes(attachment.size)}</span>
                     <button
                       type="button"
                       onClick={() => setAttachments((current) => current.filter((item) => item.id !== attachment.id))}
-                      className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-faint hover:bg-panel hover:text-ink"
+                      className="flex h-6 w-6 shrink-0 items-center justify-center rounded-[6px] text-muted hover:bg-ink/[.1] hover:text-ink"
                       aria-label={`Remove ${attachment.name}`}
                     >
-                      <X size={10} />
+                      <X size={12} />
                     </button>
                   </span>
-                ),
-              )}
-            </div>
-          )}
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
 
-          <textarea
-            ref={textareaRef}
-            value={value}
-            onChange={(event) => onChange(event.target.value)}
-            onKeyDown={onKeyDown}
-            onPaste={onPaste}
-            onFocus={() => setFocused(true)}
-            onBlur={() => setFocused(false)}
-            placeholder={placeholder}
-            rows={1}
-            aria-label="Message OpenSol"
-            className="block w-full resize-none bg-transparent px-1.5 py-1 text-[14.5px] leading-[1.55] text-ink outline-none placeholder:text-faint"
-            style={{ minHeight: 36, maxHeight: 220 }}
-          />
-        </div>
+        <textarea
+          ref={textareaRef}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          onKeyDown={onKeyDown}
+          onPaste={onPaste}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          placeholder={placeholder}
+          rows={1}
+          aria-label="Message OpenSol"
+          className="block w-full resize-none bg-transparent px-4 pb-1 pt-3 text-[14px] leading-[1.5] text-ink outline-none placeholder:text-faint"
+          style={{ minHeight: 44, maxHeight: 220 }}
+        />
 
-        <div className="flex items-center justify-between gap-2 px-1.5 pb-1.5 pt-0.5">
+        <div className="flex items-center justify-between gap-2 px-2 pb-2 pt-1">
           <div className="flex min-w-0 items-center gap-0.5">
             <PlusMenu onAddFiles={() => fileRef.current?.click()} />
             <Popover
               open={modeOpen}
               onClose={() => setModeOpen(false)}
-              width={230}
+              width={260}
               trigger={
                 <TextButton
                   open={modeOpen}
@@ -464,35 +437,29 @@ export function Composer({
               }
             >
               <MenuLabel>Mode</MenuLabel>
-              {(
-                [
-                  { value: 'build', label: 'Build', hint: 'Edit files and run commands', icon: Sparkles },
-                  { value: 'plan', label: 'Plan', hint: 'Read-only investigation', icon: ListChecks },
-                ] as const
-              ).map((entry) => (
-                <button
-                  key={entry.value}
-                  type="button"
-                  onClick={() => {
-                    setMode(entry.value)
-                    setModeOpen(false)
-                  }}
-                  className="flex w-full items-start gap-2 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-raised"
-                >
-                  <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center">
-                    {settings.mode === entry.value ? <Check size={12} className="text-accent" /> : <entry.icon size={12} className="text-faint" />}
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block text-[11.5px] font-medium text-ink">{entry.label}</span>
-                    <span className="mt-0.5 block text-[10px] leading-relaxed text-faint">{entry.hint}</span>
-                  </span>
-                </button>
-              ))}
+              <MenuOption
+                selected={settings.mode === 'build'}
+                label="Build"
+                hint="Edit files and run commands"
+                onClick={() => {
+                  setMode('build')
+                  setModeOpen(false)
+                }}
+              />
+              <MenuOption
+                selected={settings.mode === 'plan'}
+                label="Plan"
+                hint="Read-only investigation"
+                onClick={() => {
+                  setMode('plan')
+                  setModeOpen(false)
+                }}
+              />
             </Popover>
             <Popover
               open={permissionOpen}
               onClose={() => setPermissionOpen(false)}
-              width={290}
+              width={300}
               trigger={
                 <TextButton
                   open={permissionOpen}
@@ -509,30 +476,23 @@ export function Composer({
             >
               <MenuLabel>Permissions</MenuLabel>
               {PERMISSION_MODES.map((entry) => (
-                <button
+                <MenuOption
                   key={entry.value}
-                  type="button"
+                  selected={permission === entry.value}
+                  label={entry.label}
+                  hint={entry.description}
                   onClick={() => {
                     update({ tools: permissionTools(settings.tools, entry.value) })
                     setPermissionOpen(false)
                   }}
-                  className="flex w-full items-start gap-2 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-raised"
-                >
-                  <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center">
-                    {permission === entry.value ? <Check size={12} className="text-accent" /> : <span className="h-1.5 w-1.5 rounded-full bg-line" />}
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block text-[11.5px] font-medium text-ink">{entry.label}</span>
-                    <span className="mt-0.5 block text-[10px] leading-relaxed text-faint">{entry.description}</span>
-                  </span>
-                </button>
+                />
               ))}
             </Popover>
             {efforts.length > 1 && (
               <Popover
                 open={effortOpen}
                 onClose={() => setEffortOpen(false)}
-                width={250}
+                width={270}
                 trigger={
                   <TextButton
                     open={effortOpen}
@@ -549,23 +509,16 @@ export function Composer({
               >
                 <MenuLabel>Effort</MenuLabel>
                 {efforts.map((effort) => (
-                  <button
+                  <MenuOption
                     key={effort}
-                    type="button"
+                    selected={settings.effort === effort}
+                    label={EFFORT_LABELS[effort].label}
+                    hint={EFFORT_LABELS[effort].description}
                     onClick={() => {
                       update({ effort })
                       setEffortOpen(false)
                     }}
-                    className="flex w-full items-start gap-2 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-raised"
-                  >
-                    <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center">
-                      {settings.effort === effort ? <Check size={12} className="text-accent" /> : <span className="h-1.5 w-1.5 rounded-full bg-line" />}
-                    </span>
-                    <span className="min-w-0">
-                      <span className="block text-[11.5px] font-medium text-ink">{EFFORT_LABELS[effort].label}</span>
-                      <span className="mt-0.5 block text-[10px] leading-relaxed text-faint">{EFFORT_LABELS[effort].description}</span>
-                    </span>
-                  </button>
+                  />
                 ))}
               </Popover>
             )}
@@ -584,11 +537,7 @@ export function Composer({
 
           <div className="flex min-w-0 shrink-0 items-center gap-1">
             {contextPct !== undefined && (
-              <span
-                className={cn('hidden items-center gap-1 px-1 text-[10.5px] tabular-nums sm:flex', contextTone)}
-                title={contextTitle}
-              >
-                <span className="h-1.5 w-1.5 rounded-full bg-current" />
+              <span className={cn('hidden px-1 text-[12px] tabular-nums sm:inline', contextTone)} title={contextTitle}>
                 {contextPct}%
               </span>
             )}
@@ -604,11 +553,11 @@ export function Composer({
               <button
                 type="button"
                 onClick={onStop}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-ink text-panel transition-opacity hover:opacity-85"
+                className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-ink/[.12] text-ink transition-colors hover:bg-ink/[.2]"
                 aria-label="Stop generating"
                 title="Stop"
               >
-                <Square size={11} fill="currentColor" />
+                <Square size={12} fill="currentColor" />
               </button>
             ) : (
               <button
@@ -616,44 +565,32 @@ export function Composer({
                 onClick={() => void submit()}
                 disabled={disabledSend}
                 className={cn(
-                  'flex h-8 w-8 items-center justify-center rounded-full transition-all duration-150',
-                  disabledSend ? 'cursor-not-allowed bg-raised text-faint' : 'bg-accent text-on-accent hover:brightness-110',
+                  'flex h-[34px] w-[34px] items-center justify-center rounded-full transition-colors duration-150',
+                  disabledSend ? 'cursor-not-allowed bg-ink/[.08] text-faint' : 'bg-accent text-on-accent hover:bg-accent/90',
                 )}
                 aria-label="Send message"
                 title="Send (Enter)"
               >
-                {submitting ? (
-                  <span className="h-3 w-3 animate-spin rounded-full border border-current border-t-transparent" />
-                ) : (
-                  <ArrowUpIcon />
-                )}
+                {submitting ? <Spinner size={16} /> : <ArrowUpIcon />}
               </button>
             )}
           </div>
         </div>
 
         {dragging && (
-          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-accent/45 bg-panel/95">
-            <Upload size={18} className="text-accent" />
-            <p className="text-[12px] font-medium text-ink">Drop files to attach</p>
-            <p className="text-[10.5px] text-faint">Images up to 5 MB · text up to 512 KB</p>
+          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-1 rounded-[12px] border-2 border-dashed border-accent bg-panel">
+            <Upload size={20} className="text-link" />
+            <p className="text-[14px] font-semibold text-ink">Drop files to attach</p>
+            <p className="text-[12px] text-muted">Images up to 5 MB · text up to 512 KB</p>
           </div>
-        )}
-
-        {pixleMood && settings.showMascot && (
-          <PixleSol
-            mood={pixleMood}
-            size={44}
-            className="pointer-events-none absolute -top-[34px] right-4 z-10 hidden sm:inline-flex"
-          />
         )}
       </div>
 
       {hints && (
-        <div className="mt-2.5 flex items-center justify-between gap-4 px-2 text-[11px] text-faint">
+        <div className="mt-2 flex items-center justify-between gap-4 px-1 text-[12px] text-muted">
           <span className="hidden sm:inline">Enter to send · Shift + Enter for a new line · / for commands</span>
-          <span className="flex items-center gap-1 sm:ml-auto">
-            <ShieldCheck size={11} />
+          <span className="flex items-center gap-1.5 sm:ml-auto">
+            <ShieldCheck size={14} />
             Local daemon · keys encrypted at rest
           </span>
         </div>
@@ -664,7 +601,7 @@ export function Composer({
 
 function ArrowUpIcon() {
   return (
-    <svg viewBox="0 0 16 16" width="15" height="15" fill="none" aria-hidden="true">
+    <svg viewBox="0 0 16 16" width="16" height="16" fill="none" aria-hidden="true">
       <path d="M8 12.5V3.5M4.2 7.2L8 3.4l3.8 3.8" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   )

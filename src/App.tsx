@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Sidebar } from './components/Sidebar'
+import { TopBar, type ChatViewMode } from './components/TopBar'
 import { ChatView } from './components/ChatView'
 import { WorkspacePanel } from './components/WorkspacePanel'
 import { SettingsModal } from './components/SettingsModal'
@@ -11,6 +12,7 @@ import { ConfirmDialog, ToastHost } from './components/ui'
 import { useSettings } from './store/settings'
 import { useModelSync } from './store/models'
 import { useUi } from './store/ui'
+import { useChats } from './store/chats'
 import { useBoot } from './lib/boot'
 import { resolveTheme, themeIsDark } from './lib/themes'
 import { listInstalledPlugins } from './lib/daemon'
@@ -28,10 +30,14 @@ export default function App() {
   const setMobileSidebarOpen = useUi((state) => state.setMobileSidebarOpen)
   const setPaletteOpen = useUi((state) => state.setPaletteOpen)
 
+  const activeId = useChats((state) => state.activeId)
+  const session = useChats((state) => state.sessions.find((item) => item.id === state.activeId) ?? null)
+  const [view, setView] = useState<ChatViewMode>('chat')
+  useEffect(() => setView('chat'), [activeId])
+
   useModelSync()
 
-  // Keep the splash up for at least MIN_SPLASH_MS so the intro animation can play,
-  // then let it fade out over the app instead of cutting.
+  // Keep the splash up briefly so it never flashes, then fade it out over the app instead of cutting.
   const [splash, setSplash] = useState<'show' | 'leaving' | 'gone'>('show')
   useEffect(() => {
     if (phase !== 'ready' || splash !== 'show') return
@@ -67,7 +73,7 @@ export default function App() {
       root.classList.toggle('dark', themeIsDark(theme, media.matches))
       document
         .querySelector('meta[name="theme-color"]')
-        ?.setAttribute('content', themeIsDark(theme, media.matches) ? '#141413' : '#ffffff')
+        ?.setAttribute('content', themeIsDark(theme, media.matches) ? '#222226' : '#fafafb')
       try {
         localStorage.setItem('opensol.theme', theme)
       } catch {
@@ -122,21 +128,24 @@ export default function App() {
   const ready = phase === 'ready'
 
   return (
-    <div className="flex h-dvh min-h-0 overflow-hidden bg-canvas text-ink">
+    <div className="adw-window">
       {ready && (
         <>
-          <Sidebar />
-          {mobileSidebarOpen && (
-            <button
-              type="button"
-              aria-label="Close sidebar"
-              onClick={() => setMobileSidebarOpen(false)}
-              className="modal-scrim fixed inset-0 z-40 cursor-default bg-black/30 backdrop-blur-[2px] lg:hidden"
-            />
-          )}
-          <div className="relative flex min-h-0 min-w-0 flex-1 bg-panel lg:my-1.5 lg:mr-1.5 lg:overflow-hidden lg:rounded-xl lg:border lg:border-line lg:shadow-pill">
-            <ChatView />
-            <WorkspacePanel />
+          <TopBar session={session} view={view} onViewChange={setView} />
+          <div className="relative flex min-h-0 min-w-0 flex-1">
+            <Sidebar />
+            {mobileSidebarOpen && (
+              <button
+                type="button"
+                aria-label="Close sidebar"
+                onClick={() => setMobileSidebarOpen(false)}
+                className="adw-scrim z-40 cursor-default lg:hidden"
+              />
+            )}
+            <main className="relative flex min-h-0 min-w-0 flex-1 bg-panel">
+              <ChatView view={view} onViewChange={setView} />
+              <WorkspacePanel />
+            </main>
           </div>
           <SettingsModal />
           <McpPanel />

@@ -86,19 +86,19 @@ function PreviewOverlay({ html, onClose }: { html: string; onClose: () => void }
   }, [onClose])
 
   return createPortal(
-    <div className="fixed inset-0 z-[90] flex flex-col bg-canvas/95 p-3 backdrop-blur-sm sm:p-5" role="dialog" aria-label="Live preview">
+    <div className="fixed inset-0 z-[90] flex flex-col bg-canvas p-3 sm:p-5" role="dialog" aria-label="Live preview">
       <div className="mb-3 flex items-center justify-between">
-        <p className="text-[13.5px] font-medium text-ink">Live preview</p>
+        <p className="text-[14px] font-bold text-ink">Live preview</p>
         <div className="flex items-center gap-1">
-          <button type="button" className="icon-button" onClick={() => setReloadKey((value) => value + 1)} title="Restart" aria-label="Restart preview">
+          <button type="button" className="adw-icon-btn" onClick={() => setReloadKey((value) => value + 1)} title="Restart" aria-label="Restart preview">
             <RotateCw size={16} />
           </button>
-          <button type="button" className="icon-button" onClick={onClose} title="Close (Esc)" aria-label="Close preview">
+          <button type="button" className="adw-icon-btn" onClick={onClose} title="Close (Esc)" aria-label="Close preview">
             <X size={18} />
           </button>
         </div>
       </div>
-      <div className="min-h-0 flex-1 overflow-hidden rounded-2xl border border-line bg-white shadow-float">
+      <div className="min-h-0 flex-1 overflow-hidden rounded-[12px] border border-line bg-white">
         <PreviewFrame html={html} reloadKey={reloadKey} />
       </div>
     </div>,
@@ -131,7 +131,7 @@ function CodeBlock({ children, streaming }: { children?: ReactNode; streaming?: 
     <div className="code-shell group/code">
       <div className="code-head">
         {previewable ? (
-          <div className="inline-flex items-center rounded-lg bg-raised/80 p-0.5" role="tablist" aria-label="Code or preview">
+          <div className="inline-flex items-center rounded-[9px] bg-ink/[.07] p-0.5" role="tablist" aria-label="Code or preview">
             {(['code', 'preview'] as const).map((value) => (
               <button
                 key={value}
@@ -140,8 +140,8 @@ function CodeBlock({ children, streaming }: { children?: ReactNode; streaming?: 
                 aria-selected={view === value}
                 onClick={() => setView(value)}
                 className={cn(
-                  'h-6 rounded-md px-2.5 text-[11.5px] font-medium capitalize transition-colors',
-                  view === value ? 'bg-panel text-ink shadow-pill' : 'text-muted hover:text-ink',
+                  'h-6 rounded-[6px] px-2.5 text-[12px] font-semibold capitalize transition-colors',
+                  view === value ? 'bg-panel text-ink' : 'text-muted hover:text-ink',
                 )}
               >
                 {value}
@@ -157,20 +157,20 @@ function CodeBlock({ children, streaming }: { children?: ReactNode; streaming?: 
               <button
                 type="button"
                 onClick={() => setReloadKey((value) => value + 1)}
-                className="inline-flex h-7 w-7 items-center justify-center rounded-md text-faint transition-colors hover:bg-panel hover:text-ink"
+                className="adw-icon-btn adw-icon-btn-sm"
                 title="Restart"
                 aria-label="Restart preview"
               >
-                <RotateCw size={13} />
+                <RotateCw size={16} />
               </button>
               <button
                 type="button"
                 onClick={() => setExpanded(true)}
-                className="inline-flex h-7 w-7 items-center justify-center rounded-md text-faint transition-colors hover:bg-panel hover:text-ink"
+                className="adw-icon-btn adw-icon-btn-sm"
                 title="Full screen"
                 aria-label="Open preview full screen"
               >
-                <Maximize2 size={13} />
+                <Maximize2 size={16} />
               </button>
             </>
           )}
@@ -178,26 +178,26 @@ function CodeBlock({ children, streaming }: { children?: ReactNode; streaming?: 
             <button
               type="button"
               onClick={() => downloadText(language === 'svg' ? 'image.svg' : 'index.html', language === 'svg' ? code : html, language === 'svg' ? 'image/svg+xml' : 'text/html')}
-              className="inline-flex h-7 w-7 items-center justify-center rounded-md text-faint transition-colors hover:bg-panel hover:text-ink"
+              className="adw-icon-btn adw-icon-btn-sm"
               title="Download file"
               aria-label="Download file"
             >
-              <Download size={13} />
+              <Download size={16} />
             </button>
           )}
           <button
             type="button"
             onClick={copy}
-            className="inline-flex h-7 items-center gap-1 rounded-md px-1.5 text-[11.5px] font-medium text-faint transition-colors hover:bg-panel hover:text-ink"
+            className="adw-btn adw-btn-flat h-7 gap-1 px-1.5 text-[12px]"
             aria-label="Copy code"
           >
-            {copied ? <Check size={13} /> : <Copy size={13} />}
+            {copied ? <Check size={16} /> : <Copy size={16} />}
             {copied ? 'Copied' : 'Copy'}
           </button>
         </div>
       </div>
       {showingPreview ? (
-        <div className="h-[420px] min-h-[220px] resize-y overflow-hidden border-t border-line/60 bg-white">
+        <div className="h-[420px] min-h-[220px] resize-y overflow-hidden border-t border-line bg-white">
           <PreviewFrame html={html} reloadKey={reloadKey} />
         </div>
       ) : (
