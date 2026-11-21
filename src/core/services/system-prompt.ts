@@ -170,6 +170,20 @@ export class SystemPromptService extends Service {
       })
     }
 
+    // 4d. Task list
+    if (settings.tools.todo_write?.enabled !== false) {
+      sections.push({
+        name: 'todo-write',
+        priority: 48,
+        content: [
+          '## Task list',
+          '- For any task with three or more steps, call `todo_write` first with the full plan, then keep it current: exactly one item `in_progress` at a time, and mark each item `completed` as soon as it is done.',
+          '- Every call sends the COMPLETE list (it replaces the previous one). Keep items short and concrete, in the order you will do them.',
+          '- Skip it for a single trivial change or a plain question.',
+        ].join('\n'),
+      })
+    }
+
     // 5. Session Context
     sections.push({
       name: 'session-context',

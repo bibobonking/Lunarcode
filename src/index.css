@@ -10,15 +10,16 @@
   /* Adwaita Light. canvas = window, panel = content view, raised = recessed/secondary surface. */
   :root,
   [data-theme='light'] {
-    --canvas: 250 250 251;
-    --panel: 255 255 255;
-    --raised: 243 243 245;
-    --line: 224 224 227;
-    --ink: 51 51 56;
-    --muted: 115 115 118;
-    --faint: 153 153 156;
+    /* Soft, slightly cool paper tones: no pure white surfaces, so the light theme is easy on the eyes. */
+    --canvas: 232 234 241;
+    --panel: 241 243 248;
+    --raised: 226 229 238;
+    --line: 205 209 222;
+    --ink: 38 41 58;
+    --muted: 96 101 124;
+    --faint: 136 141 163;
     --accent: 88 101 242;
-    --accent-soft: 230 233 255;
+    --accent-soft: 222 227 252;
     --on-accent: 255 255 255;
     --success: 27 133 83;
     --warning: 154 103 0;
@@ -28,12 +29,12 @@
     --syn-number: 198 70 0;
     --syn-title: 28 113 216;
     --syn-attr: 25 120 140;
-    --headerbar: 255 255 255;
-    --sidebar: 235 235 237;
-    --sidebar-2: 243 243 245;
-    --card: 255 255 255;
-    --popover: 255 255 255;
-    --dialog: 250 250 251;
+    --headerbar: 236 238 245;
+    --sidebar: 224 227 237;
+    --sidebar-2: 231 234 242;
+    --card: 247 248 252;
+    --popover: 247 248 252;
+    --dialog: 238 240 246;
     --link: 70 82 220;
     --destructive: 224 27 36;
     --chat-font-size: 14px;

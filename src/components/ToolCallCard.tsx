@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Bot, Check, ChevronRight, FileDiff as FileDiffIcon, FilePenLine, FilePlus2, FileText, FolderTree, Globe, GitBranch, HelpCircle, Plug, Search, Sparkles, Terminal, TriangleAlert, Wrench, X } from 'lucide-react'
+import { Bot, Check, ChevronRight, FileDiff as FileDiffIcon, FilePenLine, FilePlus2, FileText, FolderTree, Globe, ListChecks, GitBranch, HelpCircle, Plug, Search, Sparkles, Terminal, TriangleAlert, Wrench, X } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import type { FileDiff, ToolMedia, ToolMessage, ToolName } from '../types'
 import { toolLabel, toolSummary } from '../lib/tool-meta'
@@ -9,6 +9,7 @@ import { cn } from '../lib/utils'
 import { diffLines, diffStats } from '../lib/diff'
 import { colorizeShellOutput, escapeHtml, highlightCode, langFromPath } from '../lib/highlight'
 import { DiffView } from './DiffView'
+import { TodoCard } from './TodoList'
 import { QuestionCard } from './QuestionCard'
 
 const FILE_TOOLS = new Set(['write_file', 'edit_file', 'rewrite_file'])
@@ -55,6 +56,7 @@ function approvalCopy(name: ToolName) {
 
 export function ToolCallCard({ message, compact = false }: { message: ToolMessage; compact?: boolean }) {
   if (message.call.name === 'ask_question') return <QuestionCard message={message} />
+  if (message.call.name === 'todo_write') return <TodoCard message={message} />
   return <GenericToolCard message={message} compact={compact} />
 }
 
@@ -116,6 +118,7 @@ const TOOL_ICONS: Partial<Record<string, LucideIcon>> = {
   subagent: Bot,
   skill: Sparkles,
   ask_question: HelpCircle,
+  todo_write: ListChecks,
 }
 
 function toolIcon(name: string): LucideIcon {

@@ -68,6 +68,10 @@ interface UiState {
   workspaceOpen: boolean
   setWorkspaceOpen: (open: boolean) => void
   mcpOpen: boolean
+  extensionsOpen: boolean
+  terminalOpen: boolean
+  setTerminalOpen: (open: boolean) => void
+  setExtensionsOpen: (open: boolean) => void
   setMcpOpen: (open: boolean) => void
   settingsOpen: boolean
   settingsTab:
@@ -126,6 +130,10 @@ export const useUi = create<UiState>()((set, get) => ({
   workspaceOpen: false,
   setWorkspaceOpen: (open) => set({ workspaceOpen: open }),
   mcpOpen: false,
+  extensionsOpen: false,
+  terminalOpen: false,
+  setTerminalOpen: (open) => set({ terminalOpen: open }),
+  setExtensionsOpen: (open) => set({ extensionsOpen: open, ...(open ? { mobileSidebarOpen: false, settingsOpen: false } : {}) }),
   setMcpOpen: (open) => set({ mcpOpen: open, ...(open ? { mobileSidebarOpen: false, settingsOpen: false } : {}) }),
   settingsOpen: false,
   settingsTab: 'general',

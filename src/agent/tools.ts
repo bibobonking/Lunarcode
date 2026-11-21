@@ -542,6 +542,7 @@ export function toolLabel(name: ToolName): string {
     subagent: 'Subagent',
     skill: 'Skill',
     ask_question: 'Question',
+    todo_write: 'Todo list',
   }
   return labels[name as BuiltinToolName] ?? 'Tool'
 }

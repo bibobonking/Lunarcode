@@ -119,7 +119,7 @@ function UserBubble({
             ))}
           </div>
         )}
-        <div className="rounded-[12px] bg-accent-soft px-4 py-2.5">
+        <div className="user-bubble rounded-[12px] bg-accent-soft px-4 py-2.5">
           {files.length > 0 && (
             <ul className="mb-2 flex flex-wrap gap-1.5">
               {files.map((file) => (

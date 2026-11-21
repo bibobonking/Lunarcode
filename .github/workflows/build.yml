@@ -1,4 +1,4 @@
-name: OpenSol Desktop
+name: Lunarcode Desktop
 
 on:
   workflow_dispatch:
@@ -35,15 +35,16 @@ jobs:
         if: matrix.label == 'linux-x64'
         uses: actions/upload-artifact@v4
         with:
-          name: opensol-web-dist
+          name: lunarcode-web-dist
           path: dist
           if-no-files-found: error
       - name: Install desktop dependencies
         working-directory: desktop
         run: npm ci
-      - name: Install RPM tooling
+      # rpm: .rpm packages. libarchive-tools (bsdtar): .pacman packages for Arch Linux / Manjaro / EndeavourOS.
+      - name: Install RPM and Arch packaging tooling
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y rpm
+        run: sudo apt-get update && sudo apt-get install -y rpm libarchive-tools
       - name: Build installers
         working-directory: desktop
         run: npm run dist
@@ -51,11 +52,12 @@ jobs:
           CSC_IDENTITY_AUTO_DISCOVERY: false
       - uses: actions/upload-artifact@v4
         with:
-          name: opensol-desktop-${{ matrix.label }}
+          name: lunarcode-desktop-${{ matrix.label }}
           path: |
             desktop/release/*.AppImage
             desktop/release/*.deb
             desktop/release/*.rpm
+            desktop/release/*.pacman
             desktop/release/*.exe
             desktop/release/*.dmg
             desktop/release/*.zip

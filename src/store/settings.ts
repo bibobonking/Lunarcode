@@ -87,6 +87,7 @@ const DEFAULT_TOOLS: Record<BuiltinToolName, ToolSetting> = {
   subagent: { enabled: true, approval: 'ask' },
   skill: { enabled: true, approval: 'auto' },
   ask_question: { enabled: true, approval: 'auto' },
+  todo_write: { enabled: true, approval: 'auto' },
 }
 
 const DEFAULTS: AppSettings = {
@@ -102,6 +103,7 @@ const DEFAULTS: AppSettings = {
   searchProvider: 'duckduckgo',
   tools: DEFAULT_TOOLS,
   theme: 'lunar',
+  uiStyle: 'default',
   showTokenEstimate: true,
   mode: 'build',
   chatFontSize: 15,
@@ -237,6 +239,7 @@ function buildSettings(persisted?: Partial<AppSettings>): AppSettings {
         : DEFAULTS.searchProvider,
     tools: mergeTools(saved.tools),
     theme: normalizeTheme(saved.theme),
+    uiStyle: saved.uiStyle === 'glass' ? 'glass' : 'default',
     chatFontSize:
       typeof saved.chatFontSize === 'number' && Number.isFinite(saved.chatFontSize)
         ? Math.max(12, Math.min(20, Math.round(saved.chatFontSize)))
@@ -268,6 +271,7 @@ function persistedPatch(patch: Partial<AppSettings>): Partial<AppSettings> {
     'searchProvider',
     'tools',
     'theme',
+    'uiStyle',
     'showTokenEstimate',
     'mode',
     'chatFontSize',

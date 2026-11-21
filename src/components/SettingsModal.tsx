@@ -40,6 +40,7 @@ import {
   Upload,
   Wrench,
   X,
+  ListChecks,
 } from 'lucide-react'
 import type { DeployProviderId, Effort, InstalledSkill, ModelInfo, ProviderId, SearchProvider, BuiltinToolName } from '../types'
 import type { LucideIcon } from 'lucide-react'
@@ -67,14 +68,14 @@ import { useMcp } from '../store/mcp'
 import { pluginRuntime } from '../plugins'
 import { Modal, Segmented, Spinner, Switch } from './ui'
 
-type TabDef = { id: string; label: string; icon: typeof Info; description: string; disabled?: boolean }
+type TabDef = { id: string; label: string; icon: typeof Info; description: string; disabled?: boolean; soon?: boolean }
 const TABS: readonly TabDef[] = [
   { id: 'general', label: 'General', icon: SlidersHorizontal, description: 'Permissions, appearance and conversation display.' },
   { id: 'models', label: 'Models', icon: Cpu, description: 'Providers, encrypted keys, live models and reasoning defaults.' },
   { id: 'tools', label: 'Tools', icon: Wrench, description: 'What Lunarcode can do on this machine, and when it must ask.' },
   { id: 'search', label: 'Search', icon: Globe2, description: 'Give the agent current web results with your own key.' },
   { id: 'skills', label: 'Skills', icon: Sparkles, description: 'Skill folders the agent loads on demand: upload a folder or install from npm.' },
-  { id: 'plugins', label: 'Plugins', icon: Package, description: 'Plugins are temporarily disabled for maintenance.', disabled: true },
+  { id: 'plugins', label: 'Extensions', icon: Package, description: 'Extension update coming soon.', soon: true },
   { id: 'mcp', label: 'MCP', icon: Link2, description: 'Model Context Protocol servers now have their own panel, with OAuth sign-in and local, HTTP and SSE connections.' },
   { id: 'deploy', label: 'Deploy', icon: Rocket, description: 'Hosting credentials and command-line tools.' },
   { id: 'appearance', label: 'Appearance', icon: Palette, description: 'Theme and interface preferences.' },
@@ -647,7 +648,7 @@ const TOOL_ORDER: Array<{ title: string; tools: BuiltinToolName[] }> = [
   },
   { title: 'Web', tools: ['web_search', 'read_url'] },
   { title: 'Delegation', tools: ['subagent', 'skill'] },
-  { title: 'Conversation', tools: ['ask_question'] },
+  { title: 'Conversation', tools: ['ask_question', 'todo_write'] },
 ]
 
 const TOOL_ICONS: Record<BuiltinToolName, LucideIcon> = {
@@ -664,6 +665,7 @@ const TOOL_ICONS: Record<BuiltinToolName, LucideIcon> = {
   subagent: Bot,
   skill: Sparkles,
   ask_question: CircleHelp,
+  todo_write: ListChecks,
 }
 
 const TOOL_COPY: Record<BuiltinToolName, { label: string; description: string }> = {
@@ -679,6 +681,7 @@ const TOOL_COPY: Record<BuiltinToolName, { label: string; description: string }>
   git: { label: 'Git', description: 'Inspect or change repository state. Plan mode is read-only.' },
   subagent: { label: 'Subagent', description: 'Delegate a read-only investigation and return a concise report.' },
   skill: { label: 'Skill', description: 'Load an installed skill (SKILL.md and its bundled files) when a task matches it.' },
+  todo_write: { label: 'Todo list', description: 'Let the agent plan a task list and tick items off as it works. Works in Plan mode too.' },
   ask_question: { label: 'Ask question', description: 'Let the agent ask you multiple-choice questions (with a free-text field) when it needs a decision. Works in Plan mode.' },
 }
 
@@ -1441,7 +1444,7 @@ function DeployTab() {
   )
 }
 
-function PluginsTab() {
+export function PluginsTab() {
   return (
     <SettingsSection
       title="Local plugins"
@@ -1690,6 +1693,59 @@ function AppearanceTab() {
                   <span className="text-[13px] font-semibold text-ink">{theme.label}</span>
                   {selected && <Check size={16} className="text-accent" />}
                 </span>
+              </button>
+            )
+          })}
+        </div>
+      </SettingsSection>
+
+      <SettingsSection title="Style" description="Liquid Glass restyles the whole window with frosted, translucent panes. Switch back any time.">
+        <div className="grid grid-cols-2 gap-2">
+          {(
+            [
+              { id: 'default' as const, label: 'Default', note: 'Clean, solid Adwaita-like surfaces.' },
+              { id: 'glass' as const, label: 'Liquid Glass', note: 'Frosted panes over a living gradient.' },
+            ] as const
+          ).map((style) => {
+            const selected = settings.uiStyle === style.id
+            const glass = style.id === 'glass'
+            return (
+              <button
+                key={style.id}
+                type="button"
+                onClick={() => update({ uiStyle: style.id })}
+                aria-pressed={selected}
+                className={cn(
+                  'rounded-[12px] border p-2 text-left transition-colors',
+                  selected ? 'border-accent bg-accent-soft' : 'border-line hover:bg-ink/[.05]',
+                )}
+              >
+                <span
+                  className="relative block h-20 w-full overflow-hidden rounded-[10px] border border-line"
+                  style={
+                    glass
+                      ? { background: 'radial-gradient(70% 90% at 15% 10%, rgb(var(--lunar-a) / .75), transparent 60%), radial-gradient(60% 80% at 90% 90%, rgb(var(--lunar-b) / .65), transparent 60%), rgb(var(--lunar-c) / .35)' }
+                      : { background: 'rgb(var(--canvas))' }
+                  }
+                >
+                  <span
+                    className={cn('absolute left-2 top-2 bottom-2 w-7', glass ? 'rounded-[8px] border border-white/40 bg-white/25' : 'rounded-[3px] bg-sidebar')}
+                    style={glass ? { backdropFilter: 'blur(6px)' } : undefined}
+                  />
+                  <span
+                    className={cn('absolute left-11 right-2 top-2 h-4', glass ? 'rounded-full border border-white/40 bg-white/25' : 'rounded-[3px] bg-headerbar')}
+                    style={glass ? { backdropFilter: 'blur(6px)' } : undefined}
+                  />
+                  <span
+                    className={cn('absolute left-11 right-2 bottom-2 h-8', glass ? 'rounded-[10px] border border-white/40 bg-white/25' : 'rounded-[3px] bg-card')}
+                    style={glass ? { backdropFilter: 'blur(6px)' } : undefined}
+                  />
+                </span>
+                <span className="mt-1.5 flex items-center justify-between px-0.5">
+                  <span className="text-[13px] font-semibold text-ink">{style.label}</span>
+                  {selected && <Check size={16} className="text-accent" />}
+                </span>
+                <span className="block px-0.5 text-[12px] text-muted">{style.note}</span>
               </button>
             )
           })}
@@ -2011,7 +2067,7 @@ export function SettingsModal() {
             <h2 id="settings-title" className="text-[16px] font-bold text-ink">
               Preferences
             </h2>
-            <p className="text-[12px] text-muted">Lunarcode · v3.2.4</p>
+            <p className="text-[12px] text-muted">Lunarcode · v3.3.0</p>
           </div>
           <nav className="flex-1 space-y-0.5 overflow-y-auto px-2 pb-3" aria-label="Preferences">
             {TABS.map((item) => {
@@ -2022,14 +2078,13 @@ export function SettingsModal() {
                   key={item.id}
                   type="button"
                   onClick={() => openSettings(item.id as typeof tab)}
-                  disabled={item.disabled}
                   title={item.description}
                   aria-current={active ? 'page' : undefined}
                   className="adw-nav-row disabled:cursor-not-allowed disabled:opacity-45"
                 >
                   <Icon size={16} className="shrink-0" />
                   <span className="min-w-0 flex-1 truncate text-left">{item.label}</span>
-                  {item.disabled && <span className="adw-badge">Maintenance</span>}
+                  {item.soon && <span className="adw-badge adw-badge-accent text-link">Soon</span>}
                 </button>
               )
             })}
@@ -2084,7 +2139,13 @@ export function SettingsModal() {
               {tab === 'tools' && <ToolsTab />}
               {tab === 'search' && <SearchTab />}
               {tab === 'skills' && <SkillsTab />}
-              {tab === 'plugins' && <PluginsTab />}
+              {tab === 'plugins' && (
+                <div className="flex h-full flex-col items-center justify-center gap-3 p-10 text-center">
+                  <span className="tool-icon h-14 w-14 rounded-[16px]"><Package size={26} /></span>
+                  <h3 className="text-[17px] font-semibold text-ink">Extension update <span className="lunar-text">coming soon</span></h3>
+                  <p className="max-w-[360px] text-[13px] text-muted">Themes, tools and skills you can install in one click.</p>
+                </div>
+              )}
               {tab === 'mcp' && <McpLauncher />}
               {tab === 'deploy' && <DeployTab />}
               {tab === 'appearance' && <AppearanceTab />}

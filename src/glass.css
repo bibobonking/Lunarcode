@@ -1,0 +1,327 @@
+/* ---------------------------------------------------------------------------
+   Liquid Glass style (Settings → Appearance → Style).
+
+   Switched on with <html data-style="glass">. It re-skins the whole window: a living
+   gradient behind everything, frosted translucent panes with specular edges, rounder
+   shapes, glossy controls. Works on top of every theme (Light, Lunar, Dark) because the
+   colours come from the theme tokens. Removing the attribute restores the default style.
+   --------------------------------------------------------------------------- */
+
+[data-style='glass'] {
+  --glass-edge: 255 255 255;
+  --glass-edge-a: 0.5;
+  --glass-fill-a: 0.42;
+  --glass-shadow: 30 34 70;
+  --glass-blur: 26px;
+  --glass-radius: 16px;
+}
+[data-style='glass'].dark {
+  --glass-edge-a: 0.16;
+  --glass-fill-a: 0.38;
+  --glass-shadow: 0 0 0;
+}
+
+@keyframes glass-blob-a {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  33% { transform: translate3d(14%, 10%, 0) scale(1.18); }
+  66% { transform: translate3d(4%, 22%, 0) scale(0.92); }
+}
+@keyframes glass-blob-b {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1.05); }
+  50% { transform: translate3d(-16%, -12%, 0) scale(1.2); }
+}
+@keyframes glass-blob-c {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(10%, -16%, 0) scale(1.14); }
+}
+@keyframes glass-sheen {
+  from { transform: translateX(-120%) skewX(-20deg); }
+  to { transform: translateX(260%) skewX(-20deg); }
+}
+
+/* ---- The backdrop: mesh gradient plus three drifting liquid blobs ------------- */
+
+[data-style='glass'] body,
+[data-style='glass'] #root {
+  background: rgb(var(--canvas));
+}
+[data-style='glass'] .adw-window {
+  isolation: isolate;
+  border-radius: 18px;
+  background:
+    radial-gradient(70% 60% at 8% 0%, rgb(var(--lunar-a) / 0.55), transparent 62%),
+    radial-gradient(60% 55% at 100% 8%, rgb(var(--lunar-c) / 0.45), transparent 60%),
+    radial-gradient(70% 60% at 85% 100%, rgb(var(--lunar-b) / 0.42), transparent 62%),
+    radial-gradient(55% 50% at 0% 100%, rgb(var(--lunar-c) / 0.3), transparent 60%),
+    rgb(var(--canvas));
+}
+[data-style='glass'] .adw-window::before,
+[data-style='glass'] .adw-window::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: 50%;
+  filter: blur(70px);
+  will-change: transform;
+}
+[data-style='glass'] .adw-window::before {
+  width: 46vmax;
+  height: 46vmax;
+  left: -12vmax;
+  top: 8vh;
+  background: radial-gradient(closest-side, rgb(var(--lunar-a) / 0.55), transparent 70%);
+  animation: glass-blob-a 26s ease-in-out infinite;
+}
+[data-style='glass'] .adw-window::after {
+  width: 40vmax;
+  height: 40vmax;
+  right: -10vmax;
+  bottom: -8vmax;
+  background: radial-gradient(closest-side, rgb(var(--lunar-b) / 0.5), transparent 70%);
+  animation: glass-blob-b 32s ease-in-out infinite;
+}
+[data-style='glass'] main::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  width: 34vmax;
+  height: 34vmax;
+  right: 8vmax;
+  top: -10vmax;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(70px);
+  background: radial-gradient(closest-side, rgb(var(--lunar-c) / 0.4), transparent 70%);
+  animation: glass-blob-c 29s ease-in-out infinite;
+}
+
+/* ---- Frosted panes ------------------------------------------------------------- */
+
+[data-style='glass'] .bg-panel,
+[data-style='glass'] .bg-canvas,
+[data-style='glass'] .bg-headerbar,
+[data-style='glass'] .bg-sidebar,
+[data-style='glass'] .bg-sidebar-2 {
+  background-color: rgb(var(--panel) / 0.18);
+}
+[data-style='glass'] .adw-window > .relative > aside,
+[data-style='glass'] aside[aria-label='Sidebar'] {
+  background-color: rgb(var(--sidebar) / calc(var(--glass-fill-a) + 0.08));
+  background-image: linear-gradient(180deg, rgb(255 255 255 / 0.1), transparent 40%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.7);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.7);
+  border-color: rgb(var(--glass-edge) / var(--glass-edge-a));
+  box-shadow: inset -1px 0 0 rgb(var(--glass-edge) / 0.08), 12px 0 40px -24px rgb(var(--glass-shadow) / 0.5);
+}
+[data-style='glass'] .adw-headerbar {
+  background-color: rgb(var(--headerbar) / calc(var(--glass-fill-a) - 0.06));
+  background-image: linear-gradient(180deg, rgb(255 255 255 / 0.14), transparent);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.7);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.7);
+  border-color: rgb(var(--glass-edge) / calc(var(--glass-edge-a) * 0.8));
+  box-shadow: inset 0 -1px 0 rgb(var(--glass-edge) / 0.06);
+}
+[data-style='glass'] main.bg-panel {
+  background-color: rgb(var(--panel) / 0.22);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  backdrop-filter: blur(14px) saturate(1.4);
+}
+
+/* Cards, tool cards, composer, inputs: glass tiles with a lit top edge. */
+[data-style='glass'] .adw-boxed,
+[data-style='glass'] .tool-card,
+[data-style='glass'] .code-shell,
+[data-style='glass'] .composer-shell,
+[data-style='glass'] .lift-card,
+[data-style='glass'] .tool-output,
+[data-style='glass'] .bg-card,
+[data-style='glass'] .bg-raised,
+[data-style='glass'] .adw-entry,
+[data-style='glass'] .adw-search,
+[data-style='glass'] .adw-select,
+[data-style='glass'] .adw-searchbox {
+  background-color: rgb(var(--card) / var(--glass-fill-a));
+  background-image: linear-gradient(160deg, rgb(255 255 255 / 0.16), rgb(255 255 255 / 0.02) 45%, transparent);
+  -webkit-backdrop-filter: blur(18px) saturate(1.6);
+  backdrop-filter: blur(18px) saturate(1.6);
+  border-color: rgb(var(--glass-edge) / var(--glass-edge-a));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.4),
+    inset 0 -1px 0 rgb(255 255 255 / 0.05),
+    0 10px 28px -16px rgb(var(--glass-shadow) / 0.45);
+}
+[data-style='glass'].dark .adw-boxed,
+[data-style='glass'].dark .tool-card,
+[data-style='glass'].dark .code-shell,
+[data-style='glass'].dark .composer-shell,
+[data-style='glass'].dark .lift-card,
+[data-style='glass'].dark .bg-card,
+[data-style='glass'].dark .bg-raised,
+[data-style='glass'].dark .adw-entry,
+[data-style='glass'].dark .adw-search,
+[data-style='glass'].dark .adw-select,
+[data-style='glass'].dark .adw-searchbox {
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.14),
+    inset 0 -1px 0 rgb(255 255 255 / 0.03),
+    0 12px 32px -16px rgb(0 0 0 / 0.6);
+}
+[data-style='glass'] .adw-boxed,
+[data-style='glass'] .composer-shell {
+  border-radius: var(--glass-radius);
+}
+[data-style='glass'] .tool-card,
+[data-style='glass'] .lift-card,
+[data-style='glass'] .code-shell {
+  border-radius: 14px;
+}
+/* Inside glass tiles, nested fills must not stack into mud. */
+[data-style='glass'] .adw-boxed .bg-card,
+[data-style='glass'] .tool-card .tool-output,
+[data-style='glass'] .composer-shell .bg-raised {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+[data-style='glass'] .composer-shell:focus-within {
+  border-color: rgb(var(--accent) / 0.7);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.4),
+    0 0 0 4px rgb(var(--accent) / 0.16),
+    0 18px 48px -18px rgb(var(--accent) / 0.55);
+}
+
+/* Popovers, dialogs, toasts: the deepest glass. */
+[data-style='glass'] .adw-popover,
+[data-style='glass'] .adw-dialog,
+[data-style='glass'] .adw-toast,
+[data-style='glass'] .adw-tooltip {
+  background-color: rgb(var(--popover) / 0.52);
+  background-image: linear-gradient(150deg, rgb(255 255 255 / 0.22), rgb(255 255 255 / 0.03) 50%, transparent);
+  -webkit-backdrop-filter: blur(44px) saturate(1.9);
+  backdrop-filter: blur(44px) saturate(1.9);
+  border: 1px solid rgb(var(--glass-edge) / calc(var(--glass-edge-a) + 0.1));
+  border-radius: 18px;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.5),
+    inset 0 0 0 1px rgb(255 255 255 / 0.05),
+    0 30px 80px -20px rgb(var(--glass-shadow) / 0.6);
+}
+[data-style='glass'].dark .adw-popover,
+[data-style='glass'].dark .adw-dialog {
+  background-color: rgb(var(--popover) / 0.5);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.2),
+    0 30px 80px -20px rgb(0 0 0 / 0.75);
+}
+[data-style='glass'] .adw-scrim {
+  background: radial-gradient(110% 90% at 50% 0%, rgb(var(--lunar-a) / 0.22), rgb(8 9 20 / 0.5) 70%);
+  -webkit-backdrop-filter: blur(10px) saturate(1.3);
+  backdrop-filter: blur(10px) saturate(1.3);
+}
+
+/* ---- Controls ------------------------------------------------------------------ */
+
+[data-style='glass'] .adw-btn {
+  border-radius: 999px;
+}
+[data-style='glass'] .adw-icon-btn {
+  border-radius: 999px;
+}
+[data-style='glass'] .adw-btn:not(.adw-btn-suggested):not(.adw-btn-destructive):not(.adw-btn-flat) {
+  background-color: rgb(255 255 255 / 0.16);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.4), 0 4px 12px -6px rgb(var(--glass-shadow) / 0.4);
+  border: 1px solid rgb(var(--glass-edge) / var(--glass-edge-a));
+}
+[data-style='glass'] .adw-btn-suggested {
+  background-image: linear-gradient(180deg, rgb(255 255 255 / 0.38), rgb(255 255 255 / 0) 55%),
+    linear-gradient(135deg, rgb(var(--accent)), rgb(var(--lunar-c) / 0.95));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.65),
+    inset 0 -6px 12px -6px rgb(0 0 0 / 0.25),
+    0 10px 24px -10px rgb(var(--accent) / 0.8);
+}
+[data-style='glass'] .adw-icon-btn:hover,
+[data-style='glass'] .adw-nav-row:hover {
+  background-color: rgb(255 255 255 / 0.16);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.3);
+}
+[data-style='glass'] .adw-nav-row {
+  border-radius: 12px;
+}
+[data-style='glass'] .adw-nav-row.is-active,
+[data-style='glass'] .adw-nav-row[aria-current='page'],
+[data-style='glass'] .adw-nav-row[aria-current='true'],
+[data-style='glass'] .adw-nav-row[aria-selected='true'] {
+  background-color: rgb(255 255 255 / 0.2);
+  background-image: linear-gradient(135deg, rgb(var(--lunar-a) / 0.28), rgb(var(--lunar-b) / 0.12));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.45), 0 6px 18px -10px rgb(var(--accent) / 0.7);
+}
+[data-style='glass'] .adw-menu-item {
+  border-radius: 12px;
+}
+[data-style='glass'] .adw-kbd,
+[data-style='glass'] .adw-badge,
+[data-style='glass'] .tool-chip {
+  background-color: rgb(255 255 255 / 0.14);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.3);
+}
+[data-style='glass'] .tool-icon {
+  border-radius: 10px;
+  background-image: linear-gradient(145deg, rgb(255 255 255 / 0.35), rgb(var(--lunar-a) / 0.22));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.55), 0 6px 14px -8px rgb(var(--accent) / 0.8);
+}
+
+/* Messages: user bubble becomes a glass lozenge. */
+[data-style='glass'] .user-bubble,
+[data-style='glass'] [data-role='user'] > div {
+  background-color: rgb(var(--accent) / 0.22);
+  -webkit-backdrop-filter: blur(16px) saturate(1.5);
+  backdrop-filter: blur(16px) saturate(1.5);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.4);
+}
+
+/* Terminal dock and scrollbars. */
+[data-style='glass'] .terminal-dock {
+  background-color: rgb(var(--panel) / 0.45);
+  -webkit-backdrop-filter: blur(26px) saturate(1.6);
+  backdrop-filter: blur(26px) saturate(1.6);
+  border-color: rgb(var(--glass-edge) / var(--glass-edge-a));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.3);
+}
+[data-style='glass'] .thin-scroll::-webkit-scrollbar-thumb {
+  background: rgb(255 255 255 / 0.28);
+  border-radius: 999px;
+}
+
+/* A slow specular sheen sweeps across the sidebar and the composer. */
+[data-style='glass'] aside[aria-label='Sidebar'],
+[data-style='glass'] .composer-shell {
+  position: relative;
+  overflow: hidden;
+}
+[data-style='glass'] .composer-shell::after {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 30%;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.12), transparent);
+  transform: translateX(-120%) skewX(-20deg);
+  animation: glass-sheen 9s ease-in-out infinite 2s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-style='glass'] .adw-window::before,
+  [data-style='glass'] .adw-window::after,
+  [data-style='glass'] main::before,
+  [data-style='glass'] .composer-shell::after {
+    animation: none !important;
+  }
+}
+@media (max-width: 1023px) {
+  [data-style='glass'] .adw-window {
+    border-radius: 0;
+  }
+}

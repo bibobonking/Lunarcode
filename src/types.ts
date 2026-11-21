@@ -103,6 +103,7 @@ export type BuiltinToolName =
   | 'subagent'
   | 'skill'
   | 'ask_question'
+  | 'todo_write'
 
 /** MCP tools are exposed to the model as mcp__<server>__<tool>. */
 export type McpToolName = `mcp__${string}`
@@ -144,6 +145,8 @@ export interface AppSettings {
   searchProvider: SearchProvider
   tools: Record<BuiltinToolName, ToolSetting>
   theme: ThemeId
+  /** Window style: the regular Adwaita-like look, or Liquid Glass. */
+  uiStyle: 'default' | 'glass'
   showTokenEstimate: boolean
   mode: AgentMode
   chatFontSize: number

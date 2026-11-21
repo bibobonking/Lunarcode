@@ -4,7 +4,6 @@ import {
   Download,
   FileText,
   Folder,
-  LoaderCircle,
   MoreHorizontal,
   Package,
   Pencil,
@@ -58,6 +57,7 @@ export function Sidebar() {
   const askConfirm = useUi((state) => state.askConfirm)
   const notify = useUi((state) => state.notify)
   const focusComposer = useUi((state) => state.focusComposer)
+  const setExtensionsOpen = useUi((state) => state.setExtensionsOpen)
   const streaming = useRuntime((state) => state.streaming)
   const titling = useRuntime((state) => state.titling)
 
@@ -65,7 +65,6 @@ export function Sidebar() {
   const [menu, setMenu] = useState<ChatMenu | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [draftTitle, setDraftTitle] = useState('')
-  const [switching, setSwitching] = useState('')
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase()
@@ -151,22 +150,6 @@ export function Sidebar() {
     setMenu(null)
   }
 
-  const switchWorkspace = async (path: string) => {
-    if (path === workspace.root) {
-      setWorkspaceOpen(true)
-      setMobileOpen(false)
-      return
-    }
-    setSwitching(path)
-    try {
-      await addWorkspace(path)
-      setMobileOpen(false)
-    } catch (error) {
-      notify(error instanceof Error ? error.message : 'Could not open that folder.', 'error')
-    } finally {
-      setSwitching('')
-    }
-  }
 
   const deleteWorkspace = async (path: string, name: string) => {
     const confirmed = await askConfirm({
@@ -294,14 +277,15 @@ export function Sidebar() {
         </button>
         <button
           type="button"
-          disabled
-          aria-disabled="true"
-          title="Plugins are temporarily disabled for maintenance"
+          onClick={() => {
+            closeMobile()
+            setExtensionsOpen(true)
+          }}
           className="adw-nav-row"
         >
           <Package size={16} className="shrink-0 text-muted" />
-          Plugins
-          <span className="adw-badge ml-auto text-warning">Maintenance</span>
+          Extensions
+          <span className="adw-badge adw-badge-accent ml-auto text-link">Soon</span>
         </button>
         <button
           type="button"
@@ -382,18 +366,14 @@ export function Sidebar() {
                         </button>
                         <button
                           type="button"
-                          onClick={() => {
-                            if (group.path) void switchWorkspace(group.path)
-                            setExpanded((value) => ({ ...value, [group.key]: true }))
-                          }}
+                          onClick={() => toggleOpen(group.key)}
+                          aria-expanded={open}
                           title={group.path ?? group.name}
                           className="flex min-w-0 flex-1 items-center gap-2 text-left"
                         >
                           <Folder size={15} className={cn('shrink-0', active ? 'text-accent' : 'text-muted')} />
                           <span className={cn('min-w-0 flex-1 truncate', active && 'font-semibold')}>{group.name}</span>
-                          {switching === group.path ? (
-                            <LoaderCircle size={12} className="shrink-0 animate-spin text-muted" />
-                          ) : running ? (
+                          {running ? (
                             <span className="ws-live-dot shrink-0" title="Agent is running" />
                           ) : (
                             <span className="adw-badge shrink-0 group-hover/ws:hidden">{group.sessions.length}</span>

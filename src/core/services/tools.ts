@@ -16,6 +16,7 @@ const READ_ONLY_TOOLS = new Set<ToolName>([
   'web_search',
   'read_url',
   'ask_question',
+  'todo_write',
 ])
 
 export function toolAllowedInMode(name: ToolName, mode: AgentMode): boolean {

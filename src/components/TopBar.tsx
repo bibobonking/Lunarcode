@@ -1,7 +1,8 @@
-import { FolderOpen, Menu, Moon, PanelLeft, Rocket, Search, Settings, Sun } from 'lucide-react'
+import { FolderOpen, Menu, Moon, PanelLeft, Rocket, Search, Settings, SquarePen, SquareTerminal, Sun } from 'lucide-react'
 import type { ChatSession } from '../types'
 import { useSettings } from '../store/settings'
 import { useUi } from '../store/ui'
+import { useChats } from '../store/chats'
 import { useWorkspace } from '../store/workspace'
 import { useActiveModel } from '../store/models'
 import { themeIsDark } from '../lib/themes'
@@ -34,8 +35,12 @@ export function TopBar({
   const workspaceOpen = useUi((state) => state.workspaceOpen)
   const setWorkspaceOpen = useUi((state) => state.setWorkspaceOpen)
   const setDeployOpen = useUi((state) => state.setDeployOpen)
+  const terminalOpen = useUi((state) => state.terminalOpen)
+  const setTerminalOpen = useUi((state) => state.setTerminalOpen)
   const workspace = useWorkspace((state) => state.info)
   const activeModel = useActiveModel()
+  const newChat = useChats((state) => state.newChat)
+  const focusComposer = useUi((state) => state.focusComposer)
 
   // Go through the theme registry so every dark variant and plugin theme counts as dark.
   const isDark = themeIsDark(
@@ -74,6 +79,18 @@ export function TopBar({
         >
           <PanelLeft size={16} />
         </button>
+        <button
+          type="button"
+          className="adw-icon-btn"
+          onClick={() => {
+            newChat()
+            focusComposer()
+          }}
+          title="New chat"
+          aria-label="New chat"
+        >
+          <SquarePen size={16} />
+        </button>
       </div>
 
       <div className="min-w-0 flex-1 px-2 text-center">
@@ -109,6 +126,16 @@ export function TopBar({
           <FolderOpen size={16} />
         </button>
         <SystemPromptButton session={session} />
+        <button
+          type="button"
+          className="adw-icon-btn"
+          onClick={() => setTerminalOpen(!terminalOpen)}
+          title={`Terminal (${isApple ? '⌘' : 'Ctrl'} \`)`}
+          aria-label="Toggle terminal"
+          aria-pressed={terminalOpen}
+        >
+          <SquareTerminal size={16} className={terminalOpen ? 'text-accent' : undefined} />
+        </button>
         <button
           type="button"
           className="adw-icon-btn hidden sm:inline-flex"

@@ -31,6 +31,7 @@ linux:
     - AppImage
     - deb
     - rpm
+    - pacman
   category: Development
   synopsis: Lunarcode coding agent
   description: Lunarcode Desktop runs the Lunarcode local daemon and shows the app in an Electron window.

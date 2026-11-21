@@ -17,8 +17,15 @@ export function toolLabel(name: ToolName): string {
     subagent: 'Subagent',
     skill: 'Skill',
     ask_question: 'Question',
+    todo_write: 'Todo list',
   }
   return labels[name as BuiltinToolName] ?? 'Tool'
+}
+
+function todoSummary(args: Record<string, unknown>): string {
+  const list = Array.isArray(args.todos) ? args.todos : []
+  const done = list.filter((item) => item && typeof item === 'object' && (item as { status?: unknown }).status === 'completed').length
+  return list.length ? `${done}/${list.length} done` : ''
 }
 
 function questionSummary(args: Record<string, unknown>): string {
@@ -43,7 +50,9 @@ export function toolSummary(name: ToolName, args: Record<string, unknown>): stri
                 ? args.task
                 : name === 'skill'
                   ? [args.name, args.file].filter(Boolean).join(' / ')
-                  : name === 'ask_question'
+                  : name === 'todo_write'
+                    ? todoSummary(args)
+                    : name === 'ask_question'
                     ? questionSummary(args)
                 : (args.path ?? '')
   return typeof value === 'string' ? value : ''

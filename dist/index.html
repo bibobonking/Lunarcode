@@ -29,12 +29,13 @@
             ? 'dark'
             : 'light'
         const root = document.documentElement
+        if (localStorage.getItem('lunarcode.style') === 'glass') root.dataset.style = 'glass'
         root.dataset.theme = theme
         if (DARK.includes(theme)) root.classList.add('dark')
       } catch {}
     </script>
-    <script type="module" crossorigin src="./assets/index-sQKHfuBN.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-CQvfmOj7.css">
+    <script type="module" crossorigin src="./assets/index-BzmwpAHQ.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-Ddo4mzaS.css">
   </head>
   <body>
     <div id="root"><div class="splash" id="boot-splash" aria-hidden="true">

@@ -71,6 +71,7 @@ import {
   writeWorkspaceFile,
 } from './lib/tools.mjs'
 import { deployToolStatus, detectProject, runDeploy } from './lib/deploy.mjs'
+import { startTerminalCommand } from './lib/terminal.mjs'
 import {
   getPluginArchive,
   installPlugin,
@@ -212,6 +213,7 @@ const TOOL_NAMES = new Set([
   'subagent',
   'skill',
   'ask_question',
+  'todo_write',
 ])
 const SEARCH_PROVIDERS = new Set(['duckduckgo', 'tavily', 'brave', 'serper'])
 
@@ -236,6 +238,7 @@ function sanitizeSettings(patch, current = {}) {
   }
   // Plugin themes are named by their plugin, so accept any bounded theme slug.
   if (typeof source.theme === 'string' && /^[a-z0-9-]{1,64}$/.test(source.theme)) next.theme = source.theme
+  if (source.uiStyle === 'default' || source.uiStyle === 'glass') next.uiStyle = source.uiStyle
   if (source.mode === 'build' || source.mode === 'plan') next.mode = source.mode
   if (typeof source.aiSessionTitles === 'boolean') next.aiSessionTitles = source.aiSessionTitles
   if (typeof source.showMascot === 'boolean') next.showMascot = source.showMascot
@@ -484,6 +487,29 @@ async function handleDeploy(req, res) {
     })
     res.end()
   }
+}
+
+async function handleTerminalRun(req, res) {
+  const payload = await readJson(req, 256 * 1024)
+  const controller = new AbortController()
+  res.on('close', () => {
+    if (!res.writableEnded) controller.abort()
+  })
+  streamHeaders(res, 'application/x-ndjson')
+  const write = (event) => {
+    if (!res.writableEnded) res.write(`${JSON.stringify(event)}\n`)
+  }
+  try {
+    const root = await workspaceRoot().catch(() => '')
+    const result = await startTerminalCommand(
+      { command: payload.command, cwd: payload.cwd, root },
+      { signal: controller.signal, onData: (data) => write({ type: 'out', data }) },
+    )
+    write({ type: 'exit', ...result })
+  } catch (error) {
+    write({ type: 'error', message: error instanceof Error ? error.message : 'Could not run that command.' })
+  }
+  if (!res.writableEnded) res.end()
 }
 
 async function handleProviderModels(res, url) {
@@ -843,6 +869,11 @@ async function route(req, res) {
       return
     }
 
+    if (pathname === '/api/terminal/run' && method === 'POST') {
+      await handleTerminalRun(req, res)
+      return
+    }
+
     if (pathname === '/api/llm' && method === 'POST') {
       await handleLlm(req, res)
       return
@@ -1076,7 +1107,7 @@ async function route(req, res) {
     if (pathname === '/api/tools/execute' && method === 'POST') {
       const body = await readJson(req, 24 * 1024 * 1024)
       const name = String(body.name ?? '')
-      if (!TOOL_NAMES.has(name) || name === 'subagent' || name === 'skill' || name === 'ask_question') {
+      if (!TOOL_NAMES.has(name) || name === 'subagent' || name === 'skill' || name === 'ask_question' || name === 'todo_write') {
         throw new HttpError(400, `Unknown tool: ${name}`, 'unknown_tool')
       }
       const result = await executeTool(name, body.args ?? {}, {

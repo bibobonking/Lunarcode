@@ -6,6 +6,8 @@ import { WorkspacePanel } from './components/WorkspacePanel'
 import { SettingsModal } from './components/SettingsModal'
 import { DeployModal } from './components/DeployModal'
 import { McpPanel } from './components/McpPanel'
+import { ExtensionsSoon } from './components/ExtensionsSoon'
+import { TerminalPanel } from './components/TerminalPanel'
 import { CommandPalette } from './components/CommandPalette'
 import { Splash } from './components/Splash'
 import { ConfirmDialog, ToastHost } from './components/ui'
@@ -25,6 +27,7 @@ export default function App() {
   const error = useBoot((state) => state.error)
   const boot = useBoot((state) => state.boot)
   const theme = useSettings((state) => state.theme)
+  const uiStyle = useSettings((state) => state.uiStyle)
   const chatFontSize = useSettings((state) => state.chatFontSize)
   const mobileSidebarOpen = useUi((state) => state.mobileSidebarOpen)
   const setMobileSidebarOpen = useUi((state) => state.setMobileSidebarOpen)
@@ -87,6 +90,17 @@ export default function App() {
   }, [theme])
 
   useEffect(() => {
+    const root = document.documentElement
+    if (uiStyle === 'glass') root.dataset.style = 'glass'
+    else delete root.dataset.style
+    try {
+      localStorage.setItem('lunarcode.style', uiStyle)
+    } catch {
+      // Storage can be unavailable; the style still applies for this session.
+    }
+  }, [uiStyle])
+
+  useEffect(() => {
     document.documentElement.style.setProperty('--chat-font-size', `${chatFontSize}px`)
   }, [chatFontSize])
 
@@ -108,6 +122,12 @@ export default function App() {
         if (key === ',') {
           event.preventDefault()
           useUi.getState().openSettings('general')
+          return
+        }
+        if (key === '`' || key === 'j') {
+          event.preventDefault()
+          const ui = useUi.getState()
+          ui.setTerminalOpen(!ui.terminalOpen)
           return
         }
         if (key === '.') {
@@ -142,13 +162,17 @@ export default function App() {
                 className="adw-scrim z-40 cursor-default lg:hidden"
               />
             )}
-            <main className="relative flex min-h-0 min-w-0 flex-1 bg-panel">
-              <ChatView view={view} onViewChange={setView} />
-              <WorkspacePanel />
-            </main>
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+              <main className="relative flex min-h-0 min-w-0 flex-1 bg-panel">
+                <ChatView view={view} onViewChange={setView} />
+                <WorkspacePanel />
+              </main>
+              <TerminalPanel />
+            </div>
           </div>
           <SettingsModal />
           <McpPanel />
+          <ExtensionsSoon />
           <DeployModal />
           <CommandPalette />
           <ConfirmDialog />

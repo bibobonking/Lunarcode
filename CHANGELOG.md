@@ -1,5 +1,46 @@
 # Changelog
 
+## 3.3.0
+
+**Lunarcode: new name, new look**
+- **OpenSol is now Lunarcode.** New name across the app, desktop installers, CLI (`lunarcode start|stop|status|open|logs`; `opensol` stays as an alias) and npm package (`@bibobonking/lunarcode`). Data lives in `~/.lunarcode`; an existing `~/.opensol` or `~/.maxcode` is renamed automatically on first start, nothing is converted or lost. `LUNARCODE_DATA` overrides the folder (`OPENSOL_DATA` and `MAXCODE_DATA` still work). `LUNARCODE.md` is read as a project instruction file (before `OPENSOL.md`).
+- **New logo.** Same mark, re-lit for night: gradient ring, cratered moon, silvered prompt, glossy tile. Not flat. Desktop icons regenerated.
+- **Three themes: Light, Lunar and Dark.** Lunar is the new default (moonlit indigo with a periwinkle moon accent). Dark is the neutral Adwaita Dark. The other palettes were removed; anyone who had one is moved to Lunar.
+- **Effects in the Lunar tone.** Acrylic popovers and dialogs, gradient primary buttons with a sheen, active rails in the sidebar, moon spinner, shimmering "running" text, drifting aurora and stars on the welcome screen, lift-on-hover cards, expand/collapse that animates height. All of it respects reduced motion.
+- **Smaller, denser UI** and larger panels: type, controls, headerbar and sidebar are one step smaller; dialogs, settings, MCP, the model picker and the command palette are wider and taller; composer menus are wider.
+
+**Style and light theme**
+- **Liquid Glass style.** Settings → Appearance → Style switches the whole window to Liquid Glass: a living gradient behind frosted, translucent panes with lit edges, rounder shapes, glossy pill buttons, glass dialogs and menus. It sits on top of any theme (Light, Lunar, Dark) and **Default** restores the regular look instantly. Reduced motion stops the drifting blobs.
+- **Softer Light theme.** No more pure-white surfaces: cool paper tones, a softer text colour and gentler borders, so Light is no longer glaring.
+
+**Agent**
+- **Todo list tool (`todo_write`).** The agent plans multi-step work as a checklist and ticks items off as it goes. A card in the conversation shows each update and a dock above the composer shows the live list with progress. Works in Plan mode, can be switched off in Settings → Tools.
+- **Reasoning effort on gateways.** Custom endpoints such as 9router, LiteLLM or one-api now get effort controls: the model behind an id like `ag/claude-sonnet-4-6` or `tokenharbor/deepseek-v4.1-flash:free` is recognised (catalog lookup, then family patterns for Claude, GPT-5/o-series, Gemini, DeepSeek, Qwen3, GLM, Kimi, MiMo and more).
+- **Agent activity logo.** While the agent works, a pixel Lunarcode mark appears under the turn: the moon orbits the ring while it thinks or runs a shell, and the ring redraws itself while it writes, edits or rewrites. It disappears when the turn ends.
+
+**Tool output**
+- **Cards for every tool call**, with status rail, icon, duration, and for write/edit/rewrite the file path, **+N −M** counts and a proportion bar.
+- **Syntax colours** for diffs, written content and `read_file` output by file type, bash colours for commands, and coloured shell output (errors, warnings, successes, paths). Output text is brighter and easier to read.
+
+**Terminal**
+- **Built-in terminal.** Run commands in the workspace without leaving Lunarcode: toggle from the top bar or with Ctrl/⌘ `` ` ``. Streams output as it arrives with ANSI colours, command history (↑/↓), `cd` that carries over, Ctrl C to stop, Ctrl L to clear and a resizable dock. It runs one command at a time (no full-screen programs).
+
+**Interface**
+- **New chat button in the top bar**, no need to open the sidebar.
+- **Workspaces expand on click.** Clicking a workspace row expands or collapses its chats; it no longer opens the file tree.
+- **Extensions (soon).** Plugins is now Extensions with a Soon badge and an "Extension update coming soon" dialog.
+- Message header is cleaner: no avatar, no model name.
+
+**Fixed**
+- **Slash commands hidden behind the page.** The `/` command list is now drawn above everything and flips below the composer when there is no room.
+- **Composer menus covered by the welcome cards.** Permissions, effort, plus and workspace menus are rendered on top and clamp to the window.
+- **Model picker search box misaligned.** Icon, input and key hint now sit in one field (same fix in the file search).
+- **MCP templates cut off.** The template grid adapts to the width and descriptions wrap.
+
+**Build**
+- **Arch Linux package.** The desktop workflow now builds a `.pacman` package next to AppImage, deb and rpm (Arch, Manjaro, EndeavourOS).
+- Version 3.3.0 everywhere (package, daemon, desktop, MCP client info, About).
+
 ## 3.2.4 (hotfix)
 
 **`read_file` reads more than text**

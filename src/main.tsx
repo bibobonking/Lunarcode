@@ -4,6 +4,7 @@ import App from './App'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import './index.css'
 import './lunar.css'
+import './glass.css'
 
 const root = document.getElementById('root')
 if (!root) throw new Error('Root element not found.')

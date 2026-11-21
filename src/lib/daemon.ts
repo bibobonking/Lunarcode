@@ -558,3 +558,57 @@ export async function detectDeployProject(path: string): Promise<DeployDetection
   const result = await api<{ project: DeployDetection }>('/api/deploy/detect', jsonBody({ path }))
   return result.project
 }
+
+export type TerminalEvent =
+  | { type: 'out'; data: string }
+  | { type: 'exit'; code: number; cwd: string; killed?: boolean }
+  | { type: 'error'; message: string }
+
+/** Runs one command in the built-in terminal and yields its output as it arrives. */
+export async function* streamTerminal(
+  command: string,
+  cwd: string,
+  signal?: AbortSignal,
+): AsyncGenerator<TerminalEvent> {
+  await ensureSession()
+  let response: Response
+  try {
+    response = await fetch('/api/terminal/run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-maxcode-csrf': csrf },
+      body: JSON.stringify({ command, cwd }),
+      signal,
+      credentials: 'same-origin',
+    })
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') throw error
+    throw new DaemonError('Lost the connection to the local daemon.', 0, 'daemon_unreachable')
+  }
+  if (!response.ok) throw await parseError(response)
+  if (!response.body) throw new DaemonError('The terminal stream was empty.', 502, 'empty_stream')
+  const reader = response.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      buffer += decoder.decode(value, { stream: true })
+      let index = buffer.indexOf('\n')
+      while (index !== -1) {
+        const line = buffer.slice(0, index).trim()
+        buffer = buffer.slice(index + 1)
+        if (line) {
+          try {
+            yield JSON.parse(line) as TerminalEvent
+          } catch {
+            yield { type: 'out', data: `${line}\n` }
+          }
+        }
+        index = buffer.indexOf('\n')
+      }
+    }
+  } finally {
+    reader.releaseLock()
+  }
+}

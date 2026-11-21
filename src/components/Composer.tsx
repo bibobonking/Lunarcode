@@ -7,6 +7,8 @@ import {
   type ClipboardEvent,
   type DragEvent,
   type KeyboardEvent,
+  type ReactNode,
+  type RefObject,
 } from 'react'
 import { FileText, ShieldCheck, Square, Upload, X } from 'lucide-react'
 import type { Attachment } from '../types'
@@ -19,9 +21,11 @@ import { PERMISSION_MODES, permissionLabel, permissionMode, permissionTools } fr
 import { cn, formatBytes, readFileAsDataUrl, readFileAsText } from '../lib/utils'
 import { ModelDeck, ModelDeckTrigger } from './ModelDeck'
 import { Popover, MenuLabel, MenuOption, TextButton } from './composer/Popover'
+import { createPortal } from 'react-dom'
 import { Spinner } from './ui'
 import { PlusMenu } from './composer/PlusMenu'
 import { WorkspacePicker } from './composer/WorkspacePicker'
+import { TodoDock } from './TodoList'
 
 const TEXT_EXTENSIONS = /\.(txt|md|markdown|ts|tsx|js|jsx|mjs|cjs|json|css|scss|html|vue|svelte|py|go|rs|rb|java|kt|cs|c|h|cpp|hpp|php|swift|sh|bash|zsh|yml|yaml|toml|ini|sql|csv|xml|gitignore|env)$/i
 const MAX_ATTACHMENTS = 6
@@ -100,6 +104,7 @@ export function Composer({
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
+  const rootRef = useRef<HTMLDivElement>(null)
   const modelId = activeModelId(settings)
   const providerModels = useProviderModels(settings.provider)
   const activeModel = useActiveModel()
@@ -322,11 +327,11 @@ export function Composer({
     contextPct === undefined ? '' : contextPct >= 95 ? 'text-danger' : contextPct >= 70 ? 'text-warning' : 'text-muted'
 
   return (
-    <div className="relative w-full">
+    <div ref={rootRef} className="relative w-full">
       <ModelDeck open={pickerOpen && connected} onClose={() => setPickerOpen(false)} />
 
       {commandMatches.length > 0 && (
-        <div role="listbox" aria-label="Commands" className="adw-popover absolute bottom-[calc(100%+8px)] left-0 z-40 w-[min(94vw,380px)]">
+        <SlashMenu anchorRef={rootRef}>
           <MenuLabel>Commands</MenuLabel>
           {commandMatches.map((command, index) => (
             <button
@@ -342,8 +347,10 @@ export function Composer({
               <span className="min-w-0 flex-1 truncate text-[12px] text-muted">{command.description}</span>
             </button>
           ))}
-        </div>
+        </SlashMenu>
       )}
+
+      <TodoDock />
 
       <div className="mb-1 flex flex-wrap items-center gap-x-1">
         <WorkspacePicker />
@@ -604,5 +611,42 @@ function ArrowUpIcon() {
     <svg viewBox="0 0 16 16" width="16" height="16" fill="none" aria-hidden="true">
       <path d="M8 12.5V3.5M4.2 7.2L8 3.4l3.8 3.8" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
+  )
+}
+
+/** Command list: portalled and fixed-positioned so nothing on the welcome screen can cover it. */
+function SlashMenu({ anchorRef, children }: { anchorRef: RefObject<HTMLDivElement | null>; children: ReactNode }) {
+  const [box, setBox] = useState<{ left: number; width: number; bottom?: number; top?: number; maxHeight: number } | null>(null)
+  useLayoutEffect(() => {
+    const measure = () => {
+      const anchor = anchorRef.current
+      if (!anchor) return
+      const rect = anchor.getBoundingClientRect()
+      const width = Math.min(Math.max(rect.width, 360), 560, window.innerWidth - 16)
+      const left = Math.max(8, Math.min(rect.left, window.innerWidth - width - 8))
+      const above = rect.top - 16
+      const below = window.innerHeight - rect.bottom - 16
+      if (above >= 150 || above >= below) setBox({ left, width, bottom: window.innerHeight - rect.top + 8, maxHeight: Math.min(360, above) })
+      else setBox({ left, width, top: rect.bottom + 8, maxHeight: Math.min(360, below) })
+    }
+    measure()
+    window.addEventListener('resize', measure)
+    window.addEventListener('scroll', measure, true)
+    return () => {
+      window.removeEventListener('resize', measure)
+      window.removeEventListener('scroll', measure, true)
+    }
+  }, [anchorRef])
+  if (!box) return null
+  return createPortal(
+    <div
+      role="listbox"
+      aria-label="Commands"
+      style={{ left: box.left, width: box.width, bottom: box.bottom, top: box.top, maxHeight: box.maxHeight }}
+      className="adw-popover thin-scroll fixed z-[95] overflow-y-auto overscroll-contain"
+    >
+      {children}
+    </div>,
+    document.body,
   )
 }

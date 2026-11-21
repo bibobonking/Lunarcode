@@ -29,6 +29,7 @@
             ? 'dark'
             : 'light'
         const root = document.documentElement
+        if (localStorage.getItem('lunarcode.style') === 'glass') root.dataset.style = 'glass'
         root.dataset.theme = theme
         if (DARK.includes(theme)) root.classList.add('dark')
       } catch {}
