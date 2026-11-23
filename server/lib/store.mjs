@@ -153,16 +153,6 @@ export async function saveState(next) {
   return next
 }
 
-export async function patchState(patch) {
-  const state = await loadState()
-  const next = { ...state, ...patch }
-  return saveState(next)
-}
-
-export function cachedState() {
-  return stateCache
-}
-
 async function masterKey() {
   if (masterKeyCache) return masterKeyCache
   await ensureDataDir()
@@ -246,22 +236,6 @@ export async function saveSecrets(next) {
   secretsCache = next
   await enqueue('secrets', () => writeAtomic(SECRETS_FILE, envelope))
   return next
-}
-
-export async function patchSecrets(patch) {
-  const secrets = await loadSecrets()
-  const next = {
-    ...secrets,
-    ...patch,
-    providers: { ...secrets.providers, ...(patch.providers ?? {}) },
-    search: { ...secrets.search, ...(patch.search ?? {}) },
-    deploy: {
-      cloudflare: { ...secrets.deploy.cloudflare, ...(patch.deploy?.cloudflare ?? {}) },
-      netlify: { ...secrets.deploy.netlify, ...(patch.deploy?.netlify ?? {}) },
-      vercel: { ...secrets.deploy.vercel, ...(patch.deploy?.vercel ?? {}) },
-    },
-  }
-  return saveSecrets(next)
 }
 
 export function hintFor(value) {

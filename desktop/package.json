@@ -1,13 +1,13 @@
 {
-  "name": "opensol-desktop",
+  "name": "lunarcode-desktop",
   "version": "4.0.0",
   "private": true,
   "type": "module",
-  "description": "Lunarcode Desktop — the Lunarcode coding agent in an Electron window.",
+  "description": "Lunarcode Desktop \u2014 the Lunarcode coding agent in an Electron window.",
   "author": "OpenSoftX <bibobonking@gmail.com>",
   "license": "MIT",
   "homepage": "https://github.com/bibobonking/OpenSol",
-  "desktopName": "opensol.desktop",
+  "desktopName": "lunarcode.desktop",
   "main": "electron/main.mjs",
   "scripts": {
     "start": "electron .",

@@ -267,11 +267,3 @@ export async function serveStatic(req, res, root, pathname, { transform } = {}) 
   stream.on('error', () => res.destroy())
   stream.pipe(res)
 }
-
-export function parseJson(value, fallback = null) {
-  try {
-    return JSON.parse(value)
-  } catch {
-    return fallback
-  }
-}

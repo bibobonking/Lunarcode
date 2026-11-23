@@ -1123,10 +1123,3 @@ export async function proxyRequest(request) {
     bodyBase64: bytes.toString('base64'),
   }
 }
-
-// Re-exported for the daemon's fingerprint of server code (restart detection).
-export async function serverState() {
-  const records = await scan()
-  return { patches: await serverPatchHash(records), code: await serverCodeHash(records) }
-}
-

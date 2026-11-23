@@ -87,4 +87,6 @@ Extension themes are registered at runtime as `ext-<id>-<theme>` and styled the 
 - Vite's root is the repo root. Edit `src/` and `index.html` only.
 - `dist/` is committed and is what the daemon serves — a source change is invisible in the app until `npm run build`.
 - The data directory is `~/.lunarcode` (override with `LUNARCODE_DATA`; `OPENSOL_DATA`/`MAXCODE_DATA` are still honoured, and an existing `~/.opensol` or `~/.maxcode` is renamed to it on first start); provider keys, chats, settings and extensions all live there, so tests and manual runs share state with the real app.
-- The CSRF header is still named `x-maxcode-csrf` for compatibility; the extension global is `lunarcode`.
+- The CSRF header is still named `x-maxcode-csrf` for compatibility; the extension global is `lunarcode`. `OPENSOL_*` env vars and the app id `dev.opensoft.opensol` also keep their old names on purpose.
+- Desktop only: there is no npm package, no `bin` and no web launcher. The CLI is `server/cli.mjs` (`ext`, `version`, `help`), run by the desktop binary (`desktop/electron/main.mjs`) or by the launchers in `desktop/bin/`. The Arch `.pkg.tar.zst` is built by `.github/workflows/build.yml` with `makepkg`, not by electron-builder.
+- The README disclaimer (independent developer, no review, install at your own risk) must stay.

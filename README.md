@@ -2,28 +2,44 @@
 
 A local-first AI coding agent by OpenSoftX. Lunarcode pairs a warm React chat interface with a zero-dependency Node daemon that owns the real workspace, shell, git, search, deploy and provider credentials on your machine.
 
-The daemon binds to `127.0.0.1` only. It serves the prebuilt app from `dist/` and stores everything under `~/.lunarcode`. API keys and hosting tokens are encrypted with AES-256-GCM using a local `master.key`; the browser only ever receives a masked hint.
+The daemon binds to `127.0.0.1` only. It serves the prebuilt app from `dist/` and stores everything under `~/.lunarcode`. API keys and hosting tokens are encrypted with AES-256-GCM using a local `master.key`; the app window only ever receives a masked hint.
 
-## Run it
+## Disclaimer
 
-Lunarcode is a **desktop app** (Windows, macOS, Linux). There is no npm package and no web install: download the installer from the releases page, or build it yourself (see `desktop/README.md`). The app starts its own daemon, so there is nothing to launch by hand.
+Lunarcode is made by **one independent developer**. There is no review team, no security audit and no vetting of releases, builds or extensions (this includes `examples/*.lce` and any `.lce`, skill or MCP server you download). Read the code and check anything you install yourself. The agent can edit files and run commands on your machine, so review what it does too.
 
-CLI (desktop only): `Lunarcode ext …` on the app binary, or the `lunarcode` launcher shipped in `resources/app/bin/` (`lunarcode.cmd` on Windows). Commands: `ext list|new|pack|unpack|install|enable|disable|remove|path`, `version`, `help`.
+If you install or enable something without checking it carefully, **you do so at your own risk** and you are responsible for what it does. The software is provided “as is”, without warranty of any kind, under the MIT license.
+
+
+## Install
+
+Lunarcode is a **desktop app**. There is no npm package and no web version. Download an installer from the releases page, or build it yourself (see [desktop/README.md](desktop/README.md)).
+
+| OS | Package | Executable |
+|---|---|---|
+| Windows 10 / 11 | `.exe` (NSIS) | `Lunarcode.exe` |
+| macOS 13+ | `.dmg`, `.zip` (Apple Silicon and Intel) | `Lunarcode.app` |
+| Linux | `.AppImage`, `.deb`, `.rpm` | `lunarcode` |
+| Arch Linux | `.pkg.tar.zst` (`sudo pacman -U <file>`) | `lunarcode`, `lunarcode-cli` |
+
+The app starts its own daemon, so there is nothing to launch by hand.
+
+**CLI (desktop only).** `lunarcode ext …` through the launcher in `resources/app/bin/` (`lunarcode`, `lunarcode.cmd`; the Arch package installs it as `lunarcode-cli`), or `<executable> ext …` on the app binary. Commands: `ext list|new|pack|unpack|install|enable|disable|remove|path`, `version`, `help`.
 
 On first launch, choose a real project folder, then add a provider key in **Settings → Models** and pick a live model. Everything else — workspace tree, editor, git, search, build/plan modes, subagents and deploys — runs through the local daemon.
 
-Works on **Windows, macOS and Linux**. See *Shell* below for how commands run on each.
+See *Shell* below for how commands run on each OS.
 
 ## What is in the app
 
 - **Build and Plan modes.** Build can edit files and run commands; Plan is read-only investigation.
 - **Live models and reasoning.** Model lists come from each provider; the models.dev catalog is only a fallback. Thinking is the provider's job: an effort control appears only when the selected model advertises effort levels or a token budget, and it is sent automatically.
-- **Themes.** Light, Dark, Night Owl, Claude Code and Flame, plus System, which follows the OS preference. Syntax highlighting follows the theme.
+- **Themes.** Light, Lunar and Dark, plus extension themes. Syntax highlighting follows the theme.
 - **Real tools.** Read/write/edit files, grep, list files, shell, git, web search, URL reading, skills and read-only subagents. Each user turn renders as one answer, with consecutive tool rounds collapsed into a single “Used N tools” group.
 - **New composer.** A compact box: the project folder sits above it, **+** adds files, toggles web search and Plan mode, opens MCP and switches skills. Permissions and effort are plain text at the bottom left (a panel opens on click); the model name is at the bottom right and opens the Model Deck (`Ctrl/⌘ M`).
 - **MCP that keeps up.** Tools a server opens mid-session (10 → 100 after creating a project) reach the agent immediately without stopping the turn; dropped servers reconnect by themselves; Streamable HTTP and legacy SSE URLs fall back to each other automatically.
 - **Ask Question.** The agent can ask several multiple-choice questions at once (single or multi-select, a comment under each option, a free-text field on every question).
-- **Shell.** The `shell` tool runs in your default shell: bash/zsh (login shell) on Linux and macOS, PowerShell 7 or Windows PowerShell on Windows (`cmd` as a last resort). The agent is told which one in its system prompt. Override with `OPENSOL_SHELL=/path/to/shell`. Plan mode accepts only read-only commands in the matching syntax.
+- **Shell.** The `shell` tool runs in your default shell: bash/zsh (login shell) on Linux and macOS, PowerShell 7 or Windows PowerShell on Windows (`cmd` as a last resort). The agent is told which one in its system prompt. Override with `OPENSOL_SHELL=/path/to/shell` (the variable keeps its old name). Plan mode accepts only read-only commands in the matching syntax.
 - **Smart compaction.** Near 85% of the context window (checked before a turn and between tool rounds), older turns are summarised while the newest ones stay verbatim. Earlier summaries are merged, not re-summarised; changed files are tracked from tool calls; if the model is unavailable a deterministic fallback keeps the session going. Run `/compact [focus]` to do it yourself.
 - **Subagents.** `subagent` delegates read-only work to a separate context: `explore` (codebase), `research` (web + code) and `review` (bugs in a diff). Several calls in one message run in parallel, progress streams into the tool card, and each has a round budget and context pruning.
 - **Turn queue.** A prompt sent while a turn is streaming waits its turn and runs next, instead of splitting into a second reply.
@@ -65,7 +81,7 @@ TypeScript, React 19, Vite, Tailwind CSS, Zustand, direct provider adapters (Ope
 ```
 src/        React app, Cordis kernel (src/core), stores, adapters and UI
 server/     local daemon, encrypted store, workspace tools, shell, MCP and deploy
-desktop/    Electron wrapper
+desktop/    Electron app, installers and the launcher scripts of the CLI
 shared/     .lce archive format and patch engine used by both sides
 dist/       production build served by the daemon
 ```

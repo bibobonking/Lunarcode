@@ -1,6 +1,6 @@
 # Lunarcode extensions (`.lce`)
 
-An extension changes Lunarcode directly. There is no permission model and no API version to stay inside: it can run code in the app window, run Node code in the daemon, and rewrite the app's own files with patches. Enabling an extension is a full-trust decision, the same as installing a userscript or a game mod.
+An extension changes Lunarcode directly. There is no permission model and no API version to stay inside: it can run code in the app window, run Node code in the daemon, and rewrite the app's own files with patches. Enabling an extension is a full-trust decision, the same as installing a userscript or a game mod. Lunarcode is made by one independent developer and nothing is reviewed or audited, including the extensions in `examples/`: read an extension's code before you enable it. If you install one without checking, the risk is yours (see the [disclaimer](../README.md#disclaimer)).
 
 ## Install and manage
 

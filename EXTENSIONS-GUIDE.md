@@ -111,7 +111,7 @@ lunarcode ext install my-ext.lce    # or drag into Extensions → Install .lce
 lunarcode ext enable my-ext
 ```
 
-Installing the same `id` again updates it and keeps its enabled state and its data in `~/.lunarcode/extension-data/my-ext/`. Remove with `lunarcode ext remove my-ext`. To share, send the `.lce`. Recipients must enable it themselves, and enabling means fully trusting its code.
+Installing the same `id` again updates it and keeps its enabled state and its data in `~/.lunarcode/extension-data/my-ext/`. Remove with `lunarcode ext remove my-ext`. To share, send the `.lce`. Recipients must enable it themselves, and enabling means fully trusting its code. Nobody reviews extensions for you, so read an `.lce` (`lunarcode ext unpack`) before you enable one; installing without checking is at your own risk.
 
 ## 6. Debugging
 

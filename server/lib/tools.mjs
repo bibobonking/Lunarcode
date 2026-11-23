@@ -391,16 +391,6 @@ export async function deleteWorkspaceEntry(input) {
   return { path: relative, deleted: true, type: info.isDirectory() ? 'dir' : 'file' }
 }
 
-export async function chmodWorkspaceFile(input, mode) {
-  const { absolute, relative } = await resolveWorkspacePath(input, { allowRoot: false })
-  const parsed = Number.parseInt(String(mode), 8)
-  if (!Number.isFinite(parsed) || parsed < 0 || parsed > 0o777) {
-    throw new HttpError(400, 'Use a valid octal mode such as 755.', 'bad_mode')
-  }
-  await chmod(absolute, parsed)
-  return { path: relative, mode: parsed.toString(8) }
-}
-
 async function walkFiles(root, { maxFiles = 4000, maxBytes = 12 * 1024 * 1024 } = {}) {
   const files = []
   let bytes = 0

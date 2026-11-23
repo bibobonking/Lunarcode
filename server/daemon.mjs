@@ -1,6 +1,6 @@
 import { describeShell, repairProcessEnv } from './lib/shell.mjs'
 import { randomBytes } from 'node:crypto'
-import { mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises'
+import { mkdir, stat } from 'node:fs/promises'
 import http from 'node:http'
 import os from 'node:os'
 import path from 'node:path'
@@ -1350,7 +1350,7 @@ function scheduleRestart() {
   }, 200).unref()
 }
 
-export async function startServer({ port: requested = 4174, open = false } = {}) {
+export async function startServer({ port: requested = 4174 } = {}) {
   await mkdir(DATA_DIR, { recursive: true, mode: 0o700 })
   // Scan extensions before listening so the very first page is served with the right CSP and patches.
   await prepareExtensions(VERSION).catch((error) => console.error('[lunarcode] extensions scan failed', error))
@@ -1379,19 +1379,12 @@ export async function startServer({ port: requested = 4174, open = false } = {})
     server.once('error', reject)
     server.listen(port, host, resolve)
   })
-  const pidFile = path.join(DATA_DIR, 'daemon.json')
-  await writeFile(
-    pidFile,
-    `${JSON.stringify({ pid: process.pid, port, host, url: `http://${host}:${port}`, startedAt: Date.now() }, null, 2)}\n`,
-    { mode: 0o600 },
-  )
 
   const shutdown = async (signal) => {
     console.log(`[lunarcode] ${signal} received, shutting down.`)
     server.close()
     await extensionHooks.shutdown().catch(() => undefined)
     await mcp.shutdown().catch(() => undefined)
-    await rm(pidFile, { force: true }).catch(() => undefined)
     process.exit(0)
   }
   process.on('SIGTERM', () => void shutdown('SIGTERM'))
@@ -1409,61 +1402,14 @@ export async function startServer({ port: requested = 4174, open = false } = {})
   void mcp.connectAll().catch(() => undefined)
   await startExtensions(VERSION).catch((error) => console.error('[lunarcode] extensions failed to start', error))
   await extensionHooks.ready()
-  if (open) {
-    const opener = process.platform === 'darwin' ? 'open' : process.platform === 'win32' ? 'cmd' : 'xdg-open'
-    const args = process.platform === 'win32' ? ['/c', 'start', '', url] : [url]
-    const child = spawn(opener, args, { detached: true, stdio: 'ignore' })
-    child.on('error', () => console.log(`[lunarcode] open ${url} in your browser.`))
-    child.unref()
-  }
   return { server, url, port }
-}
-
-export async function daemonStatus() {
-  const pidFile = path.join(DATA_DIR, 'daemon.json')
-  try {
-    const raw = await readFile(pidFile, 'utf8')
-    const info = JSON.parse(raw)
-    const response = await fetch(`http://${info.host ?? host}:${info.port}/api/health`, {
-      signal: AbortSignal.timeout(1500),
-    })
-    if (!response.ok) return { running: false, info }
-    const health = await response.json()
-    return { running: true, info: { ...info, ...health } }
-  } catch {
-    return { running: false, info: null }
-  }
-}
-
-export async function stopDaemon() {
-  const status = await daemonStatus()
-  if (!status.running) {
-    await rm(path.join(DATA_DIR, 'daemon.json'), { force: true })
-    return { stopped: false, reason: 'Lunarcode is not running.' }
-  }
-  try {
-    process.kill(status.info.pid, 'SIGTERM')
-  } catch (error) {
-    if (error.code !== 'ESRCH') throw error
-  }
-  for (let attempt = 0; attempt < 40; attempt += 1) {
-    await new Promise((resolve) => setTimeout(resolve, 150))
-    const next = await daemonStatus()
-    if (!next.running) return { stopped: true, pid: status.info.pid }
-  }
-  try {
-    process.kill(status.info.pid, 'SIGKILL')
-  } catch {
-    // It already exited.
-  }
-  return { stopped: true, pid: status.info.pid, forced: true }
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const args = process.argv.slice(2)
   if (!globalThis.__lunarcodeServerPatches && process.env.LUNARCODE_PRELOADED !== '1') {
     // Started as `node server/daemon.mjs` without the preload: run again with it so extension patches can
-    // reach the daemon's own modules. The CLI and the desktop app already pass --import.
+    // reach the daemon's own modules. The desktop app already passes --import.
     const child = spawn(
       process.execPath,
       ['--import', pathToFileURL(path.join(HERE, 'lib', 'ext-boot.mjs')).href, fileURLToPath(import.meta.url), ...args],
@@ -1474,7 +1420,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   } else {
     const portArg = args.find((value) => value.startsWith('--port='))
     const parsedPort = portArg ? Number(portArg.split('=')[1]) : 4174
-    startServer({ port: parsedPort, open: args.includes('--open') }).catch((error) => {
+    startServer({ port: parsedPort }).catch((error) => {
       console.error(error)
       process.exit(1)
     })

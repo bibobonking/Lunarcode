@@ -3,7 +3,7 @@
   "configVersion": 0,
   "workspaces": {
     "": {
-      "name": "opensol-desktop",
+      "name": "lunarcode-desktop",
       "devDependencies": {
         "electron": "^45.3.2",
         "electron-builder": "^26.18.0",

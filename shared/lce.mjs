@@ -12,10 +12,8 @@
 //   ├── style.css          stylesheets                                              (optional)
 //   └── …                  any other files: more modules, images, wasm, data
 
-import { createHash } from 'node:crypto'
 import { crc32 as zlibCrc32, deflateRawSync, inflateRawSync } from 'node:zlib'
 
-export const LCE_EXTENSION = '.lce'
 export const MANIFEST_FILE = 'extension.json'
 
 /** Generous on purpose: "any size of extension installs". These only stop zip bombs. */
@@ -474,15 +472,4 @@ export function packExtension({ manifest, files }) {
   // Round-trip so a package that cannot be installed is never produced.
   readExtensionArchive(bytes)
   return { bytes, manifest: clean }
-}
-
-export function hashFiles(files) {
-  const hash = createHash('sha256')
-  for (const name of [...files.keys()].sort()) {
-    hash.update(name)
-    hash.update('\0')
-    hash.update(files.get(name))
-    hash.update('\0')
-  }
-  return hash.digest('hex')
 }
