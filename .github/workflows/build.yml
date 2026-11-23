@@ -2,6 +2,16 @@ name: Lunarcode Desktop
 
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag (vd: v1.0.0)'
+        required: true
+        type: string
+      draft:
+        description: 'Tạo draft release (nháp) để kiểm tra trước?'
+        required: false
+        default: true
+        type: boolean
   push:
     tags: ['v*']
 
@@ -38,10 +48,10 @@ jobs:
           name: lunarcode-web-dist
           path: dist
           if-no-files-found: error
+          retention-days: 1
       - name: Install desktop dependencies
         working-directory: desktop
         run: npm ci
-      # rpm: .rpm packages. libarchive-tools (bsdtar): .pacman packages for Arch Linux / Manjaro / EndeavourOS.
       - name: Install RPM and Arch packaging tooling
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y rpm libarchive-tools
@@ -62,18 +72,53 @@ jobs:
             desktop/release/*.dmg
             desktop/release/*.zip
           if-no-files-found: error
+          retention-days: 1
 
   release:
-    if: startsWith(github.ref, 'refs/tags/v')
     needs: build
     runs-on: ubuntu-22.04
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # ✅ Chỉ tải artifact desktop, KHÔNG tải web dist
       - uses: actions/download-artifact@v4
         with:
           path: dist-desktop
+          pattern: lunarcode-desktop-*
           merge-multiple: true
-      - uses: softprops/action-gh-release@v2
+
+      - name: Show files to release
+        run: ls -lh dist-desktop/
+
+      # Xác định tag: từ input (workflow_dispatch) hoặc từ ref (push tag)
+      - name: Determine tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "tag=${{ inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Draft Release
+        uses: softprops/action-gh-release@v2
         with:
-          files: dist-desktop/*
+          tag_name: ${{ steps.tag.outputs.tag }}
+          name: Release ${{ steps.tag.outputs.tag }}
+          generate_release_notes: true
+          draft: ${{ github.event_name == 'workflow_dispatch' && inputs.draft || false }}
+          files: |
+            dist-desktop/*.AppImage
+            dist-desktop/*.deb
+            dist-desktop/*.rpm
+            dist-desktop/*.pacman
+            dist-desktop/*.exe
+            dist-desktop/*.dmg
+            dist-desktop/*.zip
+          fail_on_unmatched_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
