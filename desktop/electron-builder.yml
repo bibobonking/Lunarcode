@@ -21,8 +21,6 @@ extraResources:
     to: app/server
   - from: ../shared
     to: app/shared
-  - from: ../node_modules/fflate
-    to: app/node_modules/fflate
   - from: ../package.json
     to: app/package.json
 

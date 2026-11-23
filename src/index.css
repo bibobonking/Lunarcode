@@ -88,30 +88,39 @@
     color-scheme: dark;
   }
 
-  /* Dark — neutral Adwaita Dark, blue accent. Glows stay blue instead of lunar violet. */
+  /* Dark — graphite. Neutral surfaces in clear elevation steps (content < chrome < cards < popovers),
+     soft off-white text instead of pure white, readable borders and a brighter blue accent that keeps
+     4.5:1+ against both the surfaces and its own label. Glows stay blue, never lunar violet. */
   [data-theme='dark'] {
-    --canvas: 34 34 38;
-    --panel: 29 29 32;
-    --raised: 40 40 44;
-    --line: 62 62 66;
-    --ink: 255 255 255;
-    --muted: 189 189 191;
-    --faint: 144 144 147;
-    --accent: 53 132 228;
-    --accent-soft: 38 61 100;
-    --on-accent: 255 255 255;
-    --success: 87 227 137;
-    --warning: 248 228 92;
-    --danger: 255 123 99;
-    --syn-keyword: 220 138 221;
-    --syn-string: 143 240 164;
-    --syn-number: 255 163 72;
-    --syn-title: 153 193 241;
-    --syn-attr: 153 218 227;
-    --link: 120 174 237;
-    --lunar-a: 53 132 228;
-    --lunar-b: 99 180 240;
-    --lunar-c: 120 150 240;
+    --canvas: 18 18 21;
+    --panel: 24 24 28;
+    --raised: 36 36 42;
+    --line: 54 54 63;
+    --ink: 236 236 241;
+    --muted: 168 168 180;
+    --faint: 122 122 135;
+    --accent: 96 160 255;
+    --accent-soft: 30 48 84;
+    --on-accent: 8 18 40;
+    --success: 98 214 144;
+    --warning: 242 202 96;
+    --danger: 255 118 112;
+    --syn-keyword: 200 148 242;
+    --syn-string: 144 216 162;
+    --syn-number: 250 170 98;
+    --syn-title: 132 182 252;
+    --syn-attr: 112 210 222;
+    --headerbar: 30 30 35;
+    --sidebar: 27 27 32;
+    --sidebar-2: 32 32 38;
+    --card: 32 32 38;
+    --popover: 40 40 47;
+    --dialog: 34 34 40;
+    --link: 132 184 255;
+    --destructive: 226 70 76;
+    --lunar-a: 96 160 255;
+    --lunar-b: 112 204 244;
+    --lunar-c: 132 160 250;
     color-scheme: dark;
   }
 

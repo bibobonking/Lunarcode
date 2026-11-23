@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import {
   ArrowDownToLine,
   Bot,
@@ -60,12 +60,12 @@ import { stopAllRuns } from '../agent'
 import { applySnapshot } from '../lib/boot'
 import { executeDaemonTool, resetScope } from '../lib/daemon'
 import { effortOptions, reasoningSummary } from '../lib/reasoning'
+import { scopeGatewayModels } from '../lib/gateway'
 import { PERMISSION_MODES, permissionMode, permissionTools } from '../lib/permissions'
 import { cn, formatBytes } from '../lib/utils'
 import { LogoMark } from './Logo'
-import { PluginManager } from './PluginManager'
 import { useMcp } from '../store/mcp'
-import { pluginRuntime } from '../plugins'
+import { useUiRegistry } from '../extensions/registry'
 import { Modal, Segmented, Spinner, Switch } from './ui'
 
 type TabDef = { id: string; label: string; icon: typeof Info; description: string; disabled?: boolean; soon?: boolean }
@@ -75,7 +75,6 @@ const TABS: readonly TabDef[] = [
   { id: 'tools', label: 'Tools', icon: Wrench, description: 'What Lunarcode can do on this machine, and when it must ask.' },
   { id: 'search', label: 'Search', icon: Globe2, description: 'Give the agent current web results with your own key.' },
   { id: 'skills', label: 'Skills', icon: Sparkles, description: 'Skill folders the agent loads on demand: upload a folder or install from npm.' },
-  { id: 'plugins', label: 'Extensions', icon: Package, description: 'Extension update coming soon.', soon: true },
   { id: 'mcp', label: 'MCP', icon: Link2, description: 'Model Context Protocol servers now have their own panel, with OAuth sign-in and local, HTTP and SSE connections.' },
   { id: 'deploy', label: 'Deploy', icon: Rocket, description: 'Hosting credentials and command-line tools.' },
   { id: 'appearance', label: 'Appearance', icon: Palette, description: 'Theme and interface preferences.' },
@@ -206,6 +205,13 @@ function ProviderCard({
   const keyHint = status?.hint ?? ''
   const activeModel = activeModelId(settings)
   const currentModel = models.find((model) => model.id === activeModel)
+  const visibleModels = useMemo(
+    () =>
+      providerId === 'custom'
+        ? scopeGatewayModels(models, isActive ? activeModel : '')
+        : models,
+    [providerId, models, isActive, activeModel],
+  )
 
   useEffect(() => {
     if (!open || !configured) return
@@ -258,13 +264,13 @@ function ProviderCard({
   }
 
   const activate = async () => {
-    if (models.length === 0) {
+    if (visibleModels.length === 0) {
       const loaded = await fetchModels(providerId, true)
       if (loaded[0]) selectModel(providerId, loaded[0].id)
       else notify('No usable model was returned by this provider.', 'error')
       return
     }
-    selectModel(providerId, models[0].id)
+    selectModel(providerId, visibleModels[0].id)
   }
 
   return (
@@ -388,7 +394,7 @@ function ProviderCard({
             {models.length > 0 ? (
               <>
                 <select
-                  value={isActive ? activeModel : ''}
+                  value={isActive && visibleModels.some((model) => model.id === activeModel) ? activeModel : ''}
                   onChange={(event) => {
                     if (event.target.value) selectModel(providerId, event.target.value)
                   }}
@@ -399,7 +405,7 @@ function ProviderCard({
                   {isActive && activeModel && !models.some((model) => model.id === activeModel) && (
                     <option value={activeModel}>{activeModel} (not listed)</option>
                   )}
-                  {models.map((model) => (
+                  {visibleModels.map((model) => (
                     <option key={model.id} value={model.id}>
                       {model.name || model.id}
                       {model.context ? ` · ${tokenLabel(model.context)} ctx` : ''}
@@ -407,7 +413,7 @@ function ProviderCard({
                   ))}
                 </select>
                 <p className="mt-1 text-[12px] text-faint">
-                  {models.length} usable chat model{models.length === 1 ? '' : 's'}
+                  {visibleModels.length} usable chat model{visibleModels.length === 1 ? '' : 's'}
                   {source === 'catalog' ? ' from the models.dev fallback' : ' loaded live from the provider'}.
                 </p>
               </>
@@ -1444,17 +1450,6 @@ function DeployTab() {
   )
 }
 
-export function PluginsTab() {
-  return (
-    <SettingsSection
-      title="Local plugins"
-      description="Lunarcode only installs plugin packages you choose from this machine. A plugin stays sandboxed and disabled until you review its permissions and mark it Safe."
-    >
-      <PluginManager />
-    </SettingsSection>
-  )
-}
-
 function GeneralTab() {
   const settings = useSettings()
   const update = useSettings((state) => state.update)
@@ -1649,24 +1644,27 @@ function GeneralTab() {
 function AppearanceTab() {
   const settings = useSettings()
   const update = useSettings((state) => state.update)
+  const registry = useUiRegistry()
   const themes = [
     { id: 'light' as const, label: 'Light', className: 'bg-[#fafafb]', line: 'bg-[#e0e0e3]', bar: 'bg-[#ffffff]', accent: 'bg-[#3584e4]' },
     { id: 'lunar' as const, label: 'Lunar', className: 'bg-[#131420]', line: 'bg-[#2c2e42]', bar: 'bg-[#0e0f17]', accent: 'bg-[#8e96ff]' },
-    { id: 'dark' as const, label: 'Dark', className: 'bg-[#222226]', line: 'bg-[#3e3e42]', bar: 'bg-[#1d1d20]', accent: 'bg-[#3584e4]' },
-    // Themes contributed by Safe plugins.
-    ...pluginRuntime().themes().map((theme) => ({
+    { id: 'dark' as const, label: 'Dark', className: 'bg-[#18181c]', line: 'bg-[#36363f]', bar: 'bg-[#1e1e23]', accent: 'bg-[#60a0ff]' },
+    // Themes contributed by extensions; their swatch is drawn from their own palette.
+    ...registry.themes.map((theme) => ({
       id: theme.id,
       label: theme.label,
-      className: 'bg-raised',
-      line: 'bg-line',
-      bar: 'bg-panel',
-      accent: 'bg-accent',
+      className: '',
+      line: '',
+      bar: '',
+      accent: '',
+      palette: theme.palette,
     })),
-  ]
+  ] as Array<{ id: string; label: string; className: string; line: string; bar: string; accent: string; palette?: Record<string, string> }>
+  const swatch = (palette: Record<string, string> | undefined, token: string) => (palette?.[token] ? { backgroundColor: `rgb(${palette[token]})` } : undefined)
 
   return (
     <>
-      <SettingsSection title="Theme" description="Light, Lunar (moonlit indigo) or neutral Dark.">
+      <SettingsSection title="Theme" description="Light, Lunar (moonlit indigo) or graphite Dark.">
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {themes.map((theme) => {
             const selected = settings.theme === theme.id
@@ -1681,12 +1679,12 @@ function AppearanceTab() {
                   selected ? 'border-accent bg-accent-soft' : 'border-line hover:bg-ink/[.05]',
                 )}
               >
-                <span className={cn('block h-16 w-full overflow-hidden rounded-[9px] border border-line', theme.className)}>
-                  <span className={cn('block h-3 w-full', theme.bar)} />
+                <span className={cn('block h-16 w-full overflow-hidden rounded-[9px] border border-line', theme.className)} style={swatch(theme.palette, 'canvas')}>
+                  <span className={cn('block h-3 w-full', theme.bar)} style={swatch(theme.palette, 'headerbar') ?? swatch(theme.palette, 'panel')} />
                   <span className="block p-2">
-                    <span className={cn('block h-1.5 w-8 rounded-[3px]', theme.line)} />
-                    <span className={cn('mt-1.5 block h-1.5 w-12 rounded-[3px]', theme.line)} />
-                    <span className={cn('mt-2 block h-2 w-5 rounded-[3px]', theme.accent)} />
+                    <span className={cn('block h-1.5 w-8 rounded-[3px]', theme.line)} style={swatch(theme.palette, 'line')} />
+                    <span className={cn('mt-1.5 block h-1.5 w-12 rounded-[3px]', theme.line)} style={swatch(theme.palette, 'line')} />
+                    <span className={cn('mt-2 block h-2 w-5 rounded-[3px]', theme.accent)} style={swatch(theme.palette, 'accent')} />
                   </span>
                 </span>
                 <span className="mt-1.5 flex items-center justify-between px-0.5">
@@ -2067,7 +2065,7 @@ export function SettingsModal() {
             <h2 id="settings-title" className="text-[16px] font-bold text-ink">
               Preferences
             </h2>
-            <p className="text-[12px] text-muted">Lunarcode · v3.3.0</p>
+            <p className="text-[12px] text-muted">Lunarcode · v4.0.0</p>
           </div>
           <nav className="flex-1 space-y-0.5 overflow-y-auto px-2 pb-3" aria-label="Preferences">
             {TABS.map((item) => {
@@ -2139,13 +2137,6 @@ export function SettingsModal() {
               {tab === 'tools' && <ToolsTab />}
               {tab === 'search' && <SearchTab />}
               {tab === 'skills' && <SkillsTab />}
-              {tab === 'plugins' && (
-                <div className="flex h-full flex-col items-center justify-center gap-3 p-10 text-center">
-                  <span className="tool-icon h-14 w-14 rounded-[16px]"><Package size={26} /></span>
-                  <h3 className="text-[17px] font-semibold text-ink">Extension update <span className="lunar-text">coming soon</span></h3>
-                  <p className="max-w-[360px] text-[13px] text-muted">Themes, tools and skills you can install in one click.</p>
-                </div>
-              )}
               {tab === 'mcp' && <McpLauncher />}
               {tab === 'deploy' && <DeployTab />}
               {tab === 'appearance' && <AppearanceTab />}

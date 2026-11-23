@@ -123,6 +123,8 @@ export interface ToolDefinition {
   description: string
   parameters: JsonSchema
   allowedInMode?: (mode: AgentMode) => boolean
+  /** Extension tools only: whether each call needs the person's confirmation. */
+  approval?: 'auto' | 'ask'
   execute: (args: Record<string, unknown>, exec: ToolExecutionContext) => Promise<ToolResult>
 }
 

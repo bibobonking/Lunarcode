@@ -4,8 +4,9 @@ import { mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises'
 import http from 'node:http'
 import os from 'node:os'
 import path from 'node:path'
+import { spawn } from 'node:child_process'
 import { Readable } from 'node:stream'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import {
   HttpError,
   clientIp,
@@ -73,15 +74,28 @@ import {
 import { deployToolStatus, detectProject, runDeploy } from './lib/deploy.mjs'
 import { startTerminalCommand } from './lib/terminal.mjs'
 import {
-  getPluginArchive,
-  installPlugin,
-  listPlugins,
-  requestPluginNetwork,
-  setPluginEnabled,
-  setPluginGrants,
-  setPluginSafe,
-  uninstallPlugin,
-} from './lib/plugins.mjs'
+  buildArchive,
+  createExtension,
+  extensionIcon,
+  extensionLogs,
+  exportExtension,
+  extensionsActive,
+  getStorage,
+  handleExtensionRoute,
+  hooks as extensionHooks,
+  installArchive,
+  listExtensions,
+  proxyRequest,
+  reloadExtensions,
+  serveExtensionFile,
+  setExtensionEnabled,
+  setStorage,
+  prepareExtensions,
+  startExtensions,
+  subscribeExtensionEvents,
+  transformAppFile,
+  uninstallExtension,
+} from './lib/extensions.mjs'
 import {
   installSkillFromNpm,
   installSkillUpload,
@@ -94,7 +108,7 @@ import { mcp, sanitizeServerConfig } from './lib/mcp.mjs'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const DIST = path.resolve(HERE, '..', 'dist')
-const VERSION = '3.3.0'
+const VERSION = '4.0.0'
 const SESSION_COOKIE = 'maxcode_session'
 const CSRF_HEADER = 'x-maxcode-csrf'
 const SESSION_TTL = 14 * 24 * 60 * 60 * 1000
@@ -367,7 +381,7 @@ function streamHeaders(res, contentType = 'text/event-stream') {
 }
 
 async function handleLlm(req, res) {
-  const payload = await readJson(req, 24 * 1024 * 1024)
+  const payload = await extensionHooks.llmBefore(await readJson(req, 24 * 1024 * 1024))
   const provider = String(payload.provider ?? '')
   const kind = String(payload.kind ?? '')
   const model = String(payload.model ?? '')
@@ -638,6 +652,18 @@ async function route(req, res) {
   const pathname = url.pathname
   const method = req.method ?? 'GET'
 
+  // Extensions may answer any request first (their `request` hook), the way a middleware would.
+  if (await extensionHooks.request(req, res, url)) return
+
+  // Extension files: /ext/<id>/<path>. Same-origin module imports carry the session cookie but cannot send the
+  // CSRF header, so this read-only route checks the cookie only.
+  const extensionFile = /^\/ext\/([a-z0-9][a-z0-9_-]{1,63})\/(.+)$/.exec(pathname)
+  if (extensionFile) {
+    requireSession(req)
+    await serveExtensionFile(req, res, extensionFile[1], extensionFile[2])
+    return
+  }
+
   if (pathname === '/api/health') {
     if (method !== 'GET') throw new HttpError(405, 'Method not allowed.', 'method_not_allowed')
     const distReady = await stat(path.join(DIST, 'index.html'))
@@ -728,50 +754,117 @@ async function route(req, res) {
       throw new HttpError(405, 'Method not allowed.', 'method_not_allowed')
     }
 
-    if (pathname === '/api/plugins' && method === 'GET') {
-      json(res, 200, { plugins: await listPlugins() })
+    if (pathname === '/api/extensions' && method === 'GET') {
+      json(res, 200, await listExtensions())
       return
     }
 
-    if (pathname === '/api/plugins' && method === 'POST') {
-      const body = await readJson(req, 8 * 1024 * 1024)
-      if (typeof body.archive !== 'string' || body.archive.length > 7_000_000) {
-        throw new HttpError(400, 'A local plugin archive is required.', 'missing_plugin_archive')
+    if (pathname === '/api/extensions/events' && method === 'GET') {
+      streamHeaders(res)
+      res.write('retry: 1500\n\n')
+      const send = (event) => {
+        if (!res.writableEnded) res.write(`data: ${JSON.stringify(event)}\n\n`)
       }
-      json(res, 201, { plugin: await installPlugin(Buffer.from(body.archive, 'base64')) })
+      const unsubscribe = subscribeExtensionEvents(send)
+      const keepAlive = setInterval(() => {
+        if (!res.writableEnded) res.write(': keep-alive\n\n')
+      }, 25_000)
+      keepAlive.unref?.()
+      await new Promise((resolve) => {
+        res.on('close', () => {
+          clearInterval(keepAlive)
+          unsubscribe()
+          resolve()
+        })
+      })
       return
     }
 
-    const pluginRoute = /^\/api\/plugins\/([a-z0-9][a-z0-9-]{1,63})(?:\/(package|grants|safe|enabled|network))?$/.exec(pathname)
-    if (pluginRoute) {
-      const [, pluginId, action] = pluginRoute
-      if (action === 'package' && method === 'GET') {
-        const archive = await getPluginArchive(pluginId)
-        json(res, 200, { archive: archive.toString('base64') })
-        return
+    // Install: { archive: <base64 .lce>, enable?: boolean }. Enabling is the person's explicit trust decision.
+    if (pathname === '/api/extensions' && method === 'POST') {
+      const body = await readJson(req, 380 * 1024 * 1024)
+      if (typeof body.archive !== 'string' || body.archive.length < 8) {
+        throw new HttpError(400, 'An .lce archive is required.', 'missing_extension_archive')
       }
+      json(res, 201, await installArchive(Buffer.from(body.archive, 'base64'), { enable: body.enable === true }))
+      return
+    }
+
+    // Build an .lce from { manifest, files } without installing it (the in-app editor's "Download").
+    if (pathname === '/api/extensions/build' && method === 'POST') {
+      const body = await readJson(req, 64 * 1024 * 1024)
+      const files = {}
+      for (const [name, value] of Object.entries(body.files ?? {})) {
+        files[name] = typeof value === 'string' ? value : Buffer.from(String(value?.base64 ?? ''), 'base64')
+      }
+      json(res, 200, { archive: buildArchive(body.manifest, files).toString('base64') })
+      return
+    }
+
+    if (pathname === '/api/extensions/new' && method === 'POST') {
+      const body = await readJson(req, 64 * 1024)
+      json(res, 201, await createExtension({ id: String(body.id ?? ''), name: String(body.name ?? ''), template: String(body.template ?? 'hello') }))
+      return
+    }
+
+    if (pathname === '/api/extensions/reload' && method === 'POST') {
+      json(res, 200, await reloadExtensions())
+      return
+    }
+
+    if (pathname === '/api/extensions/proxy' && method === 'POST') {
+      json(res, 200, await proxyRequest(await readJson(req, 64 * 1024 * 1024)))
+      return
+    }
+
+    if (pathname === '/api/extensions/restart' && method === 'POST') {
+      json(res, 200, { ok: true })
+      scheduleRestart()
+      return
+    }
+
+    const extensionRoute = /^\/api\/extensions\/([a-z0-9][a-z0-9_-]{1,63})(?:\/(enabled|export|icon|storage|logs|reload|rpc|x)(?:\/(.*))?)?$/.exec(pathname)
+    if (extensionRoute) {
+      const [, extensionId, action, rest = ''] = extensionRoute
       if (!action && method === 'DELETE') {
-        json(res, 200, await uninstallPlugin(pluginId))
+        json(res, 200, await uninstallExtension(extensionId, { removeData: url.searchParams.get('data') === '1' }))
         return
       }
-      if (action) {
-        const body = await readJson(req, action === 'network' ? 128 * 1024 : 64 * 1024)
-        if (action === 'grants' && method === 'PUT') {
-          json(res, 200, { plugin: await setPluginGrants(pluginId, body) })
+      if (action === 'enabled' && method === 'PUT') {
+        const body = await readJson(req, 64 * 1024)
+        json(res, 200, await setExtensionEnabled(extensionId, body.enabled))
+        return
+      }
+      if (action === 'export' && method === 'GET') {
+        json(res, 200, { archive: (await exportExtension(extensionId)).toString('base64') })
+        return
+      }
+      if (action === 'icon' && method === 'GET') {
+        await extensionIcon(req, res, extensionId)
+        return
+      }
+      if (action === 'storage') {
+        if (method === 'GET') {
+          json(res, 200, { value: await getStorage(extensionId) })
           return
         }
-        if (action === 'safe' && method === 'PUT') {
-          json(res, 200, { plugin: await setPluginSafe(pluginId, body.safe) })
+        if (method === 'PUT') {
+          const body = await readJson(req, 9 * 1024 * 1024)
+          json(res, 200, { value: await setStorage(extensionId, body.value) })
           return
         }
-        if (action === 'enabled' && method === 'PUT') {
-          json(res, 200, { plugin: await setPluginEnabled(pluginId, body.enabled) })
-          return
-        }
-        if (action === 'network' && method === 'POST') {
-          json(res, 200, await requestPluginNetwork(pluginId, body))
-          return
-        }
+      }
+      if (action === 'logs' && method === 'GET') {
+        json(res, 200, { logs: extensionLogs(extensionId) })
+        return
+      }
+      if (action === 'reload' && method === 'POST') {
+        json(res, 200, await reloadExtensions(extensionId))
+        return
+      }
+      if (action === 'rpc' || action === 'x') {
+        await handleExtensionRoute(req, res, extensionId, action, rest, { readJson, json })
+        return
       }
       throw new HttpError(405, 'Method not allowed.', 'method_not_allowed')
     }
@@ -1110,10 +1203,16 @@ async function route(req, res) {
       if (!TOOL_NAMES.has(name) || name === 'subagent' || name === 'skill' || name === 'ask_question' || name === 'todo_write') {
         throw new HttpError(400, `Unknown tool: ${name}`, 'unknown_tool')
       }
-      const result = await executeTool(name, body.args ?? {}, {
-        mode: body.mode === 'plan' ? 'plan' : 'build',
-        checkpoint: typeof body.checkpoint === 'string' ? body.checkpoint : '',
-      })
+      const mode = body.mode === 'plan' ? 'plan' : 'build'
+      const exec = { name, mode, args: body.args ?? {} }
+      const before = await extensionHooks.toolBefore(exec)
+      let result =
+        before.result ??
+        (await executeTool(name, before.args ?? {}, {
+          mode,
+          checkpoint: typeof body.checkpoint === 'string' ? body.checkpoint : '',
+        }))
+      result = await extensionHooks.toolAfter({ ...exec, args: before.args }, result)
       json(res, 200, { name, result })
       return
     }
@@ -1188,13 +1287,13 @@ async function route(req, res) {
       ].join('; '),
     )
   }
-  await serveStatic(req, res, DIST, pathname)
+  await serveStatic(req, res, DIST, pathname, { transform: transformAppFile })
 }
 
 const startedAt = Date.now()
 
 async function handler(req, res) {
-  securityHeaders(res)
+  securityHeaders(res, { extended: extensionsActive() })
   try {
     await route(req, res)
   } catch (error) {
@@ -1223,8 +1322,38 @@ async function findPort(start) {
   throw new Error(`No free port found between ${start} and ${start + 29}.`)
 }
 
+/** Restarts the daemon (needed after server patches change). The desktop app restarts its own daemon when it exits. */
+function scheduleRestart() {
+  setTimeout(() => {
+    if (process.env.ELECTRON_RUN_AS_NODE === '1') {
+      process.kill(process.pid, 'SIGTERM')
+      return
+    }
+    const helper = `
+      const [pid, port, cli] = process.argv.slice(1)
+      const { spawn } = require('node:child_process')
+      const started = Date.now()
+      const wait = () => {
+        let alive = true
+        try { process.kill(Number(pid), 0) } catch { alive = false }
+        if (alive && Date.now() - started < 20000) return setTimeout(wait, 120)
+        spawn(process.execPath, [cli, 'start', '--port=' + port], { detached: true, stdio: 'ignore' }).unref()
+      }
+      wait()
+    `
+    spawn(process.execPath, ['-e', helper, String(process.pid), String(port), path.join(HERE, 'lunarcode.mjs')], {
+      detached: true,
+      stdio: 'ignore',
+      env: process.env,
+    }).unref()
+    process.kill(process.pid, 'SIGTERM')
+  }, 200).unref()
+}
+
 export async function startServer({ port: requested = 4174, open = false } = {}) {
   await mkdir(DATA_DIR, { recursive: true, mode: 0o700 })
+  // Scan extensions before listening so the very first page is served with the right CSP and patches.
+  await prepareExtensions(VERSION).catch((error) => console.error('[lunarcode] extensions scan failed', error))
   mcp.getCwd = async () => (await workspaceRoot().catch(() => '')) || os.homedir()
   // OAuth clients and tokens live in the encrypted secrets file, never in state.json.
   mcp.authStore = {
@@ -1260,6 +1389,7 @@ export async function startServer({ port: requested = 4174, open = false } = {})
   const shutdown = async (signal) => {
     console.log(`[lunarcode] ${signal} received, shutting down.`)
     server.close()
+    await extensionHooks.shutdown().catch(() => undefined)
     await mcp.shutdown().catch(() => undefined)
     await rm(pidFile, { force: true }).catch(() => undefined)
     process.exit(0)
@@ -1277,8 +1407,9 @@ export async function startServer({ port: requested = 4174, open = false } = {})
   await repairProcessEnv()
   await mcp.setConfigs(await getMcpServers())
   void mcp.connectAll().catch(() => undefined)
+  await startExtensions(VERSION).catch((error) => console.error('[lunarcode] extensions failed to start', error))
+  await extensionHooks.ready()
   if (open) {
-    const { spawn } = await import('node:child_process')
     const opener = process.platform === 'darwin' ? 'open' : process.platform === 'win32' ? 'cmd' : 'xdg-open'
     const args = process.platform === 'win32' ? ['/c', 'start', '', url] : [url]
     const child = spawn(opener, args, { detached: true, stdio: 'ignore' })
@@ -1330,10 +1461,22 @@ export async function stopDaemon() {
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const args = process.argv.slice(2)
-  const portArg = args.find((value) => value.startsWith('--port='))
-  const parsedPort = portArg ? Number(portArg.split('=')[1]) : 4174
-  startServer({ port: parsedPort, open: args.includes('--open') }).catch((error) => {
-    console.error(error)
-    process.exit(1)
-  })
+  if (!globalThis.__lunarcodeServerPatches && process.env.LUNARCODE_PRELOADED !== '1') {
+    // Started as `node server/daemon.mjs` without the preload: run again with it so extension patches can
+    // reach the daemon's own modules. The CLI and the desktop app already pass --import.
+    const child = spawn(
+      process.execPath,
+      ['--import', pathToFileURL(path.join(HERE, 'lib', 'ext-boot.mjs')).href, fileURLToPath(import.meta.url), ...args],
+      { stdio: 'inherit', env: { ...process.env, LUNARCODE_PRELOADED: '1' } },
+    )
+    for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, () => child.kill(signal))
+    child.on('exit', (code) => process.exit(code ?? 0))
+  } else {
+    const portArg = args.find((value) => value.startsWith('--port='))
+    const parsedPort = portArg ? Number(portArg.split('=')[1]) : 4174
+    startServer({ port: parsedPort, open: args.includes('--open') }).catch((error) => {
+      console.error(error)
+      process.exit(1)
+    })
+  }
 }

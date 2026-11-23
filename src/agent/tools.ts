@@ -528,6 +528,7 @@ export async function executeTool(
 
 export function toolLabel(name: ToolName): string {
   if (name.startsWith('mcp__')) return name.split('__').slice(2).join(' ').replace(/_/g, ' ') || 'MCP tool'
+  if (name.startsWith('ext__')) return name.split('__').slice(2).join(' ').replace(/_/g, ' ') || 'Extension tool'
   const labels: Record<BuiltinToolName, string> = {
     shell: 'Shell',
     read_file: 'Read file',

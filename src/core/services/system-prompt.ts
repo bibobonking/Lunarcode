@@ -200,7 +200,7 @@ export class SystemPromptService extends Service {
       ].join('\n'),
     })
 
-    // Custom sections from plugins
+    // Custom sections from extensions
     for (const generator of this.customSections.values()) {
       const section = generator(settings, mode)
       if (section && section.content) sections.push(section)

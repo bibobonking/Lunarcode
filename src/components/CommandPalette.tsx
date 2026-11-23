@@ -13,6 +13,7 @@ import {
   Palette,
   Plug,
   Plus,
+  Puzzle,
   Rocket,
   Search,
   Sparkles,
@@ -20,6 +21,7 @@ import {
   Wrench,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import { useUiRegistry } from '../extensions/registry'
 import { useChats, exportChats } from '../store/chats'
 import { useSettings } from '../store/settings'
 import { useUi } from '../store/ui'
@@ -47,6 +49,7 @@ export function CommandPalette() {
   const notify = useUi((state) => state.notify)
   const sessions = useChats((state) => state.sessions)
   const entries = useWorkspace((state) => state.entries)
+  const extensionRegistry = useUiRegistry()
   const [query, setQuery] = useState('')
   const [activeIndex, setActiveIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -253,8 +256,21 @@ export function CommandPalette() {
         },
       }))
 
-    return [...actions, ...chatCommands, ...fileCommands]
-  }, [sessions, entries, focusComposer, notify, openSettings, setMcpOpen, setOpen, setWorkspaceOpen, setDeployOpen])
+    const extensionCommands: PaletteCommand[] = extensionRegistry.commands.map((command) => ({
+      id: `ext-${command.id}`,
+      label: command.label,
+      hint: command.hint ?? command.owner,
+      group: 'Extensions',
+      icon: Puzzle,
+      keywords: command.owner,
+      action: () => {
+        close()
+        command.run()
+      },
+    }))
+
+    return [...actions, ...extensionCommands, ...chatCommands, ...fileCommands]
+  }, [extensionRegistry,  sessions, entries, focusComposer, notify, openSettings, setMcpOpen, setOpen, setWorkspaceOpen, setDeployOpen])
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase()

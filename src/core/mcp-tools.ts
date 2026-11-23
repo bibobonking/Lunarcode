@@ -63,9 +63,18 @@ export function mcpDefinitions(): ToolDefinition[] {
   return out
 }
 
-/** Enabled/approval for any tool: built-ins come from Settings → Tools, MCP tools from their server. */
+const extensionToolSettings = new Map<string, ToolSetting>()
+
+/** Extension tools are always offered; an extension may ask for confirmation per call. */
+export function setExtensionToolSetting(name: string, setting: ToolSetting | null): void {
+  if (setting) extensionToolSettings.set(name, setting)
+  else extensionToolSettings.delete(name)
+}
+
+/** Enabled/approval for any tool: built-ins come from Settings → Tools, MCP tools from their server, extension tools from the extension. */
 export function resolveToolSetting(settings: AppSettings, name: ToolName): ToolSetting | undefined {
-  if (!isMcpToolName(name)) return settings.tools[name]
+  if (name.startsWith('ext__')) return extensionToolSettings.get(name)
+  if (!isMcpToolName(name)) return settings.tools[name as keyof AppSettings['tools']]
   const hit = useMcp.getState().lookup(name)
   if (!hit) return undefined
   const { server, tool } = hit

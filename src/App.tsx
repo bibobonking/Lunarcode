@@ -6,7 +6,8 @@ import { WorkspacePanel } from './components/WorkspacePanel'
 import { SettingsModal } from './components/SettingsModal'
 import { DeployModal } from './components/DeployModal'
 import { McpPanel } from './components/McpPanel'
-import { ExtensionsSoon } from './components/ExtensionsSoon'
+import { ExtensionsPanel } from './components/ExtensionsPanel'
+import { ExtensionPanelDock } from './components/ExtensionDock'
 import { TerminalPanel } from './components/TerminalPanel'
 import { CommandPalette } from './components/CommandPalette'
 import { Splash } from './components/Splash'
@@ -17,8 +18,7 @@ import { useUi } from './store/ui'
 import { useChats } from './store/chats'
 import { useBoot } from './lib/boot'
 import { resolveTheme, themeIsDark } from './lib/themes'
-import { listInstalledPlugins } from './lib/daemon'
-import { syncPlugins } from './plugins'
+import { startExtensions } from './extensions'
 
 const MIN_SPLASH_MS = 2600
 
@@ -59,12 +59,10 @@ export default function App() {
     void boot()
   }, [boot])
 
-  // Safe + enabled plugins are loaded once the app knows the daemon answered.
+  // Enabled extensions are loaded once the app knows the daemon answered, and follow every later change.
   useEffect(() => {
     if (phase !== 'ready') return
-    void listInstalledPlugins()
-      .then((result) => syncPlugins(result.plugins))
-      .catch(() => undefined)
+    startExtensions()
   }, [phase])
 
   useEffect(() => {
@@ -76,7 +74,7 @@ export default function App() {
       root.classList.toggle('dark', themeIsDark(theme, media.matches))
       document
         .querySelector('meta[name="theme-color"]')
-        ?.setAttribute('content', themeIsDark(theme, media.matches) ? '#222226' : '#fafafb')
+        ?.setAttribute('content', themeIsDark(theme, media.matches) ? '#121215' : '#e8eaf1')
       try {
         localStorage.setItem('opensol.theme', theme)
       } catch {
@@ -166,13 +164,14 @@ export default function App() {
               <main className="relative flex min-h-0 min-w-0 flex-1 bg-panel">
                 <ChatView view={view} onViewChange={setView} />
                 <WorkspacePanel />
+                <ExtensionPanelDock />
               </main>
               <TerminalPanel />
             </div>
           </div>
           <SettingsModal />
           <McpPanel />
-          <ExtensionsSoon />
+          <ExtensionsPanel />
           <DeployModal />
           <CommandPalette />
           <ConfirmDialog />

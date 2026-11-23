@@ -6,7 +6,7 @@ The daemon binds to `127.0.0.1` only. It serves the prebuilt app from `dist/` an
 
 ## Run it
 
-Requires Node.js 20 or newer (the daemon itself has no runtime dependencies, except `fflate` for plugin packages).
+Requires Node.js 20 or newer (the daemon has no runtime dependencies; server patches in extensions need Node 22.15+).
 
 ```bash
 npm install -g @bibobonking/lunarcode   # once
@@ -38,10 +38,7 @@ Works on **Windows, macOS and Linux**. See *Shell* below for how commands run on
 - **Smart compaction.** Near 85% of the context window (checked before a turn and between tool rounds), older turns are summarised while the newest ones stay verbatim. Earlier summaries are merged, not re-summarised; changed files are tracked from tool calls; if the model is unavailable a deterministic fallback keeps the session going. Run `/compact [focus]` to do it yourself.
 - **Subagents.** `subagent` delegates read-only work to a separate context: `explore` (codebase), `research` (web + code) and `review` (bugs in a diff). Several calls in one message run in parallel, progress streams into the tool card, and each has a round budget and context pruning.
 - **Turn queue.** A prompt sent while a turn is streaming waits its turn and runs next, instead of splitting into a second reply.
-- **Local plugins.** Two plugin modes:
-  - **API v1 (sandboxed):** Install a package, review its declared workspace capabilities and HTTPS domains, preview in a sandbox, mark it Safe. Plugin code gets a restricted API (`registerCommand`, `registerPanel`, `registerTheme`, workspace read/write, HTTPS-only network to declared hosts).
-  - **API v2 (free):** Plugin receives the full Cordis kernel context — register custom AI tools, hook into `agent/request` / `tools/execute` / `system-prompt/assemble` events, patch any app behaviour at runtime. No capability declarations needed. When removed, the Cordis fiber disposes automatically and the app returns to its original state — no source files are ever modified.
-  The same panel builds a package from a folder you pick. Packages live under `~/.lunarcode/plugins`, outside the selected workspace.
+- **Extensions (`.lce`).** No API, no sandbox, no limits: an extension is a zip with an `extension.json` and any mix of renderer code, daemon code and direct find/replace patches to the app itself, like a userscript or a BepInEx mod. Add agent tools, panels, commands, themes, HTTP routes and hooks, or rewrite any file of the UI or daemon. Install from the Extensions panel or `lunarcode ext install my.lce`; create one from a template with `lunarcode ext new`. Live reload while you edit. Enabling an extension is a full-trust decision. See [docs/EXTENSIONS.md](docs/EXTENSIONS.md) and the ready-made `examples/*.lce`.
 - **Workspace panel.** Folder tree, file editor, git status and quick file actions.
 - **Deploy.** Cloudflare Pages, Netlify and Vercel, for the open workspace or another existing folder. Tokens stay in the daemon and are passed to CLIs through environment variables.
 - **Local history.** Conversations, settings, workspaces and encrypted keys survive restarts.
@@ -79,6 +76,6 @@ TypeScript, React 19, Vite, Tailwind CSS, Zustand, direct provider adapters (Ope
 src/        React app, Cordis kernel (src/core), stores, adapters and UI
 server/     local daemon, encrypted store, workspace tools, shell, MCP and deploy
 desktop/    Electron wrapper
-shared/     plugin package contract used by both sides
+shared/     .lce archive format and patch engine used by both sides
 dist/       production build served by the daemon
 ```

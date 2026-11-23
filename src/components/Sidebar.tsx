@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import {
   ChevronRight,
   Download,
@@ -25,6 +26,8 @@ import { getProviderName } from '../data/providers'
 import { cn, downloadText, formatRelativeTime } from '../lib/utils'
 import { LogoLockup } from './Logo'
 import type { ChatSession } from '../types'
+import { ExtensionSidebarActions } from './ExtensionDock'
+import { useExtensions } from '../store/extensions'
 
 function shortTime(timestamp: number) {
   return new Date(timestamp).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
@@ -34,6 +37,7 @@ interface ChatMenu {
   id: string
   x: number
   y: number
+  anchor: { top: number; bottom: number; right: number }
 }
 
 export function Sidebar() {
@@ -58,11 +62,13 @@ export function Sidebar() {
   const notify = useUi((state) => state.notify)
   const focusComposer = useUi((state) => state.focusComposer)
   const setExtensionsOpen = useUi((state) => state.setExtensionsOpen)
+  const enabledExtensions = useExtensions((state) => state.listing?.extensions.filter((item) => item.enabled).length ?? 0)
   const streaming = useRuntime((state) => state.streaming)
   const titling = useRuntime((state) => state.titling)
 
   const [query, setQuery] = useState('')
   const [menu, setMenu] = useState<ChatMenu | null>(null)
+  const menuRef = useRef<HTMLDivElement | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [draftTitle, setDraftTitle] = useState('')
 
@@ -78,6 +84,39 @@ export function Sidebar() {
       return {}
     }
   })
+  // Smart collision: measure the real popover and flip/clamp so it is never clipped or covered.
+  useLayoutEffect(() => {
+    if (!menu || !menuRef.current) return
+    const el = menuRef.current
+    const margin = 8
+    const { width, height } = el.getBoundingClientRect()
+    const vw = window.innerWidth
+    const vh = window.innerHeight
+    const { anchor } = menu
+    const x = Math.max(margin, Math.min(anchor.right - width, vw - width - margin))
+    const below = anchor.bottom + 4
+    const above = anchor.top - height - 4
+    let y: number
+    if (below + height + margin <= vh) y = below
+    else if (above >= margin) y = above
+    else y = Math.max(margin, vh - height - margin)
+    if (Math.abs(x - menu.x) > 0.5 || Math.abs(y - menu.y) > 0.5) setMenu({ ...menu, x, y })
+  }, [menu])
+
+  useEffect(() => {
+    if (!menu) return
+    const close = () => setMenu(null)
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') close()
+    }
+    window.addEventListener('resize', close)
+    window.addEventListener('keydown', onKey)
+    return () => {
+      window.removeEventListener('resize', close)
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [menu])
+
   useEffect(() => {
     try {
       localStorage.setItem('lunarcode.sidebar.open', JSON.stringify(expanded))
@@ -285,8 +324,9 @@ export function Sidebar() {
         >
           <Package size={16} className="shrink-0 text-muted" />
           Extensions
-          <span className="adw-badge adw-badge-accent ml-auto text-link">Soon</span>
+          {enabledExtensions > 0 && <span className="adw-badge adw-badge-accent ml-auto text-link">{enabledExtensions}</span>}
         </button>
+        <ExtensionSidebarActions />
         <button
           type="button"
           onClick={() => {
@@ -460,14 +500,12 @@ export function Sidebar() {
                                         return
                                       }
                                       const rect = event.currentTarget.getBoundingClientRect()
-                                      const width = 208
-                                      const height = 232
-                                      const x = Math.max(8, Math.min(rect.right - width, window.innerWidth - width - 8))
-                                      const y =
-                                        rect.bottom + height + 8 > window.innerHeight
-                                          ? Math.max(8, rect.top - height - 4)
-                                          : rect.bottom + 4
-                                      setMenu({ id: session.id, x, y })
+                                      setMenu({
+                                        id: session.id,
+                                        x: Math.max(8, rect.right - 208),
+                                        y: rect.bottom + 4,
+                                        anchor: { top: rect.top, bottom: rect.bottom, right: rect.right },
+                                      })
                                     }}
                                     className={cn(
                                       'adw-icon-btn adw-icon-btn-sm absolute right-1 top-1/2 -translate-y-1/2',
@@ -532,7 +570,7 @@ export function Sidebar() {
         </div>
       </div>
 
-      {menu && (
+      {menu && createPortal(
         <>
           <button
             type="button"
@@ -541,7 +579,7 @@ export function Sidebar() {
             className="fixed inset-0 z-[60] cursor-default bg-transparent"
             onClick={() => setMenu(null)}
           />
-          <div role="menu" className="adw-popover fixed z-[70] w-[208px]" style={{ left: menu.x, top: menu.y }}>
+          <div ref={menuRef} role="menu" className="adw-popover fixed z-[70] w-[208px]" style={{ left: menu.x, top: menu.y }}>
             {(() => {
               const session = sessions.find((item) => item.id === menu.id)
               if (!session) return null
@@ -573,7 +611,8 @@ export function Sidebar() {
               )
             })()}
           </div>
-        </>
+        </>,
+        document.body,
       )}
     </aside>
   )

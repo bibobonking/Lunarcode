@@ -108,7 +108,10 @@ export type BuiltinToolName =
 /** MCP tools are exposed to the model as mcp__<server>__<tool>. */
 export type McpToolName = `mcp__${string}`
 
-export type ToolName = BuiltinToolName | McpToolName
+/** Tools added by extensions are exposed as ext__<extension>__<tool>. */
+export type ExtToolName = `ext__${string}`
+
+export type ToolName = BuiltinToolName | McpToolName | ExtToolName
 
 export interface ToolSetting {
   enabled: boolean

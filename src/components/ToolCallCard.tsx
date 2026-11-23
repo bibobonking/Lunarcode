@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Bot, Check, ChevronRight, FileDiff as FileDiffIcon, FilePenLine, FilePlus2, FileText, FolderTree, Globe, ListChecks, GitBranch, HelpCircle, Plug, Search, Sparkles, Terminal, TriangleAlert, Wrench, X } from 'lucide-react'
+import { Bot, Check, ChevronRight, FileDiff as FileDiffIcon, FilePenLine, FilePlus2, FileText, FolderTree, Globe, ListChecks, GitBranch, HelpCircle, Package, Plug, Search, Sparkles, Terminal, TriangleAlert, Wrench, X } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import type { FileDiff, ToolMedia, ToolMessage, ToolName } from '../types'
 import { toolLabel, toolSummary } from '../lib/tool-meta'
@@ -123,6 +123,7 @@ const TOOL_ICONS: Partial<Record<string, LucideIcon>> = {
 
 function toolIcon(name: string): LucideIcon {
   if (name.startsWith('mcp__')) return Plug
+  if (name.startsWith('ext__')) return Package
   return TOOL_ICONS[name] ?? Wrench
 }
 

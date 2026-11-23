@@ -9,6 +9,7 @@ import { themeIsDark } from '../lib/themes'
 import { ContextBar } from './ContextBar'
 import { SystemPromptButton } from './SystemPromptButton'
 import { Segmented } from './ui'
+import { ExtensionTopActions } from './ExtensionDock'
 
 export type ChatViewMode = 'chat' | 'trajectory'
 
@@ -42,7 +43,7 @@ export function TopBar({
   const newChat = useChats((state) => state.newChat)
   const focusComposer = useUi((state) => state.focusComposer)
 
-  // Go through the theme registry so every dark variant and plugin theme counts as dark.
+  // Go through the theme registry so every dark variant and extension theme counts as dark.
   const isDark = themeIsDark(
     settings.theme,
     typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches,
@@ -125,6 +126,7 @@ export function TopBar({
         >
           <FolderOpen size={16} />
         </button>
+        <ExtensionTopActions />
         <SystemPromptButton session={session} />
         <button
           type="button"

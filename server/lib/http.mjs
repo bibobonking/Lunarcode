@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import { createReadStream } from 'node:fs'
 import { stat } from 'node:fs/promises'
 import path from 'node:path'
@@ -63,25 +64,42 @@ export class HttpError extends Error {
   }
 }
 
-export function securityHeaders(res) {
+export function securityHeaders(res, { extended = false } = {}) {
   res.setHeader('X-Content-Type-Options', 'nosniff')
   res.setHeader('X-Frame-Options', 'DENY')
   res.setHeader('Referrer-Policy', 'no-referrer')
   res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+  // While an extension is enabled the page may talk to any host and run any script, which is the whole point of
+  // extensions that are not boxed in by an API. With none enabled the strict policy applies.
   res.setHeader(
     'Content-Security-Policy',
-    [
-      "default-src 'self'",
-      // `blob:` lets a user-approved Safe plugin load as a module without unsafe-eval.
-      "script-src 'self' 'unsafe-inline' blob:",
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-      "font-src 'self' https://fonts.gstatic.com",
-      "img-src 'self' data: blob:",
-      "connect-src 'self'",
-      "frame-ancestors 'none'",
-      "base-uri 'self'",
-      "form-action 'self'",
-    ].join('; '),
+    (extended
+      ? [
+          "default-src 'self'",
+          "script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' blob: https:",
+          "style-src 'self' 'unsafe-inline' https:",
+          "font-src 'self' data: https:",
+          "img-src 'self' data: blob: https: http:",
+          "media-src 'self' data: blob: https: http:",
+          "connect-src 'self' data: blob: https: http: wss: ws:",
+          "worker-src 'self' blob:",
+          "frame-src 'self' blob: https:",
+          "frame-ancestors 'none'",
+          "base-uri 'self'",
+          "form-action 'self'",
+        ]
+      : [
+          "default-src 'self'",
+          "script-src 'self' 'unsafe-inline' blob:",
+          "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+          "font-src 'self' https://fonts.gstatic.com",
+          "img-src 'self' data: blob:",
+          "connect-src 'self'",
+          "frame-ancestors 'none'",
+          "base-uri 'self'",
+          "form-action 'self'",
+        ]
+    ).join('; '),
   )
 }
 
@@ -170,7 +188,7 @@ export function setCookie(res, name, value, options = {}) {
   res.setHeader('Set-Cookie', next)
 }
 
-export async function serveStatic(req, res, root, pathname) {
+export async function serveStatic(req, res, root, pathname, { transform } = {}) {
   if (req.method !== 'GET' && req.method !== 'HEAD') {
     throw new HttpError(405, 'Method not allowed.', 'method_not_allowed')
   }
@@ -213,12 +231,34 @@ export async function serveStatic(req, res, root, pathname) {
   }
 
   const ext = path.extname(target).toLowerCase()
-  const immutable = target.includes(`${path.sep}assets${path.sep}`)
-  res.writeHead(200, {
+  const relativeTarget = path.relative(root, target).replaceAll(path.sep, '/')
+  // Every file revalidates (a cheap 304 on loopback): the app can be patched by extensions, and a patched or
+  // unpatched copy must never be pinned in the browser cache by a long max-age.
+  const baseHeaders = {
     'Content-Type': MIME[ext] ?? 'application/octet-stream',
-    'Content-Length': info.size,
-    'Cache-Control': immutable ? 'public, max-age=31536000, immutable' : 'no-cache',
-  })
+    'Cache-Control': 'no-cache',
+  }
+
+  const patched = transform ? await transform(relativeTarget, target) : null
+  if (patched) {
+    const etag = `"${createHash('sha1').update(patched).digest('hex').slice(0, 20)}"`
+    if (req.headers['if-none-match'] === etag) {
+      res.writeHead(304, { ...baseHeaders, ETag: etag })
+      res.end()
+      return
+    }
+    res.writeHead(200, { ...baseHeaders, ETag: etag, 'Content-Length': patched.length })
+    res.end(req.method === 'HEAD' ? undefined : patched)
+    return
+  }
+
+  const etag = `W/"${info.size.toString(16)}-${Math.round(info.mtimeMs).toString(16)}"`
+  if (req.headers['if-none-match'] === etag) {
+    res.writeHead(304, { ...baseHeaders, ETag: etag })
+    res.end()
+    return
+  }
+  res.writeHead(200, { ...baseHeaders, ETag: etag, 'Content-Length': info.size })
   if (req.method === 'HEAD') {
     res.end()
     return

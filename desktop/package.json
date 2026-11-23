@@ -1,6 +1,6 @@
 {
   "name": "opensol-desktop",
-  "version": "3.3.0",
+  "version": "4.0.0",
   "private": true,
   "type": "module",
   "description": "Lunarcode Desktop — the Lunarcode coding agent in an Electron window.",

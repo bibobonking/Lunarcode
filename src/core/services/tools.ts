@@ -1,6 +1,6 @@
 import { Service, type Context } from 'cordis'
 import type { AgentMode, AppSettings, ToolName } from '../../types'
-import { mcpDefinition, mcpDefinitions, resolveToolSetting } from '../mcp-tools'
+import { mcpDefinition, mcpDefinitions, resolveToolSetting, setExtensionToolSetting } from '../mcp-tools'
 import type {
   ToolDefinition,
   ToolExecutionContext,
@@ -34,11 +34,23 @@ export class ToolService extends Service {
 
   register(definition: ToolDefinition): () => void {
     this.definitions.set(definition.name, definition)
+    if (definition.name.startsWith('ext__')) setExtensionToolSetting(definition.name, { enabled: true, approval: definition.approval ?? 'auto' })
     return () => {
       if (this.definitions.get(definition.name) === definition) {
         this.definitions.delete(definition.name)
+        if (definition.name.startsWith('ext__')) setExtensionToolSetting(definition.name, null)
       }
     }
+  }
+
+  /** Names of every registered tool, so the extension runtime can undo registrations made through the raw API. */
+  names(): ToolName[] {
+    return [...this.definitions.keys()]
+  }
+
+  unregister(name: ToolName): void {
+    this.definitions.delete(name)
+    if (name.startsWith('ext__')) setExtensionToolSetting(name, null)
   }
 
   get(name: ToolName): ToolDefinition | undefined {

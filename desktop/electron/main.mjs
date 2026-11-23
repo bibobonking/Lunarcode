@@ -5,7 +5,7 @@ import { app, BrowserWindow, Menu, shell } from 'electron'
 import { spawn, spawnSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { isLocalUrl, parseListeningPort } from './util.mjs'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
@@ -62,7 +62,7 @@ async function healthy(port, version) {
 
 function spawnDaemon(appDir) {
   return new Promise((resolve, reject) => {
-    const child = spawn(process.execPath, [path.join(appDir, 'server', 'daemon.mjs'), '--port=0'], {
+    const child = spawn(process.execPath, ['--import', pathToFileURL(path.join(appDir, 'server', 'lib', 'ext-boot.mjs')).href, path.join(appDir, 'server', 'daemon.mjs'), '--port=0'], {
       cwd: appDir,
       env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
       stdio: ['ignore', 'pipe', 'pipe'],

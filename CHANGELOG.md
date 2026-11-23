@@ -1,5 +1,23 @@
 # Changelog
 
+## 4.0.0
+
+**Extensions replace plugins**
+- **New `.lce` format (Lunarcode Extension).** A zip with an `extension.json`. Install from Settings → Extensions, drag in a file, or `lunarcode ext install file.lce`. Export any installed extension back to `.lce`; output is deterministic.
+- **No API, no sandbox, no limits.** The capability/domain/API-version system is gone. An extension can ship renderer code, daemon (Node) code and **patches**: find/replace, insert before/after, append or prepend against any file of the served UI or the daemon source, with regex support and `{{id}}`/`{{ext}}` variables. Web patches are applied in memory, files on disk are never touched; stale patches are reported per patch, never fatal. Server patches load through a preload hook (Node 22.15+) and ask for a restart.
+- **Full access from code.** `lunarcode` global: Cordis context, every service and store, React, tools, commands, panels, actions, settings pages, themes, styles, a daemon bridge (`server.call/fetch/on`) and a CORS-free HTTP proxy. The daemon side gets `activate(host)` with rpc, HTTP routes, tool/LLM/request hooks, SSE events, persistent storage, tracked timers and processes, and access to daemon modules.
+- **Live reload.** Edit a folder under `~/.lunarcode/extensions` and the extension reloads itself, including multi-file server extensions. Per-extension logs, enable/disable, restart banner, patch status in the manager.
+- **Scaffolding and CLI.** "New extension" templates (hello, theme, tool, patch) and `lunarcode ext list|new|pack|unpack|install|enable|disable|remove|path`.
+- **Dynamic CSP.** Strict while no extension is enabled; relaxed only when one is, so extensions can talk to any service.
+- Extension tools are `ext__<id>__<tool>`, extension themes `ext-<id>-<theme>`. Plugins (`.plugin.json`) are removed; this is a clean break. The `fflate` dependency is gone.
+
+**Dark theme**
+- Reworked as a neutral graphite palette: a clear surface ladder (canvas, panel, raised, popover), softer text, a cool blue accent, readable syntax and status colours, and matching overrides for the Lunar chrome (headerbar, sidebar, scrims, shadows).
+
+**Other**
+- Static files are served with ETags and `no-cache`, so updates and patches apply on the next load.
+- Version 4.0.0 across the app, CLI, desktop and packages.
+
 ## 3.3.0
 
 **Lunarcode: new name, new look**

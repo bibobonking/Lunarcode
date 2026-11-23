@@ -17,17 +17,7 @@ import type {
   WorkspaceInfo,
 } from '../types'
 import type { InstalledSkill } from '../types'
-import type { PluginManifest, PluginCapability } from '../../shared/plugin-package.mjs'
-
-export interface InstalledPlugin {
-  id: string
-  manifest: PluginManifest
-  manifestHash: string
-  installedAt: string
-  safe: boolean
-  enabled: boolean
-  grants: { capabilities: PluginCapability[]; domains: string[] }
-}
+import type { ExtensionListing, ExtensionInfo } from '../extensions/types'
 
 export class DaemonError extends Error {
   status: number
@@ -137,8 +127,8 @@ export function getHealth(): Promise<{ ok: boolean; pid: number; port: number; d
   return api('/api/health')
 }
 
-export function listInstalledPlugins(): Promise<{ plugins: InstalledPlugin[] }> {
-  return api('/api/plugins')
+export function listExtensions(): Promise<ExtensionListing> {
+  return api('/api/extensions')
 }
 
 function base64ToBytes(value: string): Uint8Array {
@@ -146,11 +136,6 @@ function base64ToBytes(value: string): Uint8Array {
   const bytes = new Uint8Array(binary.length)
   for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index)
   return bytes
-}
-
-export async function getInstalledPluginArchive(id: string): Promise<Uint8Array> {
-  const result = await api<{ archive: string }>(`/api/plugins/${encodeURIComponent(id)}/package`)
-  return base64ToBytes(result.archive)
 }
 
 function bytesToBase64(bytes: Uint8Array): string {
@@ -161,51 +146,66 @@ function bytesToBase64(bytes: Uint8Array): string {
   return btoa(binary)
 }
 
-export function installPluginArchive(archive: Uint8Array): Promise<{ plugin: InstalledPlugin }> {
-  return api('/api/plugins', {
+export function installExtensionArchive(
+  archive: Uint8Array,
+  enable: boolean,
+): Promise<{ extension: ExtensionInfo; updated: boolean }> {
+  return api('/api/extensions', { method: 'POST', body: JSON.stringify({ archive: bytesToBase64(archive), enable }) })
+}
+
+export function createExtension(input: { id: string; name: string; template: string }): Promise<{ extension: ExtensionInfo }> {
+  return api('/api/extensions/new', { method: 'POST', body: JSON.stringify(input) })
+}
+
+export function setExtensionEnabled(id: string, enabled: boolean): Promise<{ extension: ExtensionInfo }> {
+  return api(`/api/extensions/${encodeURIComponent(id)}/enabled`, { method: 'PUT', body: JSON.stringify({ enabled }) })
+}
+
+export function removeExtension(id: string, removeData: boolean): Promise<{ id: string; removed: boolean }> {
+  return api(`/api/extensions/${encodeURIComponent(id)}${removeData ? '?data=1' : ''}`, { method: 'DELETE' })
+}
+
+export function reloadExtensionsOnDisk(id?: string): Promise<ExtensionListing> {
+  return api(id ? `/api/extensions/${encodeURIComponent(id)}/reload` : '/api/extensions/reload', { method: 'POST', body: '{}' })
+}
+
+export async function exportExtension(id: string): Promise<Uint8Array> {
+  const result = await api<{ archive: string }>(`/api/extensions/${encodeURIComponent(id)}/export`)
+  return base64ToBytes(result.archive)
+}
+
+export function extensionLogs(id: string): Promise<{ logs: Array<{ at: number; level: string; text: string }> }> {
+  return api(`/api/extensions/${encodeURIComponent(id)}/logs`)
+}
+
+export function getExtensionStorage(id: string): Promise<{ value: Record<string, unknown> }> {
+  return api(`/api/extensions/${encodeURIComponent(id)}/storage`)
+}
+
+export function setExtensionStorage(id: string, value: Record<string, unknown>): Promise<{ value: Record<string, unknown> }> {
+  return api(`/api/extensions/${encodeURIComponent(id)}/storage`, { method: 'PUT', body: JSON.stringify({ value }) })
+}
+
+export function callExtensionRpc<T = unknown>(id: string, name: string, args?: unknown): Promise<T> {
+  return api<{ result: T }>(`/api/extensions/${encodeURIComponent(id)}/rpc/${encodeURIComponent(name)}`, {
     method: 'POST',
-    body: JSON.stringify({ archive: bytesToBase64(archive) }),
-  })
+    body: JSON.stringify({ args }),
+  }).then((response) => response.result)
 }
 
-export function savePluginGrants(
-  id: string,
-  grants: { capabilities: PluginCapability[]; domains: string[] },
-): Promise<{ plugin: InstalledPlugin }> {
-  return api(`/api/plugins/${encodeURIComponent(id)}/grants`, {
-    method: 'PUT',
-    body: JSON.stringify(grants),
-  })
+export function restartDaemon(): Promise<{ ok: boolean }> {
+  return api('/api/extensions/restart', { method: 'POST', body: '{}' })
 }
 
-export function setPluginTrust(id: string, safe: boolean): Promise<{ plugin: InstalledPlugin }> {
-  return api(`/api/plugins/${encodeURIComponent(id)}/safe`, {
-    method: 'PUT',
-    body: JSON.stringify({ safe }),
-  })
-}
-
-export function setPluginActivation(id: string, enabled: boolean): Promise<{ plugin: InstalledPlugin }> {
-  return api(`/api/plugins/${encodeURIComponent(id)}/enabled`, {
-    method: 'PUT',
-    body: JSON.stringify({ enabled }),
-  })
-}
-
-export function removeInstalledPlugin(id: string): Promise<{ id: string; removed: boolean }> {
-  return api(`/api/plugins/${encodeURIComponent(id)}`, { method: 'DELETE' })
-}
-
-export function pluginNetworkRequest(id: string, request: {
+export function extensionProxy(request: {
   url: string
-  method?: 'GET' | 'POST'
+  method?: string
   headers?: Record<string, string>
   body?: string
-}): Promise<{ status: number; contentType: string; body: string }> {
-  return api(`/api/plugins/${encodeURIComponent(id)}/network`, {
-    method: 'POST',
-    body: JSON.stringify(request),
-  })
+  bodyBase64?: string
+  timeoutMs?: number
+}): Promise<{ status: number; statusText: string; url: string; headers: Record<string, string>; contentType: string; bodyBase64: string }> {
+  return api('/api/extensions/proxy', { method: 'POST', body: JSON.stringify(request) })
 }
 
 export function patchSettings(patch: Partial<AppSettings>): Promise<{ settings: AppSettings }> {

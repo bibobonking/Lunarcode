@@ -7,6 +7,7 @@ import { activeModelId, providerHasCredentials, useSettings } from '../store/set
 import { useModelCatalog } from '../store/models'
 import { useUi } from '../store/ui'
 import { defaultEffort, effortOptions, normalizeEffort, reasoningSummary } from '../lib/reasoning'
+import { scopeGatewayModels } from '../lib/gateway'
 import { cn } from '../lib/utils'
 import { RadioMark, Spinner } from './ui'
 
@@ -86,6 +87,10 @@ export function ModelDeck({ open, onClose }: { open: boolean; onClose: () => voi
   const connectedNow = connected(provider)
   const keyless = Boolean(PROVIDER_MAP[provider]?.keyless) || provider === 'custom'
   const efforts = effortOptions(active)
+  const visibleModels = useMemo(
+    () => (provider === 'custom' ? scopeGatewayModels(models, modelId) : models),
+    [provider, models, modelId],
+  )
 
   useEffect(() => {
     if (!open) return
@@ -111,11 +116,11 @@ export function ModelDeck({ open, onClose }: { open: boolean; onClose: () => voi
 
   const filtered = useMemo(() => {
     const clean = query.trim().toLowerCase()
-    if (!clean) return models
-    return models.filter(
+    if (!clean) return visibleModels
+    return visibleModels.filter(
       (model) => model.name.toLowerCase().includes(clean) || model.id.toLowerCase().includes(clean),
     )
-  }, [models, query])
+  }, [visibleModels, query])
 
   useLayoutEffect(() => {
     setCursor(0)
@@ -291,7 +296,7 @@ export function ModelDeck({ open, onClose }: { open: boolean; onClose: () => voi
                       value={query}
                       onChange={(event) => setQuery(event.target.value)}
                       onKeyDown={onSearchKey}
-                      placeholder={models.length > 0 ? `Search ${models.length} models…` : 'Search models…'}
+                      placeholder={visibleModels.length > 0 ? `Search ${visibleModels.length} models…` : 'Search models…'}
                       aria-label="Search models"
                     />
                     <kbd className="adw-kbd hidden sm:inline-flex">↑↓ ↵</kbd>
@@ -309,7 +314,7 @@ export function ModelDeck({ open, onClose }: { open: boolean; onClose: () => voi
                 </div>
 
                 <div ref={listRef} className="thin-scroll min-h-0 flex-1 overflow-y-auto px-4 pb-4">
-                  {loading && models.length === 0 && (
+                  {loading && visibleModels.length === 0 && (
                     <p className="flex items-center gap-2 px-3 py-4 text-[13px] text-muted">
                       <Spinner size={16} /> Loading live models…
                     </p>
@@ -353,10 +358,10 @@ export function ModelDeck({ open, onClose }: { open: boolean; onClose: () => voi
                       })}
                     </div>
                   )}
-                  {!loading && filtered.length === 0 && models.length > 0 && (
+                  {!loading && filtered.length === 0 && visibleModels.length > 0 && (
                     <p className="px-3 py-6 text-center text-[13px] text-muted">No model matches “{query}”.</p>
                   )}
-                  {!loading && models.length === 0 && !error && (
+                  {!loading && visibleModels.length === 0 && !error && (
                     <p className="px-3 py-6 text-center text-[13px] text-muted">This provider returned no usable chat models.</p>
                   )}
 

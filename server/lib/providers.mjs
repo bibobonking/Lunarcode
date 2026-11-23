@@ -225,14 +225,48 @@ function stripThinkingSuffix(bare) {
   return bare.replace(/[-_](thinking|reasoning|reasoner|think|high|medium|low|xhigh|max|preview|latest|exp)$/g, '')
 }
 
-function inferFromCatalog(catalog, id) {
+/**
+ * A gateway lists models from many upstream providers, so its ids ("oc/…", "openai/…")
+ * never match a catalog key directly. Index every catalog model by its bare id once, then
+ * use it to recover metadata for gateway ids without rescanning the whole catalog per model.
+ */
+const catalogIndexCache = new WeakMap()
+
+function catalogBareIndex(catalog) {
+  if (!catalog || typeof catalog !== 'object') return new Map()
+  const cached = catalogIndexCache.get(catalog)
+  if (cached) return cached
+  const index = new Map()
+  for (const [, providerEntry] of Object.entries(catalog.providers ?? {})) {
+    for (const [modelId, entry] of Object.entries(record(providerEntry?.models))) {
+      const bare = bareModelId(modelId)
+      if (!bare) continue
+      const hits = index.get(bare)
+      if (hits) hits.push(entry)
+      else index.set(bare, [entry])
+    }
+  }
+  catalogIndexCache.set(catalog, index)
+  return index
+}
+
+/** A catalog entry that is the only model with this bare id across every provider. */
+function uniqueCatalogEntry(index, id) {
+  const bare = bareModelId(id)
+  if (!bare) return null
+  for (const candidate of new Set([bare, stripThinkingSuffix(bare)])) {
+    const hits = index.get(candidate)
+    if (hits?.length === 1) return hits[0]
+  }
+  return null
+}
+
+function inferFromCatalog(catalog, id, bareIndex) {
   const bare = bareModelId(id)
   const candidates = new Set([bare, stripThinkingSuffix(bare)])
-  for (const [, providerEntry] of Object.entries(catalog?.providers ?? {})) {
-    const models = record(providerEntry?.models)
-    for (const candidate of candidates) {
-      const hit = models[candidate]
-      if (!hit) continue
+  const index = bareIndex ?? catalogBareIndex(catalog)
+  for (const candidate of candidates) {
+    for (const hit of index.get(candidate) ?? []) {
       const options = normalizeReasoning(hit)
       if (options.length > 0) return options
     }
@@ -314,18 +348,35 @@ function pricingOf(livePricing, catalogCost) {
   return undefined
 }
 
-function modelInfo({ providerId, id, name, context, maxOutput, vision, catalogEntry, fallbackKind, livePricing, catalog }) {
-  const catalogDef = catalogEntry ?? {}
-  const modalities = record(catalogDef.modalities)
-  const limit = record(catalogDef.limit)
-  let reasoningOptions = normalizeReasoning(catalogDef)
+function modelInfo({
+  providerId,
+  id,
+  name,
+  context,
+  maxOutput,
+  vision,
+  toolCall,
+  reasoning,
+  catalogEntry,
+  metadataEntry,
+  fallbackKind,
+  livePricing,
+  catalog,
+}) {
+  const exact = catalogEntry ?? {}
+  // Gateways list ids the catalog does not know ("oc/…"), so a unique bare-id match
+  // can still supply limits and capabilities. Pricing stays tied to the exact entry.
+  const meta = metadataEntry ?? exact
+  const modalities = record(meta.modalities)
+  const limit = record(meta.limit)
+  let reasoningOptions = Array.isArray(reasoning) ? reasoning : normalizeReasoning(meta)
   // Custom endpoints, Ollama and any model the catalog does not know: recover the family from the id.
-  if (reasoningOptions.length === 0 && (!catalogEntry || providerId === 'custom')) {
+  if (reasoningOptions.length === 0 && !Array.isArray(reasoning) && (!catalogEntry || providerId === 'custom')) {
     reasoningOptions = inferReasoning(catalog, id)
   }
   const apiKind =
     providerId === 'opencode'
-      ? opencodeKindFromId(id, catalogDef)
+      ? opencodeKindFromId(id, exact)
       : providerDef(providerId).format === 'anthropic'
         ? 'anthropic'
         : providerDef(providerId).format === 'gemini'
@@ -338,22 +389,24 @@ function modelInfo({ providerId, id, name, context, maxOutput, vision, catalogEn
       /(^|[-_/])test($|[-_/])/i.test(id))
   return {
     id,
-    name: name || text(catalogDef.name) || id.replace(/^models\//, ''),
+    name: name || text(exact.name) || text(meta.name) || id.replace(/^models\//, ''),
     context: context ?? number(limit.context),
-    maxOutput: number(limit.output),
-    vision: Boolean(
-      vision ||
-        strings(modalities.input).includes('image') ||
-        strings(modalities.input).includes('pdf'),
-    ),
+    maxOutput: maxOutput ?? number(limit.output),
+    vision:
+      typeof vision === 'boolean'
+        ? vision
+        : Boolean(
+            strings(modalities.input).includes('image') ||
+              strings(modalities.input).includes('pdf'),
+          ),
     reasoningOptions,
-    toolCall: catalogDef.tool_call !== false,
-    temperature: catalogDef.temperature !== false,
-    family: text(catalogDef.family) || undefined,
+    toolCall: typeof toolCall === 'boolean' ? toolCall : meta.tool_call !== false,
+    temperature: meta.temperature !== false,
+    family: text(exact.family) || text(meta.family) || undefined,
     apiKind,
     free,
-    canonicalId: text(catalogDef.canonical_model_id) || undefined,
-    pricing: pricingOf(livePricing, catalogDef.cost),
+    canonicalId: text(exact.canonical_model_id) || text(meta.canonical_model_id) || undefined,
+    pricing: pricingOf(livePricing, exact.cost),
     note:
       providerId === 'opencode' && free
         ? 'OpenCode free-tier models only work inside OpenCode. Add credits or use a paid model.'
@@ -370,13 +423,65 @@ function dedupe(models) {
   })
 }
 
+/**
+ * Routers such as 9router publish a `capabilities` block and OpenRouter a
+ * `top_provider` block. Neither uses the `context_length` field the old parser
+ * expected, so every gateway model used to fall back to 128k.
+ */
+function liveModelMetadata(item) {
+  const capabilities = record(item.capabilities)
+  const topProvider = record(item.top_provider)
+  const architecture = record(item.architecture)
+  const inputs = strings(architecture.input_modalities)
+  const context =
+    number(item.context_length) ??
+    number(item.context_window) ??
+    number(capabilities.contextWindow) ??
+    number(topProvider.context_length)
+  const maxOutput =
+    number(item.max_completion_tokens) ??
+    number(capabilities.maxOutput) ??
+    number(topProvider.max_completion_tokens)
+  const vision =
+    typeof capabilities.vision === 'boolean'
+      ? capabilities.vision
+      : inputs.includes('image')
+        ? true
+        : undefined
+  const toolCall = typeof capabilities.tools === 'boolean' ? capabilities.tools : undefined
+  return { context, maxOutput, vision, toolCall, reasoning: reasoningFromCapabilities(item, capabilities) }
+}
+
+function reasoningFromCapabilities(item, capabilities) {
+  if (typeof capabilities.reasoning !== 'boolean') return undefined
+  if (!capabilities.reasoning) return []
+  const levels = strings(item.thinking_levels)
+    .map((value) => value.toLowerCase())
+    .filter((value) => EFFORTS.has(value))
+  if (levels.length > 0) return [{ type: 'effort', values: levels }]
+  const range = record(capabilities.thinkingRange)
+  const max = number(range.max)
+  if (max !== undefined && max > 0) {
+    const min = number(range.min)
+    return [{ type: 'budget_tokens', ...(min !== undefined ? { min } : {}), max }]
+  }
+  if (capabilities.thinkingEffortSupported === true) {
+    return [{ type: 'effort', values: ['low', 'medium', 'high'] }]
+  }
+  if (capabilities.thinkingCanDisable === true) return [{ type: 'toggle' }]
+  return []
+}
+
 function fromOpenAI(payload, providerId, catalog) {
   const entries = Array.isArray(record(payload).data) ? record(payload).data : []
   const models = []
+  const bareIndex = catalogBareIndex(catalog)
   for (const raw of entries) {
     const item = record(raw)
     const id = text(item.id)
     if (!id) continue
+    const kind = text(item.kind)
+    if (kind && kind !== 'llm' && kind !== 'chat') continue
     if (providerId === 'openai' && !OPENAI_CHAT.test(id)) continue
     if (NON_CHAT.test(id)) continue
     const architecture = record(item.architecture)
@@ -391,10 +496,10 @@ function fromOpenAI(payload, providerId, catalog) {
       modelInfo({
         providerId,
         id,
-        name: text(item.name) || text(entry?.name),
-        context: number(item.context_length) ?? number(item.context_window),
-        vision: strings(architecture.input_modalities).includes('image'),
+        name: text(item.name),
+        ...liveModelMetadata(item),
         catalogEntry: entry,
+        metadataEntry: entry ?? uniqueCatalogEntry(bareIndex, id),
         livePricing: item.pricing,
         catalog,
       }),

@@ -34,9 +34,9 @@ const REFRESH_DEBOUNCE_MS = 30
 const CLIENT_VERSION = (() => {
   try {
     const raw = readFileSync(new URL('../../package.json', import.meta.url), 'utf8')
-    return String(JSON.parse(raw).version || '3.3.0')
+    return String(JSON.parse(raw).version || '4.0.0')
   } catch {
-    return '3.3.0'
+    return '4.0.0'
   }
 })()
 const REQUEST_TIMEOUT_MS = 120_000

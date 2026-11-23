@@ -69,6 +69,9 @@ interface UiState {
   setWorkspaceOpen: (open: boolean) => void
   mcpOpen: boolean
   extensionsOpen: boolean
+  /** Id of the extension side panel that is open (see ui.registerPanel). */
+  extensionPanel: string | null
+  setExtensionPanel: (id: string | null) => void
   terminalOpen: boolean
   setTerminalOpen: (open: boolean) => void
   setExtensionsOpen: (open: boolean) => void
@@ -80,7 +83,6 @@ interface UiState {
     | 'tools'
     | 'search'
     | 'skills'
-    | 'plugins'
     | 'mcp'
     | 'deploy'
     | 'appearance'
@@ -131,15 +133,16 @@ export const useUi = create<UiState>()((set, get) => ({
   setWorkspaceOpen: (open) => set({ workspaceOpen: open }),
   mcpOpen: false,
   extensionsOpen: false,
+  extensionPanel: null,
+  setExtensionPanel: (id) => set({ extensionPanel: id }),
   terminalOpen: false,
   setTerminalOpen: (open) => set({ terminalOpen: open }),
   setExtensionsOpen: (open) => set({ extensionsOpen: open, ...(open ? { mobileSidebarOpen: false, settingsOpen: false } : {}) }),
   setMcpOpen: (open) => set({ mcpOpen: open, ...(open ? { mobileSidebarOpen: false, settingsOpen: false } : {}) }),
   settingsOpen: false,
   settingsTab: 'general',
-  // Plugins are paused for maintenance: any request for that tab lands on General instead.
   openSettings: (tab = 'general') =>
-    set({ settingsOpen: true, settingsTab: tab === 'plugins' ? 'general' : tab, mobileSidebarOpen: false }),
+    set({ settingsOpen: true, settingsTab: tab, mobileSidebarOpen: false }),
   closeSettings: () => set({ settingsOpen: false }),
   deployOpen: false,
   setDeployOpen: (open) => set({ deployOpen: open }),

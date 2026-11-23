@@ -18,13 +18,11 @@ Node 24 runs the `.test.mjs` files directly: they import TypeScript sources with
 
 ## Two processes, one app
 
-The React app in `src/` never talks to a provider or the filesystem directly. It calls a local Node daemon (`server/daemon.mjs`, `127.0.0.1:4174`) over `/api`, and the daemon owns every privileged operation — provider credentials, workspace files, shell, git, search, deploy, plugins.
+The React app in `src/` never talks to a provider or the filesystem directly. It calls a local Node daemon (`server/daemon.mjs`, `127.0.0.1:4174`) over `/api`, and the daemon owns every privileged operation — provider credentials, workspace files, shell, git, search, deploy, extensions.
 
 - **Provider calls** go browser → `POST /api/llm` → daemon → provider. Keys are AES-256-GCM encrypted in `~/.lunarcode/secrets.enc`; the browser only ever sees a masked hint, so adding a provider means touching both `src/` and `server/lib/providers.mjs`.
 - **Tool calls** are dispatched by the client agent loop via `src/lib/daemon.ts` → `POST /api/tools/execute` → `server/lib/tools.mjs`.
 - **All `/api` routes** require a session cookie plus `x-maxcode-csrf`; Host, Origin and `Sec-Fetch-Site` are checked in `server/daemon.mjs`. New routes go inside the `pathname.startsWith('/api/')` block, after the session guard.
-
-The daemon is documented as zero-runtime-dependency, but `shared/plugin-package.mjs` imports `fflate` from `node_modules` at runtime (`server/lib/plugins.mjs` imports it). That dependency is *not* bundled — a `node_modules`-free copy of the app cannot load plugins.
 
 ## MCP
 
@@ -52,19 +50,18 @@ The daemon is documented as zero-runtime-dependency, but `shared/plugin-package.
 
 Messages are stored flat (`UserMessage | AssistantMessage | ToolMessage`) with a `round` field. Presentation is derived, never stored: `src/lib/conversation.ts` (`groupConversationTurns`) folds consecutive tool messages into one `tools` segment and drops assistant rounds that only called tools. `TurnBlock` in `src/components/MessageItem.tsx` renders one user turn as one answer, and `UsedGroup` is the collapsible "Used N tools" cluster.
 
-## Plugins
+## Extensions
 
-Lifecycle: install (disabled + untrusted) → review capabilities/domains (v1) → optional sandboxed preview → mark **Safe** → enable. A changed manifest hash invalidates grants and trust.
+Extensions (`.lce`, since 4.0.0) replace plugins. There is **no API contract and no capability model**: an extension is a folder/zip with `extension.json` that may ship renderer code, daemon code and direct find/replace **patches** to the served app (web) or the daemon source (server). Enabling one is an explicit full-trust choice and the UI must keep saying so. Full reference: `docs/EXTENSIONS.md`.
 
-- `shared/plugin-package.mjs` is the package contract, shared verbatim by the browser and the daemon: plugin packages are zero-dependency UTF-8 JSON archives (`.plugin.json`) with `manifest`, one JS entry, one CSS stylesheet, bounded assets. Supports `apiVersion: 1` (legacy sandbox) and `apiVersion: 2` (free Cordis kernel plugin).
-- `src/plugins/runtime.ts` runs Safe plugins as **blob ES modules** (`const maxcode = ...` injected).
-  - **API v1**: Handed `createPluginApi` with capability guards, restricted host calls, and manual contribution tracking.
-  - **API v2**: Handed a scoped Cordis child `Context` (`kernel.plugin(fn)`). The plugin has 100% unrestricted access to internal services (`ctx.tools`, `ctx.ui`, `ctx.sessions`, `ctx.llm`, `ctx.on(...)`, events, stores). When deactivated/uninstalled, `fiber.dispose()` cleans up all hooks and registrations automatically without mutating files on disk.
-- `server/lib/plugins.mjs` stores packages under `~/.lunarcode/plugins` and is the **only** path to the network for v1 plugins. `network.request` is HTTPS-only, port 443, exact host from `manifest.domains` ∩ `grants.domains`, private IPs blocked, redirects refused, content-type allowlist, 64 KB request / 1 MB response / 12 s timeout.
-- `src/plugins/api.ts` (`createPluginApi`) re-checks grants at every call site for v1 plugins.
-- `src/plugins/preview.ts` builds the sandboxed preview (`iframe sandbox="allow-scripts"`, deliberately **no** `allow-same-origin`) with a stub API and validates every postMessage through `bridge.mjs`.
-
-Safe is an explicit trust choice, not a sandbox — after Safe the plugin runs same-realm with full app privileges. The UI copy must keep saying so.
+- `shared/lce.mjs` — zero-dependency ZIP reader/writer (node:zlib), manifest validation, `satisfies` (engine ranges), `packExtension`/`readExtensionArchive`. Unit-tested (`shared/lce.test.mjs`).
+- `shared/patches.mjs` — patch engine (`applyPatches`, `matchesTarget`, `fingerprintPatches`); never throws, reports `pattern not found`. Unit-tested.
+- `server/lib/extensions.mjs` — storage (`~/.lunarcode/extensions/<id>`, `state.json`, `~/.lunarcode/extension-data/<id>`), install/export/uninstall, watcher live reload, `/ext/<id>/*` file serving, `/api/extensions*` routes, daemon host (`activate(host)`: rpc, route, hooks, emit, storage, tracked timers/spawn).
+- `server/lib/ext-boot.mjs` — preload (`--import`) that applies server patches through `module.registerHooks` (Node ≥ 22.15). Server patches need a daemon restart; the desktop app and CLI both launch the daemon with this preload, and `daemon.mjs` re-execs itself with it if started bare.
+- Web patches are applied in memory per request in `serveStatic` (`transformAppFile`); files on disk (and `dist/`) are never modified. CSP is dynamic: strict with no enabled extension, permissive when any is enabled.
+- `src/extensions/*` — renderer runtime. Each extension gets a Cordis child context (`kernel.plugin`), so disposing it removes every tool/command/panel/listener it registered. `globalThis.lunarcode` (and `window.Lunarcode`) exposes services, stores, React and helpers; nothing is gated.
+- Extension tools are named `ext__<id>__<name>` and are always enabled (`setExtensionToolSetting`). Extension themes are `ext-<id>-<theme>` (the daemon's settings sanitizer only allows `[a-z0-9-]`), so `themeIsDark` must go through the registry.
+- The daemon is zero-dependency again (`fflate` is gone).
 
 ## Theming
 
@@ -72,7 +69,7 @@ Themes are `[data-theme='<id>']` attribute selectors on `<html>` in `src/index.c
 
 Three places must stay in sync when adding a theme: the CSS token block, `THEMES`/`NAMED`/`DARK` in `src/lib/themes.ts`, and the boot-time script inlined in `index.html` (which prevents a flash of the wrong theme before hydration). `src/lib/themes.test.mjs` enforces the token set.
 
-Plugin themes are registered at runtime as `plugin-<pluginId>:<themeId>` and styled the same way, so `themeIsDark` must go through the registry rather than a hardcoded list.
+Extension themes are registered at runtime as `ext-<id>-<theme>` and styled the same way, so `themeIsDark` must go through the registry rather than a hardcoded list.
 
 ## Testing traps
 
@@ -88,5 +85,5 @@ Plugin themes are registered at runtime as `plugin-<pluginId>:<themeId>` and sty
 
 - Vite's root is the repo root. Edit `src/` and `index.html` only.
 - `dist/` is committed and is what the daemon serves — a source change is invisible in `npm start` until `npm run build`.
-- The data directory is `~/.lunarcode` (override with `LUNARCODE_DATA`; `OPENSOL_DATA`/`MAXCODE_DATA` are still honoured, and an existing `~/.opensol` or `~/.maxcode` is renamed to it on first start); provider keys, chats, settings and plugins all live there, so tests and manual runs share state with the real app.
-- The CSRF header is still named `x-maxcode-csrf` for compatibility; the plugin global is still `maxcode`.
+- The data directory is `~/.lunarcode` (override with `LUNARCODE_DATA`; `OPENSOL_DATA`/`MAXCODE_DATA` are still honoured, and an existing `~/.opensol` or `~/.maxcode` is renamed to it on first start); provider keys, chats, settings and extensions all live there, so tests and manual runs share state with the real app.
+- The CSRF header is still named `x-maxcode-csrf` for compatibility; the extension global is `lunarcode`.
