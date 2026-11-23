@@ -4,8 +4,11 @@ import { useUiRegistry } from '../extensions/registry'
 import { useUi } from '../store/ui'
 import { cn } from '../lib/utils'
 
-/** Emoji / short text, or an `<svg>` string from an extension; anything else falls back to a puzzle piece. */
+/** Emoji / short text, an `<svg>` string, or an image (an extension file such as "assets/icon.png", a data: or http(s) URL); anything else falls back to a puzzle piece. */
 export function ExtIcon({ icon, size = 16 }: { icon?: string; size?: number }) {
+  if (icon && /^(\/ext\/|data:image\/|https?:\/\/)/i.test(icon.trim())) {
+    return <img src={icon.trim()} alt="" aria-hidden="true" draggable={false} style={{ width: size, height: size }} className="shrink-0 object-contain" />
+  }
   if (icon?.trim().startsWith('<svg')) {
     return <span aria-hidden="true" style={{ width: size, height: size }} className="inline-flex [&>svg]:h-full [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: icon }} />
   }

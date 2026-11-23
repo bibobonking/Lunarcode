@@ -18,6 +18,7 @@ import { mkdir, readdir, readFile, rename, rm, stat, writeFile } from 'node:fs/p
 import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { applyPatches, fingerprintPatches, matchesTarget } from '../../shared/patches.mjs'
+import { versionRelativeImports } from '../../shared/esm-version.mjs'
 import {
   LceError,
   MANIFEST_FILE,
@@ -1038,7 +1039,15 @@ export async function resolveExtensionFile(id, relative, { requireEnabled = true
 
 export async function serveExtensionFile(req, res, id, relative) {
   if (req.method !== 'GET' && req.method !== 'HEAD') throw new HttpError(405, 'Method not allowed.', 'method_not_allowed')
-  const { absolute, size } = await resolveExtensionFile(id, relative)
+  const { absolute, size, record } = await resolveExtensionFile(id, relative)
+  if (/\.m?js$/.test(absolute)) {
+    // Multi-file extensions: relative imports carry the extension's hash so a live reload re-evaluates every
+    // module instead of reusing the page's cached copies (see shared/esm-version.mjs).
+    const body = Buffer.from(versionRelativeImports(await readFile(absolute, 'utf8'), record.hash), 'utf8')
+    res.writeHead(200, { 'Content-Type': mimeFor(absolute), 'Content-Length': body.length, 'Cache-Control': 'no-cache' })
+    res.end(req.method === 'HEAD' ? undefined : body)
+    return
+  }
   res.writeHead(200, {
     'Content-Type': mimeFor(absolute),
     'Content-Length': size,

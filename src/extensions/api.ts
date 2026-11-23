@@ -123,6 +123,15 @@ export function createExtensionApi(info: ExtensionInfo, appVersion: string, ctx:
   const base = `/ext/${id}/`
   const owner = id
 
+  // Icons: an image file shipped in the extension ("assets/icon.png", "icons/a.svg") becomes its /ext URL;
+  // emoji, short text, `<svg …>` markup, data: and absolute URLs pass through unchanged.
+  const resolveIcon = (icon?: string): string | undefined => {
+    if (!icon) return icon
+    const value = icon.trim()
+    if (value.startsWith('<') || /^(data:|https?:|\/)/i.test(value) || !/\.(png|svg|jpe?g|webp|gif|ico|avif)$/i.test(value)) return icon
+    return `${base}${value.replace(/^\.?\/+/, '')}?v=${encodeURIComponent(info.hash)}`
+  }
+
   const own = <T extends () => void>(dispose: T): T => {
     track(dispose)
     return dispose
@@ -175,10 +184,10 @@ export function createExtensionApi(info: ExtensionInfo, appVersion: string, ctx:
       return own(ctx.ui.registerCommand(`${id}:${commandId}`, label, run, { owner, hint: options?.hint }))
     },
     registerPanel(panelId, label, render, options) {
-      return own(ctx.ui.registerPanel(`${id}:${panelId}`, label, render, { owner, icon: options?.icon }))
+      return own(ctx.ui.registerPanel(`${id}:${panelId}`, label, render, { owner, icon: resolveIcon(options?.icon) }))
     },
     registerAction(actionId, action) {
-      return own(ctx.ui.registerAction(`${id}:${actionId}`, { ...action, owner }))
+      return own(ctx.ui.registerAction(`${id}:${actionId}`, { ...action, icon: resolveIcon(action.icon), owner }))
     },
     registerSettings(label, render) {
       return own(ctx.ui.registerSettings(id, label, render, { owner }))

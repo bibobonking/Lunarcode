@@ -37,6 +37,7 @@ import { Modal, ModalHeader, Spinner, Switch } from './ui'
 const TEMPLATES = [
   { value: 'hello', label: 'Window', hint: 'Command, panel and styles' },
   { value: 'tool', label: 'Window + daemon', hint: 'Agent tool backed by Node code' },
+  { value: 'project', label: 'Multi-file project', hint: 'src/, server/ and styles/ folders for larger extensions' },
   { value: 'theme', label: 'Theme', hint: 'A palette, no code' },
   { value: 'patch', label: 'Patch', hint: 'Edit the app with find/replace' },
 ]

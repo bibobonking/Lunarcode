@@ -7,6 +7,7 @@ export const TEMPLATES = {
   theme: 'Theme only: a colour palette, no code',
   tool: 'Renderer + server: an agent tool backed by Node code in the daemon',
   patch: 'Patch: edit the served app directly with find/replace',
+  project: 'Multi-file project: src/ modules, several stylesheets and a server/ folder, for larger extensions',
 }
 
 export function scaffold(id, name, template = 'hello') {
@@ -60,6 +61,66 @@ export function scaffold(id, name, template = 'hello') {
       },
       files: {
         'README.md': `# ${name}\n\nPatches edit the app the way a mod edits a game: no API, just find/replace.\n\n- \`scope: "web"\` patches the served files (\`index.html\`, \`assets/index-*.js\`, \`assets/*.css\`) in memory.\n- \`scope: "server"\` patches daemon modules (\`server/lib/tools.mjs\`) as they load; restart to apply.\n- Disable or remove the extension and the original code is back. Nothing on disk is rewritten.\n- Use \`find: { "regex": "…", "flags": "g" }\`, \`replace\`, \`insertBefore\`, \`insertAfter\`, \`append\`, \`prepend\`, and \`"file": "x.js"\` to take the text from a file in this extension.\n`,
+      },
+    }
+  }
+
+  if (template === 'project') {
+    return {
+      manifest: { ...base, main: 'src/main.js', server: 'server/index.mjs', styles: ['styles/base.css', 'styles/panel.css'] },
+      files: {
+        'src/main.js': `// Entry point of the window part. Split the extension into as many files and folders as you like:
+// relative imports (./x.js, ../y.js) are served from this extension and reload live when any file changes.
+import { registerHello } from './commands/hello.js'
+import { registerPanel } from './ui/panel.js'
+
+export default function activate(lunarcode) {
+  registerHello(lunarcode)
+  registerPanel(lunarcode)
+}
+`,
+        'src/commands/hello.js': `import { greeting } from '../lib/format.js'
+
+export function registerHello(lunarcode) {
+  lunarcode.registerCommand('hello', 'Say hello from ${name.replace(/'/g, '')}', async () => {
+    const info = await lunarcode.server.call('now')
+    lunarcode.notify(greeting(${q}, info.iso), 'success')
+  })
+}
+`,
+        'src/ui/panel.js': `import { greeting } from '../lib/format.js'
+
+export function registerPanel(lunarcode) {
+  lunarcode.registerPanel('project-panel', ${q}, (host) => {
+    host.innerHTML = '<div class="lce-project"><h3></h3><p></p><button>Ask the daemon</button></div>'
+    host.querySelector('h3').textContent = ${q}
+    host.querySelector('p').textContent = greeting(${q}, new Date().toISOString())
+    const button = host.querySelector('button')
+    const click = async () => lunarcode.notify(JSON.stringify(await lunarcode.server.call('now')), 'info')
+    button.addEventListener('click', click)
+    return () => button.removeEventListener('click', click)
+  })
+}
+`,
+        'src/lib/format.js': `export const greeting = (name, iso) => 'Hello from ' + name + ' (' + iso + ')'
+`,
+        'server/index.mjs': `// Entry point of the daemon part (Node, full access). Relative imports work here too.
+import { now } from './handlers/now.mjs'
+
+export default function activate(host) {
+  host.rpc('now', now)
+  host.route('GET', 'ping', () => ({ pong: true }))
+  host.log('project server part started')
+}
+`,
+        'server/handlers/now.mjs': `export const now = () => ({ iso: new Date().toISOString(), pid: process.pid, node: process.version })
+`,
+        'styles/base.css': `.lce-project { padding: 16px; display: grid; gap: 8px; }
+.lce-project h3 { font-weight: 700; }
+`,
+        'styles/panel.css': `.lce-project button { justify-self: start; padding: 6px 12px; border-radius: 8px; background: rgb(var(--accent)); color: rgb(var(--on-accent)); }
+`,
+        'README.md': `# ${name}\n\nMulti-file extension layout:\n\n\`\`\`\nextension.json   main: src/main.js, server: server/index.mjs, styles: [...]\nsrc/             window code (ES modules, import each other with relative paths)\nserver/          daemon code (Node ESM, same rule)\nstyles/          any number of .css files, list each in "styles"\nassets/          anything else, served at /ext/${id}/<path>\n\`\`\`\n\nEvery file is part of the package: \`lunarcode ext pack\` zips the whole folder.\n`,
       },
     }
   }

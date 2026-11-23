@@ -4,7 +4,7 @@ An extension changes Lunarcode directly. There is no permission model and no API
 
 ## Install and manage
 
-- Extensions panel (top bar / sidebar): **Install .lce**, **New** (templates), enable, logs, export, remove.
+- Extensions panel (top bar / sidebar): **Install .lce**, **New** (templates, including a multi-file project), enable, logs, export, remove.
 - CLI (desktop only): `lunarcode ext list | new <id> [--template=hello|theme|tool|patch] | pack <dir> [out.lce] [--name --version --desc --id --author] | unpack <file> | install <file|dir> | enable <id> | disable <id> | remove <id> | path`. Run it as `Lunarcode ext …` on the app binary or with the `lunarcode` launcher in `resources/app/bin/`.
 - Drop-in: put a folder in `~/.lunarcode/extensions/<id>/` (it reloads live). Data for an extension lives in `~/.lunarcode/extension-data/<id>/`.
 
@@ -18,6 +18,28 @@ my-ext.lce  (zip)
 ├── style.css
 └── anything else    served at /ext/<id>/<path>
 ```
+
+Three files are only the minimum. An extension can be a whole project with any folder structure (`lunarcode ext new my-ext --template=project`):
+
+```
+my-ext/
+├── extension.json   "main": "src/main.js", "server": "server/index.mjs", "styles": ["styles/base.css", "styles/panel.css"]
+├── src/             window code: ES modules that `import './x.js'` / `'../lib/y.js'` each other
+│   ├── main.js
+│   ├── commands/…
+│   ├── ui/…
+│   └── lib/…
+├── server/          daemon code: Node ESM, relative imports work the same way
+│   ├── index.mjs
+│   └── handlers/…
+├── styles/          any number of .css files; list each one in "styles"
+└── assets/          images, JSON, … served at /ext/<id>/assets/…
+```
+
+- Icons: `"icon"` in `extension.json` takes `.png`, `.svg`, `.jpg`, `.webp`, `.gif`, `.ico` or `.avif`. `registerPanel`/`registerAction` `icon` takes an emoji, an `<svg>` string, or the path of an image inside the extension (`"assets/icon.png"`); data: and http(s) image URLs also work.
+- `main`, `server`, `styles`, `themes[].css`, `icon` and patch `file` accept any relative path with subfolders (no `..`, no absolute paths).
+- Relative imports are served from the extension and carry its version, so saving **any** file reloads the whole module graph live (renderer and daemon alike). Bare specifiers (`import x from 'react'`) are not resolved: use `lunarcode.React`, or bundle dependencies into your own files.
+- `pack`, `install`, Export and the live folder watcher all include the full folder tree. For a build step (TypeScript, a bundler), point `main` at the compiled file and pack the output.
 
 ## `extension.json`
 

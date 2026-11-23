@@ -19,7 +19,7 @@ Usage:
 const EXT_HELP = `Lunarcode extensions (.lce)
 
   lunarcode ext list                         installed extensions
-  lunarcode ext new <id> [--template=hello|theme|tool|patch] [--name="My Ext"]
+  lunarcode ext new <id> [--template=hello|theme|tool|patch|project] [--name="My Ext"]
                                              create an editable starter in the extensions folder
   lunarcode ext pack <folder> [out.lce] [--name="My Ext"] [--version=1.0.0] [--desc="short description"]
                                              zip any folder into an .lce. Without an extension.json one is
@@ -84,15 +84,15 @@ async function collectFiles(root, skipFile) {
 function generateManifest(root, files, flags) {
   const names = Object.keys(files)
   const pick = (list) => list.find((name) => names.includes(name))
-  const styles = names.filter((name) => !name.includes('/') && name.endsWith('.css'))
+  const styles = names.filter((name) => name.endsWith('.css') && (!name.includes('/') || name.startsWith('styles/')))
   const manifest = {
     id: flags.id ? String(flags.id) : slug(path.basename(root)),
     name: String(flags.name ?? path.basename(root)),
     version: String(flags.version ?? '1.0.0'),
     engine: '>=4.0.0',
   }
-  const main = pick(MAIN_FILES)
-  const server = pick(SERVER_FILES)
+  const main = pick(MAIN_FILES) ?? pick(['src/main.js', 'src/index.js'])
+  const server = pick(SERVER_FILES) ?? pick(['server/index.mjs', 'src/server.mjs'])
   const icon = pick(ICON_FILES)
   if (main) manifest.main = main
   if (server) manifest.server = server
@@ -172,7 +172,7 @@ async function commandExt(args) {
         break
       case 'new': {
         const [id] = positional
-        if (!id) throw new Error('Usage: lunarcode ext new <id> [--template=hello|theme|tool|patch] [--name="My Ext"]')
+        if (!id) throw new Error('Usage: lunarcode ext new <id> [--template=hello|theme|tool|patch|project] [--name="My Ext"]')
         await ext.createExtension({ id, name: typeof flags.name === 'string' ? flags.name : id, template: typeof flags.template === 'string' ? flags.template : 'hello' })
         console.log(`Created ${path.join(ext.EXTENSIONS_DIR, id)}`)
         console.log(`Edit it, then: lunarcode ext enable ${id}  (the running app reloads on save)`)
