@@ -4,19 +4,53 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version tag (vd: v1.0.0)'
+        description: 'Version tag (e.g. v1.0.0)'
         required: true
         type: string
       draft:
-        description: 'Tạo draft release (nháp) để kiểm tra trước?'
+        description: 'Create a draft release to review first?'
         required: false
         default: true
         type: boolean
   push:
     tags: ['v*']
 
+# Least privilege by default; only the release job gets write access.
+permissions:
+  contents: read
+
+# One run per ref. Never cancel a running release halfway.
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
+  # Resolves the release tag once (from the input or from the pushed tag) for every later job.
+  meta:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+      version: ${{ steps.tag.outputs.version }}
+    steps:
+      - name: Determine tag
+        id: tag
+        env:
+          EVENT: ${{ github.event_name }}
+          INPUT_VERSION: ${{ inputs.version }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          # Values go through env vars, never straight into the script, so they cannot inject shell code.
+          if [ "$EVENT" = "workflow_dispatch" ]; then tag="$INPUT_VERSION"; else tag="$REF_NAME"; fi
+          if ! printf '%s' "$tag" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+([.+-][0-9A-Za-z.+-]*)?$'; then
+            echo "Invalid tag '$tag' (expected something like v1.2.3)" >&2
+            exit 1
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
+
   build:
+    name: build (${{ matrix.label }})
     strategy:
       fail-fast: false
       matrix:
@@ -30,62 +64,192 @@ jobs:
           - os: macos-15-intel
             label: macos-x64
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
           cache-dependency-path: |
             package-lock.json
             desktop/package-lock.json
-      - run: npm ci
-      - run: npm run build
-      - name: Upload web build (dist)
-        if: matrix.label == 'linux-x64'
-        uses: actions/upload-artifact@v4
-        with:
-          name: lunarcode-web-dist
-          path: dist
-          if-no-files-found: error
-          retention-days: 1
+
+      - name: Build the app (dist)
+        run: |
+          npm ci
+          npm run build
+
       - name: Install desktop dependencies
         working-directory: desktop
         run: npm ci
-      - name: Install RPM and Arch packaging tooling
+
+      # rpm is needed by electron-builder for the .rpm target. Arch packages are built in the `arch` job.
+      - name: Install RPM tooling
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y rpm libarchive-tools
-      - name: Build installers
+        run: sudo apt-get update && sudo apt-get install -y rpm
+
+      # Linux: AppImage, deb and rpm, plus the unpacked app (`dir`) that the Arch package is built from.
+      - name: Build installers (Linux)
+        if: runner.os == 'Linux'
         working-directory: desktop
-        run: npm run dist
+        run: npm run dist -- --linux AppImage deb rpm dir --publish never
+
+      - name: Build installers (Windows / macOS)
+        if: runner.os != 'Linux'
+        working-directory: desktop
+        run: npm run dist -- --publish never
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
-      - uses: actions/upload-artifact@v4
+
+      # Artifacts do not keep file modes (executables, the setuid chrome-sandbox), so ship the unpacked app as a tarball.
+      - name: Archive the unpacked Linux app
+        if: runner.os == 'Linux'
+        run: tar -C desktop/release -czf linux-unpacked.tar.gz linux-unpacked
+
+      - name: Upload unpacked Linux app
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v7
+        with:
+          name: lunarcode-linux-unpacked
+          path: linux-unpacked.tar.gz
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Upload installers
+        uses: actions/upload-artifact@v7
         with:
           name: lunarcode-desktop-${{ matrix.label }}
           path: |
             desktop/release/*.AppImage
             desktop/release/*.deb
             desktop/release/*.rpm
-            desktop/release/*.pacman
             desktop/release/*.exe
             desktop/release/*.dmg
             desktop/release/*.zip
           if-no-files-found: error
           retention-days: 1
+          compression-level: 0
+
+  # Builds a real Arch package (name-version-rel-arch.pkg.tar.zst) with makepkg inside an Arch container,
+  # instead of electron-builder's `.pacman` output.
+  arch:
+    needs: [meta, build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    container: archlinux:base-devel
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Install tooling
+        run: pacman -Syu --noconfirm git zstd
+
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: lunarcode-linux-unpacked
+          path: arch-input
+
+      - name: Prepare the PKGBUILD
+        env:
+          VERSION: ${{ needs.meta.outputs.version }}
+        run: |
+          set -euo pipefail
+          work=/home/builder/pkg
+          useradd -m builder
+          mkdir -p "$work"
+          tar -xzf arch-input/linux-unpacked.tar.gz -C "$work"
+          cp desktop/build/icon.png "$work/icon.png"
+          cp LICENSE "$work/LICENSE"
+
+          # Name of the Electron executable inside the unpacked app.
+          exe=""
+          for name in Lunarcode lunarcode opensol-desktop; do
+            if [ -f "$work/linux-unpacked/$name" ]; then exe="$name"; break; fi
+          done
+          if [ -z "$exe" ]; then
+            echo "Could not find the app executable in linux-unpacked:" >&2
+            ls -la "$work/linux-unpacked" >&2
+            exit 1
+          fi
+
+          cat > "$work/lunarcode.desktop" <<'EOF'
+          [Desktop Entry]
+          Name=Lunarcode
+          Comment=Local AI coding agent
+          Exec=lunarcode %U
+          Icon=lunarcode
+          Terminal=false
+          Type=Application
+          Categories=Development;
+          StartupWMClass=Lunarcode
+          EOF
+
+          cat > "$work/PKGBUILD" <<'EOF'
+          pkgname=lunarcode
+          pkgver=@PKGVER@
+          pkgrel=1
+          pkgdesc='Lunarcode local AI coding agent (desktop)'
+          arch=('x86_64')
+          url='https://github.com/bibobonking/OpenSol'
+          license=('MIT')
+          depends=('gtk3' 'nss' 'alsa-lib' 'libxss' 'libxtst' 'libnotify' 'at-spi2-core' 'xdg-utils')
+          options=('!strip' '!debug')
+
+          package() {
+            install -d "$pkgdir/opt/Lunarcode" "$pkgdir/usr/bin"
+            cp -a "$startdir/linux-unpacked/." "$pkgdir/opt/Lunarcode/"
+            [ -f "$pkgdir/opt/Lunarcode/chrome-sandbox" ] && chmod 4755 "$pkgdir/opt/Lunarcode/chrome-sandbox"
+            [ -f "$pkgdir/opt/Lunarcode/resources/app/bin/lunarcode" ] && chmod 755 "$pkgdir/opt/Lunarcode/resources/app/bin/lunarcode"
+            ln -s /opt/Lunarcode/@EXE@ "$pkgdir/usr/bin/lunarcode"
+            ln -s /opt/Lunarcode/resources/app/bin/lunarcode "$pkgdir/usr/bin/lunarcode-cli"
+            install -Dm644 "$startdir/lunarcode.desktop" "$pkgdir/usr/share/applications/lunarcode.desktop"
+            install -Dm644 "$startdir/icon.png" "$pkgdir/usr/share/icons/hicolor/512x512/apps/lunarcode.png"
+            install -Dm644 "$startdir/LICENSE" "$pkgdir/usr/share/licenses/lunarcode/LICENSE"
+          }
+          EOF
+
+          # pkgver cannot contain '-', so 1.2.3-beta.1 becomes 1.2.3_beta.1
+          sed -i "s/@PKGVER@/${VERSION//-/_}/; s/@EXE@/$exe/" "$work/PKGBUILD"
+          chown -R builder:builder "$work"
+
+      - name: Build and verify the package
+        run: |
+          set -euo pipefail
+          su builder -c 'cd /home/builder/pkg && PKGEXT=.pkg.tar.zst makepkg -f --nodeps --nocheck --noconfirm'
+          mkdir -p out
+          cp /home/builder/pkg/*.pkg.tar.zst out/
+          for file in out/*.pkg.tar.zst; do
+            echo "== $file"
+            pacman -Qip "$file"
+            bsdtar -tf "$file" | head -n 20
+            bsdtar -tf "$file" | grep -qx '.PKGINFO'
+          done
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: lunarcode-desktop-arch-x64
+          path: out/*.pkg.tar.zst
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
 
   release:
-    needs: build
-    runs-on: ubuntu-22.04
+    needs: [meta, build, arch]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
-      # ✅ Chỉ tải artifact desktop, KHÔNG tải web dist
-      - uses: actions/download-artifact@v4
+      # Only the desktop installers; the unpacked Linux tarball has a different artifact name.
+      - uses: actions/download-artifact@v8
         with:
           path: dist-desktop
           pattern: lunarcode-desktop-*
@@ -94,28 +258,19 @@ jobs:
       - name: Show files to release
         run: ls -lh dist-desktop/
 
-      # Xác định tag: từ input (workflow_dispatch) hoặc từ ref (push tag)
-      - name: Determine tag
-        id: tag
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "tag=${{ inputs.version }}" >> $GITHUB_OUTPUT
-          else
-            echo "tag=${{ github.ref_name }}" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Create Draft Release
+      - name: Create release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.tag.outputs.tag }}
-          name: Release ${{ steps.tag.outputs.tag }}
+          tag_name: ${{ needs.meta.outputs.tag }}
+          target_commitish: ${{ github.sha }}
+          name: Release ${{ needs.meta.outputs.tag }}
           generate_release_notes: true
           draft: ${{ github.event_name == 'workflow_dispatch' && inputs.draft || false }}
           files: |
             dist-desktop/*.AppImage
             dist-desktop/*.deb
             dist-desktop/*.rpm
-            dist-desktop/*.pacman
+            dist-desktop/*.pkg.tar.zst
             dist-desktop/*.exe
             dist-desktop/*.dmg
             dist-desktop/*.zip
