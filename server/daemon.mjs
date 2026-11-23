@@ -1198,7 +1198,7 @@ async function route(req, res) {
     }
 
     if (pathname === '/api/tools/execute' && method === 'POST') {
-      const body = await readJson(req, 24 * 1024 * 1024)
+      const body = await readJson(req, Infinity)
       const name = String(body.name ?? '')
       if (!TOOL_NAMES.has(name) || name === 'subagent' || name === 'skill' || name === 'ask_question' || name === 'todo_write') {
         throw new HttpError(400, `Unknown tool: ${name}`, 'unknown_tool')

@@ -303,7 +303,7 @@ export function ChatView({ view, onViewChange }: { view: ChatViewMode; onViewCha
                   }}
                   className="thin-scroll h-full overflow-y-auto"
                 >
-                  <div className="mx-auto w-full max-w-[780px] px-4 pb-10 pt-6 sm:px-6">
+                  <div className="chat-compact mx-auto w-full max-w-[886px] px-4 pb-10 pt-6 sm:px-6">
                     {turns.map((turn, index) => (
                       <div key={turn.id} className={index === 0 ? 'turn-in' : 'turn-in mt-8'}>
                         <TurnBlock
@@ -336,7 +336,7 @@ export function ChatView({ view, onViewChange }: { view: ChatViewMode; onViewCha
           </div>
 
           <div className="shrink-0 border-t border-line bg-panel px-4 pb-3 pt-3 sm:px-6">
-            <div className="mx-auto w-full max-w-[780px]">
+            <div className="chat-compact mx-auto w-full max-w-[886px]">
               <Composer
                 value={draft}
                 onChange={setDraft}

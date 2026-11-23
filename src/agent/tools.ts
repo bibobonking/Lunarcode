@@ -341,7 +341,7 @@ async function runTool(
       }
     }
     const offset = Math.max(1, Math.round(numberArg(args, 'offset', 1)))
-    const limit = Math.min(Math.max(1, Math.round(numberArg(args, 'limit', 400))), 2000)
+    const limit = Math.max(1, Math.round(numberArg(args, 'limit', 400)))
     const lines = textValue(result.content).split('\n')
     const slice = lines.slice(offset - 1, offset - 1 + limit)
     const remaining = lines.length - (offset - 1 + limit)

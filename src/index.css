@@ -38,6 +38,7 @@
     --link: 70 82 220;
     --destructive: 224 27 36;
     --chat-font-size: 14px;
+    --chat-zoom: 0.88;
     --lunar-a: 142 150 255;
     --lunar-b: 112 214 240;
     --lunar-c: 196 156 255;
@@ -360,6 +361,11 @@
 }
 
 /* Markdown prose */
+
+/* Chat screen only: shrinks messages, tool cards and the composer; other panels are untouched. */
+.chat-compact {
+  zoom: var(--chat-zoom, 0.88);
+}
 
 .md {
   @apply font-sans text-ink;

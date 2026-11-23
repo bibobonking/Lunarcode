@@ -20,9 +20,9 @@ import { HttpError } from './http.mjs'
 import { loadState, loadSecretsSafe } from './store.mjs'
 import { describeCheckpoint, dropCheckpoint, readCheckpoint, recordBefore } from './checkpoints.mjs'
 
-const MAX_READ = 2 * 1024 * 1024
+const MAX_READ = Infinity // no cap: read_file/edit_file handle files of any size
 const MAX_MEDIA = 5 * 1024 * 1024
-const MAX_WRITE = 8 * 1024 * 1024
+const MAX_WRITE = Infinity // no cap on write_file/rewrite_file/edit_file content
 const MAX_OUTPUT = 200_000
 /** Files the model can see or hear directly, keyed by extension. */
 const MEDIA_TYPES = new Map([

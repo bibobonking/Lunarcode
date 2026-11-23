@@ -322,8 +322,7 @@ function GenericToolCard({ message, compact = false }: { message: ToolMessage; c
                     className="hljs"
                     dangerouslySetInnerHTML={{
                       __html:
-                        highlightCode(content.length > 4000 ? content.slice(0, 4000) : content, lang) +
-                        (content.length > 4000 ? `\n… ${content.length - 4000} more characters` : ''),
+                        highlightCode(content, lang),
                     }}
                   />
                 </pre>

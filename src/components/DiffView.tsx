@@ -3,7 +3,7 @@ import { diffLines } from '../lib/diff'
 import { cn } from '../lib/utils'
 import { highlightCode } from '../lib/highlight'
 
-const MAX_ROWS = 120
+const MAX_ROWS = Infinity
 
 /** Compact unified diff: only the changed lines plus two lines of context, numbered from `startLine`. */
 export function DiffView({
