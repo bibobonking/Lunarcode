@@ -6,7 +6,7 @@ import { spawn, spawnSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import { isLocalUrl, parseListeningPort } from './util.mjs'
+import { cliArguments, isLocalUrl, parseListeningPort } from './util.mjs'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const DEFAULT_PORT = 4174
@@ -25,16 +25,34 @@ function openExternal(url) {
   if (/^(https?:|mailto:)/i.test(url)) void shell.openExternal(url)
 }
 
-function resolveAppDir() {
+function appDirCandidates() {
   const candidates = []
   if (process.env.OPENSOL_APP_DIR) candidates.push(path.resolve(process.env.OPENSOL_APP_DIR))
   if (app.isPackaged) candidates.push(path.join(process.resourcesPath, 'app'))
   candidates.push(path.resolve(HERE, '../..'))
+  return candidates
+}
+
+function resolveAppDir() {
   return (
-    candidates.find(
+    appDirCandidates().find(
       (dir) => existsSync(path.join(dir, 'server', 'daemon.mjs')) && existsSync(path.join(dir, 'dist', 'index.html')),
     ) ?? null
   )
+}
+
+/** `Lunarcode ext …`: run the CLI in this process and exit, without a window or a daemon. */
+async function runCliAndExit(args) {
+  let code = 1
+  try {
+    const dir = appDirCandidates().find((candidate) => existsSync(path.join(candidate, 'server', 'cli.mjs')))
+    if (!dir) throw new Error('Lunarcode’s CLI files were not found.')
+    const { runCli } = await import(pathToFileURL(path.join(dir, 'server', 'cli.mjs')).href)
+    code = await runCli(args)
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : error)
+  }
+  app.exit(code)
 }
 
 function readAppVersion(appDir) {
@@ -270,8 +288,11 @@ function installMenu() {
   )
 }
 
-const gotLock = app.requestSingleInstanceLock()
-if (!gotLock) {
+const cliArgs = cliArguments(process.argv, process.defaultApp)
+const gotLock = cliArgs ? true : app.requestSingleInstanceLock()
+if (cliArgs) {
+  void runCliAndExit(cliArgs)
+} else if (!gotLock) {
   app.quit()
 } else {
   app.on('second-instance', () => {

@@ -86,6 +86,14 @@ lunarcode ext pack ./my-ext                 # -> my-ext-1.0.0.lce
 lunarcode ext pack ./my-ext dist/my-ext.lce # choose the file name
 ```
 
+Any folder works, even without an `extension.json`: give it a name, version and short description and one is generated (`main.js`, `server.mjs`, top-level `*.css` and `icon.png` are picked up by name):
+
+```bash
+lunarcode ext pack ./my-folder --name="My Ext" --version=1.2.0 --desc="Does one thing"   # also: --id, --author
+```
+
+With an `extension.json` present, the same flags override its fields.
+
 In the app: Extensions panel → installed extension → **Export**.
 
 By hand: `extension.json` must be **at the zip root** (or inside exactly one wrapping folder, which is unwrapped automatically):

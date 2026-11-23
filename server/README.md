@@ -3,15 +3,14 @@
 `server/` is the local Node daemon (`127.0.0.1:4174`, no runtime dependencies). It owns everything privileged: provider credentials, workspace files, shell, git, search, MCP connections, extensions, skills and deploys. The React app in `src/` only talks to it over `/api`.
 
 ```bash
-node server/lunarcode.mjs start --open   # background daemon + browser (also: npm start)
-node server/lunarcode.mjs status | logs | stop
-node server/daemon.mjs                 # foreground, for debugging
+node server/daemon.mjs                 # foreground daemon, for development (npm run daemon)
+node server/cli.mjs ext list           # desktop CLI from a checkout (npm run cli -- ext list)
 ```
 
 | File | Role |
 |---|---|
 | `daemon.mjs` | HTTP server, session cookie + CSRF guard, `/api` routes, static `dist/` |
-| `lunarcode.mjs` | CLI: start, stop, status, logs, open |
+| `cli.mjs` | Desktop CLI: `ext` (list, new, pack, unpack, install, enable, disable, remove, path), version |
 | `lib/store.mjs` | data directory (`~/.lunarcode`, or `LUNARCODE_DATA`), state, AES-256-GCM secrets |
 | `lib/tools.mjs` | file, grep, git and shell tools, workspace path guard, checkpoints |
 | `lib/shell.mjs` | picks bash/zsh/PowerShell/cmd per OS, kills process trees, Plan-mode allowlist |

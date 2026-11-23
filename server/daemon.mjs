@@ -1330,18 +1330,18 @@ function scheduleRestart() {
       return
     }
     const helper = `
-      const [pid, port, cli] = process.argv.slice(1)
+      const [pid, port, boot, daemon] = process.argv.slice(1)
       const { spawn } = require('node:child_process')
       const started = Date.now()
       const wait = () => {
         let alive = true
         try { process.kill(Number(pid), 0) } catch { alive = false }
         if (alive && Date.now() - started < 20000) return setTimeout(wait, 120)
-        spawn(process.execPath, [cli, 'start', '--port=' + port], { detached: true, stdio: 'ignore' }).unref()
+        spawn(process.execPath, ['--import', boot, daemon, '--port=' + port], { detached: true, stdio: 'ignore' }).unref()
       }
       wait()
     `
-    spawn(process.execPath, ['-e', helper, String(process.pid), String(port), path.join(HERE, 'lunarcode.mjs')], {
+    spawn(process.execPath, ['-e', helper, String(process.pid), String(port), pathToFileURL(path.join(HERE, 'lib', 'ext-boot.mjs')).href, path.join(HERE, 'daemon.mjs')], {
       detached: true,
       stdio: 'ignore',
       env: process.env,

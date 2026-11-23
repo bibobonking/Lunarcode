@@ -5,13 +5,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-npm run dev        # daemon on :4174 + Vite on :5173 (proxies /api)
+npm run daemon     # daemon on :4174 (own terminal)
+npm run dev        # Vite on :5173 (proxies /api to the daemon)
 npm test           # node --test — discovers *.test.mjs anywhere
 node --test src/lib/themes.test.mjs   # single test file
 npm run typecheck  # tsc -b --pretty
 npm run build      # tsc -b && vite build → dist/
-npm start          # daemon serving the prebuilt dist/ on :4174
-node server/lunarcode.mjs {status,logs,stop}
+npm run desktop    # Electron app from source
+npm run cli -- ext list   # desktop CLI (server/cli.mjs); desktop only, no npm bin
 ```
 
 Node 24 runs the `.test.mjs` files directly: they import TypeScript sources with an explicit `.ts` extension (`from './themes.ts'`) and rely on Node's built-in type stripping. See **Testing traps** below.
@@ -84,6 +85,6 @@ Extension themes are registered at runtime as `ext-<id>-<theme>` and styled the 
 ## Traps
 
 - Vite's root is the repo root. Edit `src/` and `index.html` only.
-- `dist/` is committed and is what the daemon serves — a source change is invisible in `npm start` until `npm run build`.
+- `dist/` is committed and is what the daemon serves — a source change is invisible in the app until `npm run build`.
 - The data directory is `~/.lunarcode` (override with `LUNARCODE_DATA`; `OPENSOL_DATA`/`MAXCODE_DATA` are still honoured, and an existing `~/.opensol` or `~/.maxcode` is renamed to it on first start); provider keys, chats, settings and extensions all live there, so tests and manual runs share state with the real app.
 - The CSRF header is still named `x-maxcode-csrf` for compatibility; the extension global is `lunarcode`.

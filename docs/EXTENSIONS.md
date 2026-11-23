@@ -5,7 +5,7 @@ An extension changes Lunarcode directly. There is no permission model and no API
 ## Install and manage
 
 - Extensions panel (top bar / sidebar): **Install .lce**, **New** (templates), enable, logs, export, remove.
-- CLI: `lunarcode ext list | new <id> [--template=hello|theme|tool|patch] | pack <dir> | unpack <file> | install <file|dir> | enable <id> | disable <id> | remove <id> | path`.
+- CLI (desktop only): `lunarcode ext list | new <id> [--template=hello|theme|tool|patch] | pack <dir> [out.lce] [--name --version --desc --id --author] | unpack <file> | install <file|dir> | enable <id> | disable <id> | remove <id> | path`. Run it as `Lunarcode ext …` on the app binary or with the `lunarcode` launcher in `resources/app/bin/`.
 - Drop-in: put a folder in `~/.lunarcode/extensions/<id>/` (it reloads live). Data for an extension lives in `~/.lunarcode/extension-data/<id>/`.
 
 ## Layout

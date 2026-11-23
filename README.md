@@ -6,20 +6,9 @@ The daemon binds to `127.0.0.1` only. It serves the prebuilt app from `dist/` an
 
 ## Run it
 
-Requires Node.js 20 or newer (the daemon has no runtime dependencies; server patches in extensions need Node 22.15+).
+Lunarcode is a **desktop app** (Windows, macOS, Linux). There is no npm package and no web install: download the installer from the releases page, or build it yourself (see `desktop/README.md`). The app starts its own daemon, so there is nothing to launch by hand.
 
-```bash
-npm install -g @bibobonking/lunarcode   # once
-lunarcode start --open                  # or: npm start, from a checkout
-```
-
-```
-lunarcode start [--port=4174] [--open] [--foreground]
-lunarcode stop
-lunarcode status
-lunarcode open
-lunarcode logs
-```
+CLI (desktop only): `Lunarcode ext …` on the app binary, or the `lunarcode` launcher shipped in `resources/app/bin/` (`lunarcode.cmd` on Windows). Commands: `ext list|new|pack|unpack|install|enable|disable|remove|path`, `version`, `help`.
 
 On first launch, choose a real project folder, then add a provider key in **Settings → Models** and pick a live model. Everything else — workspace tree, editor, git, search, build/plan modes, subagents and deploys — runs through the local daemon.
 
@@ -38,7 +27,7 @@ Works on **Windows, macOS and Linux**. See *Shell* below for how commands run on
 - **Smart compaction.** Near 85% of the context window (checked before a turn and between tool rounds), older turns are summarised while the newest ones stay verbatim. Earlier summaries are merged, not re-summarised; changed files are tracked from tool calls; if the model is unavailable a deterministic fallback keeps the session going. Run `/compact [focus]` to do it yourself.
 - **Subagents.** `subagent` delegates read-only work to a separate context: `explore` (codebase), `research` (web + code) and `review` (bugs in a diff). Several calls in one message run in parallel, progress streams into the tool card, and each has a round budget and context pruning.
 - **Turn queue.** A prompt sent while a turn is streaming waits its turn and runs next, instead of splitting into a second reply.
-- **Extensions (`.lce`).** No API, no sandbox, no limits: an extension is a zip with an `extension.json` and any mix of renderer code, daemon code and direct find/replace patches to the app itself, like a userscript or a BepInEx mod. Add agent tools, panels, commands, themes, HTTP routes and hooks, or rewrite any file of the UI or daemon. Install from the Extensions panel or `lunarcode ext install my.lce`; create one from a template with `lunarcode ext new`. Live reload while you edit. Enabling an extension is a full-trust decision. See [docs/EXTENSIONS.md](docs/EXTENSIONS.md) and the ready-made `examples/*.lce`.
+- **Extensions (`.lce`).** No API, no sandbox, no limits: an extension is a zip with an `extension.json` and any mix of renderer code, daemon code and direct find/replace patches to the app itself, like a userscript or a BepInEx mod. Add agent tools, panels, commands, themes, HTTP routes and hooks, or rewrite any file of the UI or daemon. Install from the Extensions panel or `lunarcode ext install my.lce`; create one from a template with `lunarcode ext new`; pack any folder with `lunarcode ext pack <folder> --name=… --version=… --desc=…`. Live reload while you edit. Enabling an extension is a full-trust decision. See [docs/EXTENSIONS.md](docs/EXTENSIONS.md) and the ready-made `examples/*.lce`.
 - **Workspace panel.** Folder tree, file editor, git status and quick file actions.
 - **Deploy.** Cloudflare Pages, Netlify and Vercel, for the open workspace or another existing folder. Tokens stay in the daemon and are passed to CLIs through environment variables.
 - **Local history.** Conversations, settings, workspaces and encrypted keys survive restarts.
@@ -49,12 +38,13 @@ Slash commands: `/search`, `/plan`, `/build`, `/compact`, `/new`, `/workspace`, 
 
 ```bash
 npm install
-npm run dev        # starts the daemon and Vite on http://127.0.0.1:5173
+npm run daemon     # daemon on 127.0.0.1:4174 (terminal 1)
+npm run dev        # Vite on http://127.0.0.1:5173, proxies /api to the daemon (terminal 2)
 npm run build      # typecheck + production build into dist/
 npm run typecheck
+npm run desktop    # the Electron app from source (needs dist/ and `npm ci` in desktop/)
+npm run cli -- ext list   # the CLI from a checkout
 ```
-
-`npm run dev` proxies `/api` to the daemon on port 4174. For a production-style run, use `npm run build` followed by `npm start`.
 
 Remote models need provider access from this machine. Local providers such as Ollama are keyless but must already be running; Lunarcode reports an actionable error when they are not.
 

@@ -23,6 +23,8 @@ extraResources:
     to: app/shared
   - from: ../package.json
     to: app/package.json
+  - from: bin
+    to: app/bin
 
 linux:
   target:

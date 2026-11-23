@@ -18,3 +18,12 @@ export function isLocalUrl(raw) {
   if (url.protocol !== 'http:' && url.protocol !== 'https:') return false
   return LOCAL_HOSTS.has(url.hostname)
 }
+
+/** First words that make the desktop binary behave as the CLI (`Lunarcode ext pack …`) instead of opening a window. */
+export const CLI_COMMANDS = new Set(['ext', 'extension', 'extensions', 'version', 'help'])
+
+/** The CLI arguments of this launch, or null for a normal window launch. `defaultApp` is true for `electron .`. */
+export function cliArguments(argv, defaultApp = false) {
+  const args = argv.slice(defaultApp ? 2 : 1)
+  return args.length > 0 && CLI_COMMANDS.has(args[0]) ? args : null
+}

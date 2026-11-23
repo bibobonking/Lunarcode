@@ -1,7 +1,7 @@
 # OpenSol Desktop
 
 OpenSol Desktop is the same OpenSol app in an Electron window. The renderer, daemon and data
-folder are shared with the web version, so keys, chats and settings are the same in both.
+folder live in `~/.lunarcode`.
 
 | OS | Installer |
 |---|---|
@@ -9,7 +9,11 @@ folder are shared with the web version, so keys, chats and settings are the same
 | Windows 10 / 11 | `.exe` (NSIS) |
 | macOS 13+ | `.dmg`, `.zip` (Apple Silicon and Intel) |
 
-The web version (`npm start`, `dist/`) is unchanged and still works.
+Desktop is the only supported build: there is no npm package or web launcher any more.
+
+## CLI
+
+The desktop app is also the CLI (`Lunarcode ext list|new|pack|unpack|install|enable|disable|remove|path`, `version`, `help`; `lunarcode ext help` for details). The launchers in `resources/app/bin/` (`lunarcode`, `lunarcode.cmd`) run it on the app's own Node runtime, which also works headless and prints to the terminal on Windows. Put one on your `PATH`.
 
 ## How it works
 
@@ -22,7 +26,7 @@ The web version (`npm start`, `dist/`) is unchanged and still works.
 4. When you close the window, a daemon that the app started is stopped. A daemon the app
    reused is left running.
 
-The daemon, `dist/`, `shared/` and `node_modules/fflate` are copied into the app's
+The daemon, `dist/`, `shared/` and `bin/` are copied into the app's
 `resources/app` folder at build time. `desktop/electron/` contains the main process and
 `desktop/electron-builder.yml` contains the packaging config.
 
