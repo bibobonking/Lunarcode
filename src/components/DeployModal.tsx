@@ -286,11 +286,11 @@ export function DeployModal() {
                       disabled={running}
                       aria-pressed={active}
                       className={cn(
-                        'relative flex flex-col items-start gap-2 rounded-[12px] border p-2.5 text-left transition-all disabled:opacity-60',
+                        'relative flex flex-col items-start gap-2 rounded-[18px] border p-2.5 text-left transition-all disabled:opacity-60',
                         active ? 'border-accent bg-accent-soft' : 'border-line hover:bg-ink/[.05]',
                       )}
                     >
-                      <span className="flex h-7 w-7 items-center justify-center rounded-[9px] text-white" style={{ backgroundColor: entry.tint }}>
+                      <span className="flex h-7 w-7 items-center justify-center rounded-[12px] text-white" style={{ backgroundColor: entry.tint }}>
                         <Icon size={14} />
                       </span>
                       <span className="text-[12px] font-medium leading-tight text-ink">{entry.label}</span>
@@ -306,7 +306,7 @@ export function DeployModal() {
             </Field>
 
             {!configured && (
-              <div className="rounded-[12px] border border-warning/25 bg-warning/[0.05] p-3">
+              <div className="rounded-[18px] border border-warning/25 bg-warning/[0.05] p-3">
                 <p className="flex items-start gap-1.5 text-[12px] leading-relaxed text-muted">
                   <ShieldCheck size={12} className="mt-0.5 shrink-0 text-warning" />
                   {meta.label} needs {meta.needs}. Add it once in Settings → Deploy; it is encrypted and never shown again.
@@ -351,7 +351,7 @@ export function DeployModal() {
               </div>
 
               {detected && (
-                <div className="mt-2 flex items-start gap-2.5 rounded-[12px] border border-line bg-raised/40 p-2.5">
+                <div className="mt-2 flex items-start gap-2.5 rounded-[18px] border border-line bg-raised/40 p-2.5">
                   <FolderIcon name={detected.outputDir || 'src'} open size={22} />
                   <div className="min-w-0 flex-1 text-[12px] leading-relaxed">
                     <p className="font-medium text-ink">
@@ -430,7 +430,7 @@ export function DeployModal() {
                     type="button"
                     onClick={() => setBuildCommand(value)}
                     disabled={running}
-                    className="rounded-[6px] border border-line px-1.5 py-0.5 text-[12px] text-faint transition-colors hover:text-ink"
+                    className="rounded-[8px] border border-line px-1.5 py-0.5 text-[12px] text-faint transition-colors hover:text-ink"
                   >
                     {value}
                   </button>
@@ -451,11 +451,11 @@ export function DeployModal() {
               </div>
             </Field>
 
-            <div className="flex items-start gap-1.5 rounded-[9px] border border-line bg-raised/40 px-2.5 py-2 text-[12px] leading-relaxed text-faint">
+            <div className="flex items-start gap-1.5 rounded-[12px] border border-line bg-raised/40 px-2.5 py-2 text-[12px] leading-relaxed text-faint">
               <Terminal size={11} className="mt-0.5 shrink-0" />
               {tool?.installed
                 ? `${tool.label}${tool.version ? ` ${tool.version}` : ''} found on this machine.`
-                : `${tool?.label ?? 'The CLI'} is not installed; Lunarcode will fetch it with npx for this deploy.`}
+                : `${tool?.label ?? 'The CLI'} is not installed; CreateCode will fetch it with npx for this deploy.`}
             </div>
           </div>
         </div>
@@ -470,7 +470,7 @@ export function DeployModal() {
                   <li key={step.id} className="flex min-w-0 items-center gap-1.5">
                     <span
                       className={cn(
-                        'flex h-7 items-center gap-1.5 rounded-[9px] border px-2.5 text-[12px] font-medium transition-colors',
+                        'flex h-7 items-center gap-1.5 rounded-[12px] border px-2.5 text-[12px] font-medium transition-colors',
                         state === 'active' && 'border-accent/40 bg-accent-soft text-accent',
                         state === 'done' && 'border-success/30 bg-success/10 text-success',
                         state === 'error' && 'border-danger/30 bg-danger/10 text-danger',
@@ -497,7 +497,7 @@ export function DeployModal() {
               <button
                 type="button"
                 onClick={() => abortRef.current?.abort()}
-                className="inline-flex h-8 items-center gap-1.5 rounded-[9px] border border-line px-3 text-[12px] font-medium text-muted hover:text-ink"
+                className="inline-flex h-8 items-center gap-1.5 rounded-[12px] border border-line px-3 text-[12px] font-medium text-muted hover:text-ink"
               >
                 <Square size={9} fill="currentColor" /> Stop
               </button>
@@ -546,12 +546,12 @@ export function DeployModal() {
           <div ref={logRef} className="thin-scroll min-h-0 flex-1 overflow-y-auto bg-canvas/40 px-4 py-3">
             {logs.length === 0 && !running ? (
               <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-2 px-6 text-center">
-                <span className="flex h-11 w-11 items-center justify-center rounded-[12px] bg-raised text-faint">
+                <span className="flex h-11 w-11 items-center justify-center rounded-[18px] bg-raised text-faint">
                   <PackageOpen size={18} />
                 </span>
                 <p className="text-[12px] font-medium text-muted">Ready when you are</p>
                 <p className="max-w-[280px] text-[12px] leading-relaxed text-faint">
-                  Leave the fields on auto: Lunarcode installs dependencies, builds if there is no output folder yet, then publishes it. Tokens never appear in the log.
+                  Leave the fields on auto: CreateCode installs dependencies, builds if there is no output folder yet, then publishes it. Tokens never appear in the log.
                 </p>
               </div>
             ) : (

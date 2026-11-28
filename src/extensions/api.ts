@@ -44,7 +44,7 @@ export const stores = {
 }
 
 /** What an extension's window part receives. There is no permission list: this is the live app. */
-export interface LunarcodeExtension {
+export interface CreateCodeExtension {
   readonly id: string
   readonly manifest: ExtensionInfo
   readonly appVersion: string
@@ -90,7 +90,7 @@ export interface LunarcodeExtension {
   /** Mounts a React element into a DOM node; returns the unmount function. */
   render(host: HTMLElement, element: React.ReactNode): () => void
 
-  /** Persistent per-extension JSON storage in `~/.lunarcode/extension-data/<id>/`. */
+  /** Persistent per-extension JSON storage in `~/.createcode/extension-data/<id>/`. */
   storage: {
     get<T = unknown>(key: string, fallback?: T): Promise<T>
     set(key: string, value: unknown): Promise<void>
@@ -118,7 +118,7 @@ async function bodyToProxy(body: BodyInit | null | undefined): Promise<{ body?: 
   return { bodyBase64: btoa(binary) }
 }
 
-export function createExtensionApi(info: ExtensionInfo, appVersion: string, ctx: Context, track: Track): LunarcodeExtension {
+export function createExtensionApi(info: ExtensionInfo, appVersion: string, ctx: Context, track: Track): CreateCodeExtension {
   const id = info.id
   const base = `/ext/${id}/`
   const owner = id
@@ -154,7 +154,7 @@ export function createExtensionApi(info: ExtensionInfo, appVersion: string, ctx:
     if (flushTimer !== undefined) await flush().catch(() => undefined)
   })
 
-  const api: LunarcodeExtension = {
+  const api: CreateCodeExtension = {
     id,
     manifest: info,
     appVersion,
@@ -240,7 +240,7 @@ export function createExtensionApi(info: ExtensionInfo, appVersion: string, ctx:
         await daemon.ensureSession()
         const headers = new Headers(init.headers)
         const method = (init.method ?? 'GET').toUpperCase()
-        if (!['GET', 'HEAD'].includes(method)) headers.set('x-maxcode-csrf', daemon.csrfToken())
+        if (!['GET', 'HEAD'].includes(method)) headers.set('x-createcode-csrf', daemon.csrfToken())
         return fetch(`/api/extensions/${encodeURIComponent(id)}/x/${path.replace(/^\/+/, '')}`, {
           ...init,
           method,

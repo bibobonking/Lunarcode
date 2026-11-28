@@ -27,7 +27,7 @@ export interface ExtensionInfo {
   engine: string
   hasIcon: boolean
   enabled: boolean
-  source: 'lce' | 'folder' | string
+  source: 'cce' | 'folder' | string
   installedAt: string | null
   dir: string
   dataDir: string

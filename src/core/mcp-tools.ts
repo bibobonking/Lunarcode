@@ -18,7 +18,7 @@ function toParameters(schema: Record<string, unknown>): ToolSchema['parameters']
 
 function toolsChangedNote(server: string, added: string[], removed: string[]): string {
   const list = (items: string[]) => `${items.slice(0, 12).join(', ')}${items.length > 12 ? `, … (+${items.length - 12})` : ''}`
-  const parts = [`[Lunarcode: the tool list of MCP server “${server}” changed.`]
+  const parts = [`[CreateCode: the tool list of MCP server “${server}” changed.`]
   if (added.length) parts.push(`New tools you can call from your next step: ${list(added)}.`)
   if (removed.length) parts.push(`No longer available: ${list(removed)}.`)
   parts.push('Keep going; nothing needs to be restarted.]')

@@ -53,8 +53,8 @@ function PreviewFrame({ html, reloadKey, className }: { html: string; reloadKey:
     if (!frame) return
     const onMessage = (event: MessageEvent) => {
       if (event.source !== frame.contentWindow) return
-      if ((event.data as { type?: string } | null)?.type !== 'maxcode-preview-ready') return
-      frame.contentWindow?.postMessage({ type: 'maxcode-preview', html }, '*')
+      if ((event.data as { type?: string } | null)?.type !== 'createcode-preview-ready') return
+      frame.contentWindow?.postMessage({ type: 'createcode-preview', html }, '*')
     }
     window.addEventListener('message', onMessage)
     return () => window.removeEventListener('message', onMessage)
@@ -66,7 +66,7 @@ function PreviewFrame({ html, reloadKey, className }: { html: string; reloadKey:
       ref={frameRef}
       src="/preview-host.html"
       title="Live preview"
-      // No allow-same-origin: the page cannot reach Lunarcode, its cookies or the local daemon.
+      // No allow-same-origin: the page cannot reach CreateCode, its cookies or the local daemon.
       sandbox="allow-scripts allow-pointer-lock allow-forms allow-modals"
       allow="fullscreen"
       className={cn('block h-full w-full border-0 bg-white', className)}
@@ -98,7 +98,7 @@ function PreviewOverlay({ html, onClose }: { html: string; onClose: () => void }
           </button>
         </div>
       </div>
-      <div className="min-h-0 flex-1 overflow-hidden rounded-[12px] border border-line bg-white">
+      <div className="min-h-0 flex-1 overflow-hidden rounded-[18px] border border-line bg-white">
         <PreviewFrame html={html} reloadKey={reloadKey} />
       </div>
     </div>,
@@ -131,7 +131,7 @@ function CodeBlock({ children, streaming }: { children?: ReactNode; streaming?: 
     <div className="code-shell group/code">
       <div className="code-head">
         {previewable ? (
-          <div className="inline-flex items-center rounded-[9px] bg-ink/[.07] p-0.5" role="tablist" aria-label="Code or preview">
+          <div className="inline-flex items-center rounded-[12px] bg-ink/[.07] p-0.5" role="tablist" aria-label="Code or preview">
             {(['code', 'preview'] as const).map((value) => (
               <button
                 key={value}
@@ -140,7 +140,7 @@ function CodeBlock({ children, streaming }: { children?: ReactNode; streaming?: 
                 aria-selected={view === value}
                 onClick={() => setView(value)}
                 className={cn(
-                  'h-6 rounded-[6px] px-2.5 text-[12px] font-semibold capitalize transition-colors',
+                  'h-6 rounded-[8px] px-2.5 text-[12px] font-semibold capitalize transition-colors',
                   view === value ? 'bg-panel text-ink' : 'text-muted hover:text-ink',
                 )}
               >

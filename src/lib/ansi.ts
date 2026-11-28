@@ -16,9 +16,9 @@ const BASIC = [
   'rgb(var(--danger))',
   'rgb(var(--success))',
   'rgb(var(--warning))',
-  'rgb(var(--lunar-a))',
-  'rgb(var(--lunar-c))',
-  'rgb(var(--lunar-b))',
+  'rgb(var(--syn-title))',
+  'rgb(var(--syn-keyword))',
+  'rgb(var(--syn-attr))',
   'rgb(var(--ink) / 0.85)',
 ]
 const BRIGHT = [
@@ -27,8 +27,8 @@ const BRIGHT = [
   'rgb(var(--success))',
   'rgb(var(--warning))',
   'rgb(var(--link))',
-  'rgb(var(--lunar-c))',
-  'rgb(var(--lunar-b))',
+  'rgb(var(--syn-keyword))',
+  'rgb(var(--syn-attr))',
   'rgb(var(--ink))',
 ]
 

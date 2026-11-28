@@ -72,7 +72,7 @@ type TabDef = { id: string; label: string; icon: typeof Info; description: strin
 const TABS: readonly TabDef[] = [
   { id: 'general', label: 'General', icon: SlidersHorizontal, description: 'Permissions, appearance and conversation display.' },
   { id: 'models', label: 'Models', icon: Cpu, description: 'Providers, encrypted keys, live models and reasoning defaults.' },
-  { id: 'tools', label: 'Tools', icon: Wrench, description: 'What Lunarcode can do on this machine, and when it must ask.' },
+  { id: 'tools', label: 'Tools', icon: Wrench, description: 'What CreateCode can do on this machine, and when it must ask.' },
   { id: 'search', label: 'Search', icon: Globe2, description: 'Give the agent current web results with your own key.' },
   { id: 'skills', label: 'Skills', icon: Sparkles, description: 'Skill folders the agent loads on demand: upload a folder or install from npm.' },
   { id: 'mcp', label: 'MCP', icon: Link2, description: 'Model Context Protocol servers now have their own panel, with OAuth sign-in and local, HTTP and SSE connections.' },
@@ -274,9 +274,9 @@ function ProviderCard({
   }
 
   return (
-    <div className={cn('rounded-[12px] border transition-colors', open ? 'border-line bg-raised/25' : 'border-line bg-panel')}>
+    <div className={cn('rounded-[18px] border transition-colors', open ? 'border-line bg-raised/25' : 'border-line bg-panel')}>
       <button type="button" onClick={onToggle} className="flex w-full items-center gap-3 px-3 py-2.5 text-left">
-        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[9px] border border-line bg-raised text-[12px] font-bold text-muted">
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[12px] border border-line bg-raised text-[12px] font-bold text-muted">
           {preset.name.slice(0, 1)}
         </span>
         <span className="min-w-0 flex-1">
@@ -385,7 +385,7 @@ function ProviderCard({
             </div>
 
             {error && (
-              <p className="mb-1.5 rounded-[6px] border border-danger/20 bg-danger/[0.04] px-2 py-1.5 text-[12px] leading-relaxed text-danger">
+              <p className="mb-1.5 rounded-[8px] border border-danger/20 bg-danger/[0.04] px-2 py-1.5 text-[12px] leading-relaxed text-danger">
                 {error}
               </p>
             )}
@@ -449,7 +449,7 @@ function ProviderCard({
                   setManual('')
                 }}
                 disabled={!manual.trim()}
-                className="inline-flex h-8 shrink-0 items-center rounded-[9px] border border-line px-2.5 text-[12px] font-medium text-ink disabled:opacity-40"
+                className="inline-flex h-8 shrink-0 items-center rounded-[12px] border border-line px-2.5 text-[12px] font-medium text-ink disabled:opacity-40"
               >
                 Use ID
               </button>
@@ -508,17 +508,17 @@ function ModelsTab() {
                 setRefreshing(false)
               }
             }}
-            className="inline-flex h-7 items-center gap-1 rounded-[9px] border border-line px-2 text-[12px] font-medium text-muted hover:text-ink"
+            className="inline-flex h-7 items-center gap-1 rounded-[12px] border border-line px-2 text-[12px] font-medium text-muted hover:text-ink"
           >
             {refreshing ? <Spinner size={10} /> : <RefreshCw size={10} />}
             Refresh
           </button>
         }
       >
-        <div className="mb-3 flex items-start gap-2 rounded-[9px] border border-line bg-raised/50 px-3 py-2.5">
+        <div className="mb-3 flex items-start gap-2 rounded-[12px] border border-line bg-raised/50 px-3 py-2.5">
           <ShieldCheck size={14} className="mt-0.5 shrink-0 text-success" />
           <p className="text-[12px] leading-relaxed text-muted">
-            Keys are encrypted with AES-256-GCM under <code className="font-mono text-[12px]">~/.maxcode</code>. The
+            Keys are encrypted with AES-256-GCM under <code className="font-mono text-[12px]">~/.createcode</code>. The
             browser only receives a masked hint; the daemon decrypts a key in memory for the provider request.
           </p>
         </div>
@@ -551,7 +551,7 @@ function ModelsTab() {
                 <select
                   value={chosenEffort}
                   onChange={(event) => update({ effort: event.target.value as Effort })}
-                  className="h-8 rounded-[9px] border border-line bg-panel px-2 text-[12px] text-ink outline-none"
+                  className="h-8 rounded-[12px] border border-line bg-panel px-2 text-[12px] text-ink outline-none"
                   aria-label="Reasoning effort"
                 >
                   {efforts.map((effort) => (
@@ -562,13 +562,13 @@ function ModelsTab() {
                 </select>
               </div>
             ) : (
-              <p className="rounded-[9px] border border-line bg-raised/30 px-3 py-2.5 text-[12px] leading-relaxed text-faint">
+              <p className="rounded-[12px] border border-line bg-raised/30 px-3 py-2.5 text-[12px] leading-relaxed text-faint">
                 {reasoningSummary(active)}
               </p>
             )}
           </div>
         ) : (
-          <p className="rounded-[9px] border border-line bg-raised/30 px-3 py-3 text-[12px] leading-relaxed text-faint">
+          <p className="rounded-[12px] border border-line bg-raised/30 px-3 py-3 text-[12px] leading-relaxed text-faint">
             Choose a model in the composer to see the reasoning controls this provider actually advertises.
           </p>
         )}
@@ -578,7 +578,7 @@ function ModelsTab() {
         title="Advanced request settings"
         description="Defaults for every provider. The adapter ignores fields the selected model cannot accept."
       >
-        <details className="group/advanced rounded-[12px] border border-line bg-raised/20">
+        <details className="group/advanced rounded-[18px] border border-line bg-raised/20">
           <summary className="flex cursor-pointer list-none items-center justify-between px-3 py-2.5 text-[12px] font-medium text-ink [&::-webkit-details-marker]:hidden">
             Request controls and system prompt
             <ChevronDown size={13} className="text-faint transition-transform group-open/advanced:rotate-180" />
@@ -634,7 +634,7 @@ function ModelsTab() {
                 onChange={(event) => update({ systemPrompt: event.target.value })}
                 rows={9}
                 spellCheck={false}
-                className="thin-scroll w-full resize-y rounded-[9px] border border-line bg-panel px-2.5 py-2 font-mono text-[12px] leading-relaxed text-ink outline-none focus:border-accent/50"
+                className="thin-scroll w-full resize-y rounded-[12px] border border-line bg-panel px-2.5 py-2 font-mono text-[12px] leading-relaxed text-ink outline-none focus:border-accent/50"
               />
               <p className="mt-1 text-[12px] leading-relaxed text-faint">
                 The installed skill list and the current workspace/git context are appended after this prompt.
@@ -705,7 +705,7 @@ function ToolsTab() {
         {TOOL_ORDER.map((group) => (
           <div key={group.title}>
             <p className="mb-2 text-[12px] font-medium text-faint">{group.title}</p>
-            <div className="overflow-hidden rounded-[12px] border border-line">
+            <div className="overflow-hidden rounded-[18px] border border-line">
               {group.tools.map((tool, index) => {
                 const config = settings.tools[tool]
                 const Icon = TOOL_ICONS[tool]
@@ -719,7 +719,7 @@ function ToolsTab() {
                       !config.enabled && 'opacity-60',
                     )}
                   >
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[9px] border border-line bg-panel text-muted">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[12px] border border-line bg-panel text-muted">
                       <Icon size={13} />
                     </span>
                     <div className="min-w-0 flex-1">
@@ -762,7 +762,7 @@ function ToolsTab() {
           </div>
         ))}
       </div>
-      <div className="mt-3 flex items-start gap-1.5 rounded-[9px] border border-line bg-raised/40 px-3 py-2.5 text-[12px] leading-relaxed text-faint">
+      <div className="mt-3 flex items-start gap-1.5 rounded-[12px] border border-line bg-raised/40 px-3 py-2.5 text-[12px] leading-relaxed text-faint">
         <ShieldCheck size={11} className="mt-0.5 shrink-0" />
         Shell and Git approval are on by default. Approvals apply to the open workspace only; the daemon rejects paths
         outside it with <code className="font-mono">..</code> or absolute escapes.
@@ -830,7 +830,7 @@ function SearchTab() {
     try {
       const response = await executeDaemonTool(
         'web_search',
-        { query: 'Lunarcode local coding agent', provider: settings.searchProvider },
+        { query: 'CreateCode local coding agent', provider: settings.searchProvider },
         'build',
       )
       const result = response.result && typeof response.result === 'object' ? (response.result as Record<string, unknown>) : {}
@@ -883,7 +883,7 @@ function SearchTab() {
                   setTestResult(null)
                 }}
                 className={cn(
-                  'rounded-[12px] border p-3 text-left transition-colors',
+                  'rounded-[18px] border p-3 text-left transition-colors',
                   selected ? 'border-accent bg-accent-soft' : 'border-line hover:bg-ink/[.05]',
                 )}
               >
@@ -959,7 +959,7 @@ function SearchTab() {
             type="button"
             onClick={() => void test()}
             disabled={testing || (!keyless && !configured)}
-            className="inline-flex h-8 items-center gap-1.5 rounded-[9px] border border-line bg-panel px-2.5 text-[12px] font-medium text-ink transition-colors hover:bg-raised disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex h-8 items-center gap-1.5 rounded-[12px] border border-line bg-panel px-2.5 text-[12px] font-medium text-ink transition-colors hover:bg-raised disabled:cursor-not-allowed disabled:opacity-40"
           >
             {testing ? <Spinner size={12} /> : <Search size={12} />}
             {testing ? 'Testing…' : 'Test search'}
@@ -970,7 +970,7 @@ function SearchTab() {
         {testResult && (
           <div
             className={cn(
-              'mt-2.5 rounded-[9px] border px-3 py-2 text-[12px] leading-relaxed',
+              'mt-2.5 rounded-[12px] border px-3 py-2 text-[12px] leading-relaxed',
               testResult.ok
                 ? 'border-success/25 bg-success/[0.04] text-success'
                 : 'border-warning/30 bg-warning/[0.04] text-warning',
@@ -1090,7 +1090,7 @@ function SkillsTab() {
       title="Installed skills"
       description={`${active} of ${skills.length} enabled. The model sees each skill's name and description, then loads the full SKILL.md and bundled files on demand with the skill tool.`}
     >
-      <div className="mb-3 rounded-[12px] border border-line p-3">
+      <div className="mb-3 rounded-[18px] border border-line p-3">
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
@@ -1136,13 +1136,13 @@ function SkillsTab() {
           <button
             type="submit"
             disabled={busy !== null || !npmSpec.trim()}
-            className="inline-flex h-8 items-center gap-1.5 rounded-[9px] border border-line bg-panel px-2.5 text-[12px] font-medium text-ink hover:bg-raised disabled:opacity-50"
+            className="inline-flex h-8 items-center gap-1.5 rounded-[12px] border border-line bg-panel px-2.5 text-[12px] font-medium text-ink hover:bg-raised disabled:opacity-50"
           >
             {busy === 'npm' ? <Spinner size={12} /> : <Download size={12} />} Install from npm
           </button>
         </form>
         <p className="mt-2 text-[12px] leading-relaxed text-faint">
-          npm installs run with scripts disabled; Lunarcode only copies the SKILL.md folders the package ships. Skill scripts run
+          npm installs run with scripts disabled; CreateCode only copies the SKILL.md folders the package ships. Skill scripts run
           only when the model calls the shell tool, and that still asks for approval.
         </p>
       </div>
@@ -1150,17 +1150,17 @@ function SkillsTab() {
       {error && <p className="mb-2 text-[12px] text-danger">{error}</p>}
 
       {skills.length === 0 ? (
-        <div className="rounded-[12px] border border-dashed border-line px-4 py-8 text-center">
+        <div className="rounded-[18px] border border-dashed border-line px-4 py-8 text-center">
           <Sparkles size={16} className="mx-auto text-faint" />
           <p className="mt-2 text-[12px] font-medium text-ink">{loading ? 'Loading skills…' : 'No skills installed'}</p>
           <p className="mt-1 text-[12px] text-muted">Upload a skill folder or install one from npm to give the agent new abilities.</p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-[12px] border border-line">
+        <div className="overflow-hidden rounded-[18px] border border-line">
           {skills.map((skill, index) => (
             <div key={skill.name} className={cn('px-3 py-3', index !== 0 && 'border-t border-line')}>
               <div className="flex items-start gap-2.5">
-                <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-[6px] bg-accent-soft text-accent">
+                <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-[8px] bg-accent-soft text-accent">
                   <Sparkles size={11} />
                 </span>
                 <div className="min-w-0 flex-1">
@@ -1301,13 +1301,13 @@ function DeployCredentialCard({ providerId }: { providerId: DeployProviderId }) 
   const Icon = meta.icon
 
   return (
-    <div className="rounded-[12px] border border-line bg-panel">
+    <div className="rounded-[18px] border border-line bg-panel">
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
         className="flex w-full items-center gap-3 px-3 py-2.5 text-left"
       >
-        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[9px] border border-line bg-raised/60 text-muted">
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[12px] border border-line bg-raised/60 text-muted">
           <Icon size={13} />
         </span>
         <span className="min-w-0 flex-1">
@@ -1395,7 +1395,7 @@ function DeployTab() {
         description="Tokens are encrypted by the local daemon and passed to the deploy CLI through environment variables. They are never written to logs or returned to this page."
       >
         {secretsError && (
-          <p className="mb-3 rounded-[9px] border border-warning/30 bg-warning/[0.04] px-3 py-2 text-[12px] text-warning">
+          <p className="mb-3 rounded-[12px] border border-warning/30 bg-warning/[0.04] px-3 py-2 text-[12px] text-warning">
             {secretsError}
           </p>
         )}
@@ -1408,9 +1408,9 @@ function DeployTab() {
 
       <SettingsSection
         title="Command-line tools"
-        description="Lunarcode uses an installed CLI when available and falls back to npx. Node.js must be on PATH."
+        description="CreateCode uses an installed CLI when available and falls back to npx. Node.js must be on PATH."
       >
-        <div className="overflow-hidden rounded-[12px] border border-line">
+        <div className="overflow-hidden rounded-[18px] border border-line">
           {(Object.keys(DEPLOY_META) as DeployProviderId[]).map((provider, index) => {
             const tool = deployTools?.[provider]
             const meta = DEPLOY_META[provider]
@@ -1459,12 +1459,12 @@ function GeneralTab() {
 
   const quickThemes = [
     { id: 'light' as const, label: 'Light', icon: Sun },
-    { id: 'lunar' as const, label: 'Lunar', icon: Moon },
-    { id: 'dark' as const, label: 'Dark', icon: Monitor },
+    { id: 'dark' as const, label: 'Dark', icon: Moon },
+    { id: 'system' as const, label: 'System', icon: Monitor },
   ]
 
   const copyConfig = async () => {
-    const path = settings.daemon?.dataDir ?? '~/.maxcode'
+    const path = settings.daemon?.dataDir ?? '~/.createcode'
     try {
       await navigator.clipboard.writeText(path)
       notify(`Copied the data folder path: ${path}`, 'success')
@@ -1513,7 +1513,7 @@ function GeneralTab() {
                   type="button"
                   onClick={() => update({ theme: theme.id })}
                   className={cn(
-                    'flex flex-col items-center gap-1.5 rounded-[12px] border px-2 py-2.5 transition-colors',
+                    'flex flex-col items-center gap-1.5 rounded-[18px] border px-2 py-2.5 transition-colors',
                     selected ? 'border-accent bg-accent-soft text-ink' : 'border-line text-muted hover:bg-ink/[.05] hover:text-ink',
                   )}
                 >
@@ -1602,7 +1602,7 @@ function GeneralTab() {
       <div className="adw-row flex-wrap justify-between gap-3">
         <div className="min-w-0">
           <p className="adw-row-title">Show mascot</p>
-          <p className="adw-row-subtitle">The Lunarcode mark above the greeting on the home screen. Off by default.</p>
+          <p className="adw-row-subtitle">The CreateCode mark above the greeting on the home screen. Off by default.</p>
         </div>
         <Switch checked={settings.showMascot} onChange={(showMascot) => update({ showMascot })} label="Show mascot" />
       </div>
@@ -1628,7 +1628,7 @@ function GeneralTab() {
           type="button"
           onClick={() => void copyConfig()}
           className="adw-btn"
-          title={settings.daemon?.dataDir ?? '~/.maxcode'}
+          title={settings.daemon?.dataDir ?? '~/.createcode'}
         >
           <HardDrive size={16} />
           Copy data folder path
@@ -1646,9 +1646,8 @@ function AppearanceTab() {
   const update = useSettings((state) => state.update)
   const registry = useUiRegistry()
   const themes = [
-    { id: 'light' as const, label: 'Light', className: 'bg-[#fafafb]', line: 'bg-[#e0e0e3]', bar: 'bg-[#ffffff]', accent: 'bg-[#3584e4]' },
-    { id: 'lunar' as const, label: 'Lunar', className: 'bg-[#131420]', line: 'bg-[#2c2e42]', bar: 'bg-[#0e0f17]', accent: 'bg-[#8e96ff]' },
-    { id: 'dark' as const, label: 'Dark', className: 'bg-[#18181c]', line: 'bg-[#36363f]', bar: 'bg-[#1e1e23]', accent: 'bg-[#60a0ff]' },
+    { id: 'light' as const, label: 'Light', className: 'bg-[#f6f6f8]', line: 'bg-[#e5e5eb]', bar: 'bg-[#ececf1]', accent: 'bg-[#3478d6]' },
+    { id: 'dark' as const, label: 'Dark', className: 'bg-[#222226]', line: 'bg-[#3c3c43]', bar: 'bg-[#2b2b30]', accent: 'bg-[#3e86e0]' },
     // Themes contributed by extensions; their swatch is drawn from their own palette.
     ...registry.themes.map((theme) => ({
       id: theme.id,
@@ -1664,7 +1663,7 @@ function AppearanceTab() {
 
   return (
     <>
-      <SettingsSection title="Theme" description="Light, Lunar (moonlit indigo) or graphite Dark.">
+      <SettingsSection title="Theme" description="Adwaita Light or Dark.">
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {themes.map((theme) => {
             const selected = settings.theme === theme.id
@@ -1675,11 +1674,11 @@ function AppearanceTab() {
                 onClick={() => update({ theme: theme.id })}
                 aria-pressed={selected}
                 className={cn(
-                  'rounded-[12px] border p-2 text-left transition-colors',
+                  'rounded-[18px] border p-2 text-left transition-colors',
                   selected ? 'border-accent bg-accent-soft' : 'border-line hover:bg-ink/[.05]',
                 )}
               >
-                <span className={cn('block h-16 w-full overflow-hidden rounded-[9px] border border-line', theme.className)} style={swatch(theme.palette, 'canvas')}>
+                <span className={cn('block h-16 w-full overflow-hidden rounded-[12px] border border-line', theme.className)} style={swatch(theme.palette, 'canvas')}>
                   <span className={cn('block h-3 w-full', theme.bar)} style={swatch(theme.palette, 'headerbar') ?? swatch(theme.palette, 'panel')} />
                   <span className="block p-2">
                     <span className={cn('block h-1.5 w-8 rounded-[3px]', theme.line)} style={swatch(theme.palette, 'line')} />
@@ -1714,20 +1713,20 @@ function AppearanceTab() {
                 onClick={() => update({ uiStyle: style.id })}
                 aria-pressed={selected}
                 className={cn(
-                  'rounded-[12px] border p-2 text-left transition-colors',
+                  'rounded-[18px] border p-2 text-left transition-colors',
                   selected ? 'border-accent bg-accent-soft' : 'border-line hover:bg-ink/[.05]',
                 )}
               >
                 <span
-                  className="relative block h-20 w-full overflow-hidden rounded-[10px] border border-line"
+                  className="relative block h-20 w-full overflow-hidden rounded-[14px] border border-line"
                   style={
                     glass
-                      ? { background: 'radial-gradient(70% 90% at 15% 10%, rgb(var(--lunar-a) / .75), transparent 60%), radial-gradient(60% 80% at 90% 90%, rgb(var(--lunar-b) / .65), transparent 60%), rgb(var(--lunar-c) / .35)' }
+                      ? { background: 'radial-gradient(70% 90% at 15% 10%, rgb(var(--glass-a) / .75), transparent 60%), radial-gradient(60% 80% at 90% 90%, rgb(var(--glass-b) / .65), transparent 60%), rgb(var(--glass-c) / .35)' }
                       : { background: 'rgb(var(--canvas))' }
                   }
                 >
                   <span
-                    className={cn('absolute left-2 top-2 bottom-2 w-7', glass ? 'rounded-[8px] border border-white/40 bg-white/25' : 'rounded-[3px] bg-sidebar')}
+                    className={cn('absolute left-2 top-2 bottom-2 w-7', glass ? 'rounded-[10px] border border-white/40 bg-white/25' : 'rounded-[3px] bg-sidebar')}
                     style={glass ? { backdropFilter: 'blur(6px)' } : undefined}
                   />
                   <span
@@ -1735,7 +1734,7 @@ function AppearanceTab() {
                     style={glass ? { backdropFilter: 'blur(6px)' } : undefined}
                   />
                   <span
-                    className={cn('absolute left-11 right-2 bottom-2 h-8', glass ? 'rounded-[10px] border border-white/40 bg-white/25' : 'rounded-[3px] bg-card')}
+                    className={cn('absolute left-11 right-2 bottom-2 h-8', glass ? 'rounded-[14px] border border-white/40 bg-white/25' : 'rounded-[3px] bg-card')}
                     style={glass ? { backdropFilter: 'blur(6px)' } : undefined}
                   />
                 </span>
@@ -1813,7 +1812,7 @@ function AboutTab() {
           ? 'Conversation history cleared.'
           : scope === 'settings'
             ? 'Settings restored to defaults.'
-            : 'Lunarcode was reset.',
+            : 'CreateCode was reset.',
         'success',
       )
     } catch (cause) {
@@ -1830,13 +1829,13 @@ function AboutTab() {
           <LogoMark size={46} />
           <div>
             <div className="flex flex-wrap items-baseline gap-2">
-              <h3 className="text-[16px] font-bold text-ink">Lunarcode</h3>
+              <h3 className="text-[16px] font-bold text-ink">CreateCode</h3>
               <span className="text-[12px] text-faint">v{daemon?.version ?? '1.0.0'}</span>
             </div>
-            <p className="mt-0.5 text-[12px] font-medium text-muted">An OpenSoftX product</p>
+            <p className="mt-0.5 text-[12px] font-medium text-muted">A Bibobonking product</p>
             <p className="mt-2 max-w-[520px] text-[12px] leading-relaxed text-muted">
               A local-first coding agent with a real workspace, shell, git, web research, subagents and deploy flows.
-              No Lunarcode account and no OpenSoftX server. Your keys never leave this machine.
+              No CreateCode account and no Bibobonking server. Your keys never leave this machine.
             </p>
           </div>
         </div>
@@ -1846,7 +1845,7 @@ function AboutTab() {
             ['Messages', String(messageCount)],
             ['Workspace files', workspace.available ? String(fileCount) : 'None'],
           ].map(([label, value]) => (
-            <div key={label} className="rounded-[9px] border border-line bg-raised/30 px-3 py-2">
+            <div key={label} className="rounded-[12px] border border-line bg-raised/30 px-3 py-2">
               <p className="text-[12px] text-faint">{label}</p>
               <p className="mt-0.5 text-[13px] font-bold text-ink">{value}</p>
             </div>
@@ -1854,12 +1853,12 @@ function AboutTab() {
         </div>
       </SettingsSection>
 
-      <SettingsSection title="Local data" description="Everything is stored under ~/.maxcode. Clearing that folder removes Lunarcode’s local state.">
-        <div className="space-y-1.5 rounded-[9px] border border-line bg-raised/30 px-3 py-2.5 text-[12px]">
+      <SettingsSection title="Local data" description="Everything is stored under ~/.createcode. Clearing that folder removes CreateCode’s local state.">
+        <div className="space-y-1.5 rounded-[12px] border border-line bg-raised/30 px-3 py-2.5 text-[12px]">
           <p className="flex items-center justify-between gap-3">
             <span className="text-faint">Data folder</span>
             <span className="min-w-0 truncate font-mono text-ink" title={daemon?.dataDir}>
-              {daemon?.dataDir ?? '~/.maxcode'}
+              {daemon?.dataDir ?? '~/.createcode'}
             </span>
           </p>
           <p className="flex items-center justify-between gap-3">
@@ -1883,14 +1882,14 @@ function AboutTab() {
           <button
             type="button"
             onClick={exportChats}
-            className="inline-flex h-8 items-center gap-1.5 rounded-[9px] border border-line bg-panel px-2.5 text-[12px] font-medium text-ink hover:bg-raised"
+            className="inline-flex h-8 items-center gap-1.5 rounded-[12px] border border-line bg-panel px-2.5 text-[12px] font-medium text-ink hover:bg-raised"
           >
             <ArrowDownToLine size={12} /> Export conversations
           </button>
           <button
             type="button"
             onClick={() => importRef.current?.click()}
-            className="inline-flex h-8 items-center gap-1.5 rounded-[9px] border border-line bg-panel px-2.5 text-[12px] font-medium text-ink hover:bg-raised"
+            className="inline-flex h-8 items-center gap-1.5 rounded-[12px] border border-line bg-panel px-2.5 text-[12px] font-medium text-ink hover:bg-raised"
           >
             <Upload size={12} /> Import conversations
           </button>
@@ -1927,7 +1926,7 @@ function AboutTab() {
               })
             }
             disabled={busy === 'history'}
-            className="inline-flex h-8 items-center gap-1.5 rounded-[9px] border border-line bg-panel px-2.5 text-[12px] font-medium text-ink hover:bg-raised disabled:opacity-40"
+            className="inline-flex h-8 items-center gap-1.5 rounded-[12px] border border-line bg-panel px-2.5 text-[12px] font-medium text-ink hover:bg-raised disabled:opacity-40"
           >
             {busy === 'history' ? <Spinner size={12} /> : <Trash2 size={12} />} Clear history
           </button>
@@ -1943,7 +1942,7 @@ function AboutTab() {
 
       <SettingsSection title="Danger zone">
         <div className="space-y-2">
-          <div className="flex flex-col gap-2 rounded-[9px] border border-line px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-2 rounded-[12px] border border-line px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-[12px] font-medium text-ink">Restore default settings</p>
               <p className="mt-0.5 text-[12px] text-muted">Reset prompt, modes, tool permissions and skills. Keys and chats stay.</p>
@@ -1958,14 +1957,14 @@ function AboutTab() {
                 })
               }
               disabled={busy === 'settings'}
-              className="inline-flex h-7 shrink-0 items-center gap-1 self-start rounded-[9px] border border-line px-2.5 text-[12px] font-medium text-muted hover:border-warning/30 hover:text-warning disabled:opacity-40 sm:self-auto"
+              className="inline-flex h-7 shrink-0 items-center gap-1 self-start rounded-[12px] border border-line px-2.5 text-[12px] font-medium text-muted hover:border-warning/30 hover:text-warning disabled:opacity-40 sm:self-auto"
             >
               {busy === 'settings' ? <Spinner size={11} /> : <RotateCcw size={11} />} Restore defaults
             </button>
           </div>
-          <div className="flex flex-col gap-2 rounded-[9px] border border-danger/20 bg-danger/[0.02] px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-2 rounded-[12px] border border-danger/20 bg-danger/[0.02] px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-[12px] font-medium text-ink">Reset Lunarcode</p>
+              <p className="text-[12px] font-medium text-ink">Reset CreateCode</p>
               <p className="mt-0.5 text-[12px] text-muted">
                 Delete conversations, encrypted keys, skills, settings and the remembered workspace.
               </p>
@@ -1980,7 +1979,7 @@ function AboutTab() {
                 })
               }
               disabled={busy === 'all'}
-              className="inline-flex h-7 shrink-0 items-center gap-1 self-start rounded-[9px] bg-danger px-2.5 text-[12px] font-medium text-on-accent hover:bg-danger/90 disabled:opacity-40 sm:self-auto"
+              className="inline-flex h-7 shrink-0 items-center gap-1 self-start rounded-[12px] bg-danger px-2.5 text-[12px] font-medium text-on-accent hover:bg-danger/90 disabled:opacity-40 sm:self-auto"
             >
               {busy === 'all' ? <Spinner size={11} /> : <Trash2 size={11} />} Reset everything
             </button>
@@ -2043,7 +2042,7 @@ export function SettingsModal() {
   }, [open, tab])
 
   const copyConfig = async () => {
-    const path = daemon?.dataDir ?? '~/.lunarcode'
+    const path = daemon?.dataDir ?? '~/.createcode'
     try {
       await navigator.clipboard.writeText(path)
       notify(`Copied the data folder path: ${path}`, 'success')
@@ -2065,7 +2064,7 @@ export function SettingsModal() {
             <h2 id="settings-title" className="text-[16px] font-bold text-ink">
               Preferences
             </h2>
-            <p className="text-[12px] text-muted">Lunarcode · v4.0.0</p>
+            <p className="text-[12px] text-muted">CreateCode · v4.0.0</p>
           </div>
           <nav className="flex-1 space-y-0.5 overflow-y-auto px-2 pb-3" aria-label="Preferences">
             {TABS.map((item) => {
@@ -2102,7 +2101,7 @@ export function SettingsModal() {
                 disabled={item.disabled}
                 aria-pressed={tab === item.id}
                 className={cn(
-                  'h-8 shrink-0 rounded-[9px] px-3 text-[13px] font-semibold disabled:opacity-45',
+                  'h-8 shrink-0 rounded-[12px] px-3 text-[13px] font-semibold disabled:opacity-45',
                   tab === item.id ? 'bg-ink/[.11] text-ink' : 'text-muted hover:bg-ink/[.07]',
                 )}
               >
@@ -2120,7 +2119,7 @@ export function SettingsModal() {
               type="button"
               onClick={() => void copyConfig()}
               className="adw-btn hidden h-8 sm:inline-flex"
-              title={daemon?.dataDir ?? '~/.lunarcode'}
+              title={daemon?.dataDir ?? '~/.createcode'}
             >
               <HardDrive size={16} />
               Data folder

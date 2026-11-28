@@ -118,7 +118,7 @@ export async function resolveWorkspacePath(input, { allowRoot = true } = {}) {
     throw new HttpError(403, 'That path is outside the open workspace.', 'outside_workspace')
   }
   if (/^(.*\/)?\.git(\/|$)/.test(rel)) {
-    throw new HttpError(403, 'Lunarcode does not edit the .git directory.', 'git_protected')
+    throw new HttpError(403, 'CreateCode does not edit the .git directory.', 'git_protected')
   }
   const absolute = await insideRoot(root, candidate)
   return { root, absolute, relative: rel || '.' }
@@ -285,7 +285,7 @@ export async function writeWorkspaceFile(input, content, { create = true } = {})
   const { root, absolute, relative } = await resolveWorkspacePath(input, { allowRoot: false })
   if (typeof content !== 'string') throw new HttpError(400, 'File content must be text.', 'bad_content')
   if (Buffer.byteLength(content, 'utf8') > MAX_WRITE) {
-    throw new HttpError(413, 'That file is too large to write from Lunarcode.', 'file_too_large')
+    throw new HttpError(413, 'That file is too large to write from CreateCode.', 'file_too_large')
   }
   const existing = await stat(absolute).catch(() => null)
   if (!existing && !create) throw new HttpError(404, `File not found: ${relative}`, 'not_found')
@@ -295,7 +295,7 @@ export async function writeWorkspaceFile(input, content, { create = true } = {})
     previousText = await readFile(absolute, 'utf8').catch(() => '')
   }
   await mkdir(path.dirname(absolute), { recursive: true })
-  const temp = `${absolute}.${process.pid}.maxcode.tmp`
+  const temp = `${absolute}.${process.pid}.createcode.tmp`
   await writeFile(temp, content, 'utf8')
   try {
     // Keep the original permissions (e.g. the executable bit) across the atomic swap.
@@ -579,7 +579,7 @@ export async function runShell(command, { mode = 'build', timeoutMs = 120_000 } 
   const result = await runProcess(shell.file, shell.args(command), {
     cwd: root,
     timeoutMs: Math.max(1000, Math.min(Number(timeoutMs) || 120_000, 600_000)),
-    env: { OPENSOL: '1', OPENSOL_WORKSPACE: root, MAXCODE: '1', MAXCODE_WORKSPACE: root },
+    env: { CREATECODE: '1', CREATECODE_WORKSPACE: root },
   })
   return { ...result, command, cwd: root, shell: describeShell(shell) }
 }
@@ -718,7 +718,7 @@ async function duckduckgo(query, signal) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
-      'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 OpenSol/1.0',
+      'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 CreateCode/1.0',
     },
     body: new URLSearchParams({ q: query }).toString(),
     signal,
@@ -861,7 +861,7 @@ export async function readUrl(rawUrl, { maxBytes = 400_000 } = {}) {
       redirect: 'manual',
       headers: {
         Accept: 'text/html,text/plain,application/json;q=0.9,*/*;q=0.5',
-        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 OpenSol/1.0',
+        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 CreateCode/1.0',
       },
       signal,
     })
@@ -879,7 +879,7 @@ export async function readUrl(rawUrl, { maxBytes = 400_000 } = {}) {
   }
   const type = response.headers.get('content-type') ?? ''
   if (!/text\/|json|xml|javascript/i.test(type)) {
-    throw new HttpError(415, `Lunarcode cannot read ${type || 'that content type'}.`, 'unsupported_type')
+    throw new HttpError(415, `CreateCode cannot read ${type || 'that content type'}.`, 'unsupported_type')
   }
   const raw = (await response.text()).slice(0, maxBytes)
   const text = /html/i.test(type) ? stripHtml(raw) : raw
@@ -894,7 +894,7 @@ export async function readUrl(rawUrl, { maxBytes = 400_000 } = {}) {
   }
 }
 
-const INSTRUCTION_FILES = ['LUNARCODE.md', 'OPENSOL.md', 'MAXCODE.md', 'AGENTS.md', 'CLAUDE.md', '.lunarcode/instructions.md', '.opensol/instructions.md', '.maxcode/instructions.md']
+const INSTRUCTION_FILES = ['CREATECODE.md', 'AGENTS.md', 'CLAUDE.md', '.createcode/instructions.md']
 const MAX_INSTRUCTIONS = 20_000
 
 /** The first project instruction file found in the open workspace, if any. */

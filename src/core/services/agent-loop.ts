@@ -213,7 +213,7 @@ export class AgentLoopService extends Service {
               attempt += 1
               const wait = backoffMs(attempt, message)
               window.dispatchEvent(
-                new CustomEvent('maxcode:notice', {
+                new CustomEvent('createcode:notice', {
                   detail: {
                     message: `${providerName} had a temporary error. Retrying in ${Math.round(wait / 1000)}s (${attempt}/${MAX_RETRIES})…`,
                     tone: 'info',

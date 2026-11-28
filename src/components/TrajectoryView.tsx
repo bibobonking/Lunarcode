@@ -97,7 +97,7 @@ export function TrajectoryView({ session }: { session: ChatSession }) {
                     <div className="min-w-0 flex-1 adw-boxed px-3 py-2">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <span className="flex min-w-0 items-center gap-1.5 text-[13px] font-semibold text-ink">
-                          Lunarcode
+                          CreateCode
                           {message.model && (
                             <span className="truncate text-[12px] font-normal text-faint">{message.model}</span>
                           )}

@@ -54,7 +54,7 @@ export interface CompactOptions {
 }
 
 function notice(message: string, tone: 'info' | 'success' | 'error') {
-  window.dispatchEvent(new CustomEvent('maxcode:notice', { detail: { message, tone } }))
+  window.dispatchEvent(new CustomEvent('createcode:notice', { detail: { message, tone } }))
 }
 
 function sleep(ms: number): Promise<void> {

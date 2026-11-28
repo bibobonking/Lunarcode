@@ -1,3 +1,4 @@
+import { cn } from '../lib/utils'
 import { useEffect, useRef, useState } from 'react'
 import { ArrowUp, Bug, ChevronRight, Gamepad2, KeyRound, LayoutTemplate } from 'lucide-react'
 import type { Attachment } from '../types'
@@ -154,7 +155,7 @@ export function ChatView({ view, onViewChange }: { view: ChatViewMode; onViewCha
       case 'search': {
         if (!args.trim()) {
           setDraft('/search ')
-          notify('Type what you want Lunarcode to research.', 'info')
+          notify('Type what you want CreateCode to research.', 'info')
           focusComposer()
           return false
         }
@@ -176,7 +177,7 @@ export function ChatView({ view, onViewChange }: { view: ChatViewMode; onViewCha
       case 'build': {
         setMode('build')
         if (!args.trim()) {
-          notify('Build mode is on: Lunarcode can edit files and run commands.', 'info')
+          notify('Build mode is on: CreateCode can edit files and run commands.', 'info')
           focusComposer()
           return true
         }
@@ -236,7 +237,7 @@ export function ChatView({ view, onViewChange }: { view: ChatViewMode; onViewCha
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-panel">
       {!session || messages.length === 0 ? (
-        <div className="thin-scroll lunar-aurora min-h-0 flex-1 overflow-y-auto">
+        <div className="thin-scroll min-h-0 flex-1 overflow-y-auto">
           <div className="welcome-stagger mx-auto flex min-h-full w-full max-w-[760px] flex-col justify-center gap-6 px-4 py-8 sm:px-6">
             <HomeGreeting />
 
@@ -272,12 +273,12 @@ export function ChatView({ view, onViewChange }: { view: ChatViewMode; onViewCha
                     key={starter.label}
                     type="button"
                     onClick={() => useStarter(starter.prompt)}
-                    className="lift-card group/start flex items-center gap-2.5 rounded-[10px] border border-line bg-card px-3 py-2.5 text-left"
+                    className="lift-card group/start flex items-center gap-3 rounded-[18px] border border-line/60 bg-card px-3.5 py-3.5 text-left"
                   >
-                    <span className="tool-icon h-7 w-7" aria-hidden="true">
+                    <span className={cn('tool-icon h-9 w-9 rounded-[12px]', ['tint-blue', 'tint-purple', 'tint-green'][STARTERS.indexOf(starter) % 3])} aria-hidden="true">
                       <starter.icon size={15} />
                     </span>
-                    <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-ink">{starter.label}</span>
+                    <span className="min-w-0 flex-1 text-[13px] font-semibold leading-snug text-ink">{starter.label}</span>
                     <ChevronRight size={14} className="shrink-0 text-faint transition-transform duration-200 group-hover/start:translate-x-0.5 group-hover/start:text-accent" />
                   </button>
                 ))}
@@ -325,7 +326,7 @@ export function ChatView({ view, onViewChange }: { view: ChatViewMode; onViewCha
                       setAtBottom(true)
                       scrollToBottom('smooth')
                     }}
-                    className="adw-btn jump-in absolute bottom-4 left-1/2 -translate-x-1/2 border border-line bg-panel shadow-popover hover:bg-raised"
+                    className="adw-btn jump-in absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full border border-line bg-card hover:bg-raised"
                   >
                     <ArrowUp size={16} />
                     Jump to latest
@@ -335,7 +336,7 @@ export function ChatView({ view, onViewChange }: { view: ChatViewMode; onViewCha
             )}
           </div>
 
-          <div className="shrink-0 border-t border-line bg-panel px-4 pb-3 pt-3 sm:px-6">
+          <div className="shrink-0 bg-panel px-4 pb-4 pt-2 sm:px-6">
             <div className="chat-compact mx-auto w-full max-w-[886px]">
               <Composer
                 value={draft}

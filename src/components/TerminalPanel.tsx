@@ -14,7 +14,7 @@ function shortPath(path: string) {
   return `…/${parts.slice(-2).join('/')}`
 }
 
-/** Bottom dock: run commands in the workspace without leaving Lunarcode. */
+/** Bottom dock: run commands in the workspace without leaving CreateCode. */
 export function TerminalPanel() {
   const open = useUi((state) => state.terminalOpen)
   const setOpen = useUi((state) => state.setTerminalOpen)
@@ -22,7 +22,7 @@ export function TerminalPanel() {
   const { lines, cwd, running, history, exitCode, run, stop, clear, setCwd } = useTerminal()
   const [value, setValue] = useState('')
   const [height, setHeight] = useState(() => {
-    const saved = Number(localStorage.getItem('lunarcode.terminal.height'))
+    const saved = Number(localStorage.getItem('createcode.terminal.height'))
     return Number.isFinite(saved) && saved >= MIN_HEIGHT ? saved : 260
   })
   const [historyIndex, setHistoryIndex] = useState(-1)
@@ -58,7 +58,7 @@ export function TerminalPanel() {
         window.removeEventListener('pointermove', onMove)
         window.removeEventListener('pointerup', onUp)
         try {
-          localStorage.setItem('lunarcode.terminal.height', String(Math.round(latest)))
+          localStorage.setItem('createcode.terminal.height', String(Math.round(latest)))
         } catch {
           /* storage can be unavailable */
         }
@@ -131,7 +131,7 @@ export function TerminalPanel() {
         </span>
         {running && (
           <span className="tool-chip" data-tone="running">
-            <span className="moon-spinner h-3 w-3" aria-hidden="true" /> Running
+            <span className="adw-spinner h-3 w-3" aria-hidden="true" /> Running
           </span>
         )}
         {running && (
@@ -174,7 +174,7 @@ export function TerminalPanel() {
           line.kind === 'command' ? (
             <div key={line.id} className="flex gap-2 pt-1">
               <span className="shrink-0 text-faint">{shortPath(line.cwd ?? '')}</span>
-              <span className="lunar-text shrink-0 font-bold">❯</span>
+              <span className="accent-text shrink-0 font-bold">❯</span>
               <span className="min-w-0 break-all font-semibold text-ink">{line.spans[0]?.text}</span>
             </div>
           ) : line.kind === 'info' ? (
@@ -197,7 +197,7 @@ export function TerminalPanel() {
         )}
         <div className="flex items-center gap-2 pt-1">
           <span className="shrink-0 text-faint">{shortPath(where)}</span>
-          <span className={cn('shrink-0 font-bold', exitCode && !running ? 'text-danger' : 'lunar-text')}>❯</span>
+          <span className={cn('shrink-0 font-bold', exitCode && !running ? 'text-danger' : 'accent-text')}>❯</span>
           <input
             ref={input}
             value={value}
@@ -212,7 +212,7 @@ export function TerminalPanel() {
             autoCapitalize="off"
             aria-label="Terminal command"
             placeholder={running ? 'Running…' : ''}
-            className="min-w-0 flex-1 bg-transparent font-mono text-[12.5px] text-ink caret-[rgb(var(--lunar-a))] outline-none placeholder:text-faint"
+            className="min-w-0 flex-1 bg-transparent font-mono text-[12.5px] text-ink caret-[rgb(var(--accent))] outline-none placeholder:text-faint"
           />
         </div>
       </div>

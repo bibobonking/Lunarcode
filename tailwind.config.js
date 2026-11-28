@@ -34,15 +34,16 @@ export default {
         mono: ['"Adwaita Mono"', 'Iosevka', '"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
       },
       borderRadius: {
-        sm: '4px',
-        DEFAULT: '6px',
-        md: '6px',
-        lg: '9px',
-        xl: '12px',
-        '2xl': '15px',
+        sm: '6px',
+        DEFAULT: '8px',
+        md: '10px',
+        lg: '12px',
+        xl: '18px',
+        '2xl': '22px',
       },
       boxShadow: {
-        popover: '0 1px 2px rgba(0,0,0,.08), 0 8px 24px rgba(0,0,0,.14)',
+        popover: 'none',
+        '2xl': 'none',
       },
       transitionTimingFunction: {
         out: 'cubic-bezier(0.16, 1, 0.3, 1)',

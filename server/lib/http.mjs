@@ -227,7 +227,7 @@ export async function serveStatic(req, res, root, pathname, { transform } = {}) 
     info = await stat(target).catch(() => null)
   }
   if (!info?.isFile()) {
-    throw new HttpError(503, 'Lunarcode is not built yet. Run the remote build and place the output in dist/.', 'dist_missing')
+    throw new HttpError(503, 'CreateCode is not built yet. Run the remote build and place the output in dist/.', 'dist_missing')
   }
 
   const ext = path.extname(target).toLowerCase()

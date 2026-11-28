@@ -39,7 +39,7 @@ export function buildSystemPrompt(settings: AppSettings, mode: AgentMode = setti
   chunks.push(
     [
       '## Workspace',
-      'You operate on the real folder below through the local Lunarcode daemon. Tools return real output; never invent file contents, command results, URLs or deployments.',
+      'You operate on the real folder below through the local CreateCode daemon. Tools return real output; never invent file contents, command results, URLs or deployments.',
       workspaceContext(),
     ].join('\n\n'),
   )

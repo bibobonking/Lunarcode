@@ -23,11 +23,11 @@ import {
 import { defaultEffort, normalizeEffort } from '../lib/reasoning'
 import { normalizeTheme } from '../lib/themes'
 
-export const DEFAULT_SYSTEM_PROMPT = `You are Lunarcode, a senior engineer and coding agent built by OpenSoftX. You work directly in the user's open folder through a local daemon. The shell, file, git, search and deploy tools are real and act on real files.
+export const DEFAULT_SYSTEM_PROMPT = `You are CreateCode, a senior engineer and coding agent built by Bibobonking. You work directly in the user's open folder through a local daemon. The shell, file, git, search and deploy tools are real and act on real files.
 
 # Priorities (highest first)
 1. Safety of the user's data, machine and secrets.
-2. The user's explicit instructions in this conversation, then project instructions (AGENTS.md / CLAUDE.md / MAXCODE.md).
+2. The user's explicit instructions in this conversation, then project instructions (AGENTS.md / CLAUDE.md / CREATECODE.md).
 3. Correctness, verified by running real checks.
 4. Minimal, focused change.
 5. Brevity.
@@ -102,7 +102,7 @@ const DEFAULTS: AppSettings = {
   providers: {},
   searchProvider: 'duckduckgo',
   tools: DEFAULT_TOOLS,
-  theme: 'lunar',
+  theme: 'system',
   uiStyle: 'default',
   showTokenEstimate: true,
   mode: 'build',
@@ -138,7 +138,7 @@ interface SettingsStore extends AppSettings {
 
 function notify(message: string, tone: 'info' | 'success' | 'error' = 'error') {
   if (typeof window === 'undefined') return
-  window.dispatchEvent(new CustomEvent('maxcode:notice', { detail: { message, tone } }))
+  window.dispatchEvent(new CustomEvent('createcode:notice', { detail: { message, tone } }))
 }
 
 function mergeTools(saved?: Partial<Record<BuiltinToolName, Partial<ToolSetting>>>) {
@@ -149,40 +149,8 @@ function mergeTools(saved?: Partial<Record<BuiltinToolName, Partial<ToolSetting>
   return merged
 }
 
-const PREVIOUS_DEFAULT_PROMPT = `You are OpenSol, a senior web engineer and coding agent built by OpenSoftX.
-
-You work directly in the user's open folder through a local daemon. The shell, file, git, search and deploy tools are real. Never describe tool output you did not receive.
-
-Engineering standard:
-- Read every file you change. Match the existing stack, style, naming and conventions. Never invent APIs, versions, flags, package names or paths.
-- Make the smallest correct change. One concern per edit. No speculative abstraction, dead code, placeholder TODOs or swallowed errors.
-- Keep public behavior stable unless the task explicitly changes it.
-- Security: never expose secrets, never weaken auth, CSRF, CSP or validation to make something pass, and validate untrusted input at boundaries.
-- Accessibility: semantic HTML, keyboard paths, visible focus, sufficient contrast.
-- Performance: avoid needless work; measure before optimizing.
-- Every bug fix gets a regression test when a test setup exists. Tests assert behavior, not implementation.
-
-Working loop:
-1. Inspect before editing: list files, read the relevant source, grep for call sites, check git status.
-2. For non-trivial work, state a short plan.
-3. Edit in small, coherent steps.
-4. Verify with the project's real commands (typecheck, lint, tests, build) and read the output.
-5. Report what changed, which files, and what was verified. If a check fails or cannot run, say so plainly and explain why.
-
-Never claim a check passed without running it. Ask only when a decision is genuinely ambiguous or destructive. Answer in the user's language. Cite web sources as links, and only when you actually read them.`
-
-const OPENSOL_ERA_DEFAULT_PROMPT = DEFAULT_SYSTEM_PROMPT.replace(/Lunarcode/g, 'OpenSol')
-
 function upgradePrompt(value: unknown) {
-  if (typeof value !== 'string' || !value.trim()) return DEFAULT_SYSTEM_PROMPT
-  // Untouched copies of the previous default move to the new one; edited prompts are left alone.
-  if (value.trim() === PREVIOUS_DEFAULT_PROMPT.trim()) return DEFAULT_SYSTEM_PROMPT
-  if (value.trim() === OPENSOL_ERA_DEFAULT_PROMPT.trim()) return DEFAULT_SYSTEM_PROMPT
-  const legacy =
-    /sandboxed workspace stored in the user's browser/i.test(value) ||
-    /There is no node, npm, git or network in the shell/i.test(value) ||
-    /workspace root is \/workspace/i.test(value)
-  return legacy ? DEFAULT_SYSTEM_PROMPT : value
+  return typeof value === 'string' && value.trim() ? value : DEFAULT_SYSTEM_PROMPT
 }
 
 function sanitizeWorkspacePrompts(value: unknown): Record<string, string> {

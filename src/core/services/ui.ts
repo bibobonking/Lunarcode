@@ -53,7 +53,7 @@ export interface UiSnapshot {
   themes: UiTheme[]
 }
 
-const STYLE_ID = (id: string) => `lunarcode-theme-${id}`
+const STYLE_ID = (id: string) => `createcode-theme-${id}`
 
 function tokens(palette: Record<string, string>): Array<[string, string]> {
   return Object.entries(palette).filter(([token, value]) => /^[a-z][a-z0-9-]*$/.test(token) && /^[\d\s.]+$/.test(value))

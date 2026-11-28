@@ -1,0 +1,11 @@
+#!/bin/sh
+# CreateCode desktop CLI (Linux/macOS): runs server/cli.mjs on the app's own Node runtime.
+# Put a symlink to this file on your PATH. CREATECODE_EXE overrides the executable.
+DIR="$(cd "$(dirname "$(readlink -f "$0" 2>/dev/null || echo "$0")")" && pwd)"
+for exe in "$CREATECODE_EXE" "$DIR/../../../CreateCode" "$DIR/../../../createcode" "$DIR/../../../MacOS/CreateCode"; do
+  if [ -n "$exe" ] && [ -x "$exe" ]; then
+    ELECTRON_RUN_AS_NODE=1 exec "$exe" "$DIR/../server/cli.mjs" "$@"
+  fi
+done
+echo "createcode: could not find the CreateCode executable (set CREATECODE_EXE)." >&2
+exit 1

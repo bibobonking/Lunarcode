@@ -159,7 +159,7 @@ export function TopBar({
         <button
           type="button"
           className="theme-toggle adw-icon-btn hidden sm:inline-flex"
-          onClick={() => update({ theme: isDark ? 'light' : 'lunar' })}
+          onClick={() => update({ theme: isDark ? 'light' : 'dark' })}
           title={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
           aria-label="Toggle theme"
         >

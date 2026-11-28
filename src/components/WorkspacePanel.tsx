@@ -117,7 +117,7 @@ function FolderPicker({ onDone }: { onDone?: () => void }) {
       <div className="border-b border-line px-4 py-4">
         <p className="text-[16px] font-bold text-ink">Choose a real folder</p>
         <p className="mt-1 text-[13px] leading-relaxed text-muted">
-          Lunarcode works directly in this folder through the local daemon. Nothing is uploaded.
+          CreateCode works directly in this folder through the local daemon. Nothing is uploaded.
         </p>
       </div>
 
@@ -184,7 +184,7 @@ function FolderPicker({ onDone }: { onDone?: () => void }) {
             <button
               type="button"
               onClick={() => void load(entry.path)}
-              className="flex h-9 min-w-0 flex-1 items-center gap-2 rounded-[6px] px-2 text-left text-[13px] text-ink transition-colors hover:bg-ink/[.07]"
+              className="flex h-9 min-w-0 flex-1 items-center gap-2 rounded-[8px] px-2 text-left text-[13px] text-ink transition-colors hover:bg-ink/[.07]"
             >
               <Folder size={16} className="shrink-0 text-accent" />
               <span className="truncate">{entry.name}</span>
@@ -348,7 +348,7 @@ export function WorkspacePanel() {
                 return next
               })
             }
-            className="group flex h-8 w-full items-center gap-1.5 rounded-[6px] pr-1.5 text-left text-[13px] text-ink transition-colors hover:bg-ink/[.07]"
+            className="group flex h-8 w-full items-center gap-1.5 rounded-[8px] pr-1.5 text-left text-[13px] text-ink transition-colors hover:bg-ink/[.07]"
             style={{ paddingLeft: indent }}
             title={path}
             aria-expanded={!closed}
@@ -370,7 +370,7 @@ export function WorkspacePanel() {
               onKeyDown={(event) => {
                 if (event.key === 'Enter') void removeEntry(path)
               }}
-              className="hidden h-6 w-6 items-center justify-center rounded-[6px] text-muted hover:text-danger group-hover:flex"
+              className="hidden h-6 w-6 items-center justify-center rounded-[8px] text-muted hover:text-danger group-hover:flex"
               aria-label={`Delete ${path}`}
             >
               <Trash2 size={16} />
@@ -393,7 +393,7 @@ export function WorkspacePanel() {
         type="button"
         onClick={() => setActiveFile(path)}
         className={cn(
-          'group relative flex h-8 w-full items-center gap-1.5 rounded-[6px] pr-2 text-left text-[13px] transition-colors',
+          'group relative flex h-8 w-full items-center gap-1.5 rounded-[8px] pr-2 text-left text-[13px] transition-colors',
           active ? 'bg-accent-soft text-ink' : 'text-ink hover:bg-ink/[.07]',
         )}
         style={{ paddingLeft: indent + 18 }}
@@ -472,7 +472,7 @@ export function WorkspacePanel() {
                 onClick={() => setTab('files')}
                 aria-pressed={tab === 'files'}
                 className={cn(
-                  'h-8 rounded-[6px] px-2.5 text-[13px] font-semibold',
+                  'h-8 rounded-[8px] px-2.5 text-[13px] font-semibold',
                   tab === 'files' ? 'bg-ink/[.11] text-ink' : 'text-muted hover:bg-ink/[.07] hover:text-ink',
                 )}
               >
@@ -483,7 +483,7 @@ export function WorkspacePanel() {
                 onClick={() => setTab('preview')}
                 aria-pressed={tab === 'preview'}
                 className={cn(
-                  'h-8 rounded-[6px] px-2.5 text-[13px] font-semibold',
+                  'h-8 rounded-[8px] px-2.5 text-[13px] font-semibold',
                   tab === 'preview' ? 'bg-ink/[.11] text-ink' : 'text-muted hover:bg-ink/[.07] hover:text-ink',
                 )}
               >
@@ -494,7 +494,7 @@ export function WorkspacePanel() {
                 onClick={() => setTab('sessions')}
                 aria-pressed={tab === 'sessions'}
                 className={cn(
-                  'h-8 rounded-[6px] px-2.5 text-[13px] font-semibold',
+                  'h-8 rounded-[8px] px-2.5 text-[13px] font-semibold',
                   tab === 'sessions' ? 'bg-ink/[.11] text-ink' : 'text-muted hover:bg-ink/[.07] hover:text-ink',
                 )}
               >
@@ -505,7 +505,7 @@ export function WorkspacePanel() {
                 onClick={() => setTab('git')}
                 aria-pressed={tab === 'git'}
                 className={cn(
-                  'h-8 rounded-[6px] px-2.5 text-[13px] font-semibold',
+                  'h-8 rounded-[8px] px-2.5 text-[13px] font-semibold',
                   tab === 'git' ? 'bg-ink/[.11] text-ink' : 'text-muted hover:bg-ink/[.07] hover:text-ink',
                 )}
               >
@@ -587,7 +587,7 @@ export function WorkspacePanel() {
                           type="button"
                           onClick={() => entry.type === 'file' && setActiveFile(entry.path)}
                           className={cn(
-                            'flex h-8 w-full items-center gap-1.5 rounded-[6px] px-2 text-left font-mono text-[12px]',
+                            'flex h-8 w-full items-center gap-1.5 rounded-[8px] px-2 text-left font-mono text-[12px]',
                             activeFile === entry.path ? 'bg-accent-soft text-ink' : 'text-ink hover:bg-ink/[.07]',
                           )}
                         >
@@ -725,7 +725,7 @@ export function WorkspacePanel() {
                     onClick={async () => {
                       const confirmed = await askConfirm({
                         title: 'Forget this workspace?',
-                        body: 'The folder stays on disk. Lunarcode stops showing it and closes the current file.',
+                        body: 'The folder stays on disk. CreateCode stops showing it and closes the current file.',
                         confirmLabel: 'Forget workspace',
                       })
                       if (confirmed) await forgetWorkspace()

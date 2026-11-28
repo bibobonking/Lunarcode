@@ -1,0 +1,174 @@
+/* Chat, tool and sidebar building blocks: flat fills, soft corners. */
+
+.collapse-grid {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 0.28s var(--ease-out-quint), opacity 0.2s ease-out;
+}
+.collapse-grid.is-open { grid-template-rows: 1fr; opacity: 1; }
+.collapse-grid > .collapse-inner { min-height: 0; overflow: hidden; }
+
+.shimmer-text { animation: soft-pulse 1.6s ease-in-out infinite; color: rgb(var(--muted)); }
+@keyframes soft-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+
+/* Search box: icon, input and key hint in one pill. */
+.adw-searchbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  min-width: 0;
+  padding: 0 8px 0 14px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: rgb(var(--ink) / 0.055);
+}
+.adw-searchbox:focus-within { outline: 2px solid rgb(var(--accent) / 0.6); outline-offset: -2px; }
+.adw-searchbox > input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  color: rgb(var(--ink));
+  font-size: 13px;
+  outline: none;
+}
+.adw-searchbox > input:focus { outline: none; }
+.adw-searchbox > svg, .adw-searchbox > .adw-kbd { flex: none; }
+
+/* Adwaita spinner */
+.adw-spinner {
+  display: inline-block;
+  border-radius: 50%;
+  border: 2px solid rgb(var(--ink) / 0.14);
+  border-top-color: rgb(var(--accent));
+  animation: spinslow 0.9s linear infinite;
+}
+
+@keyframes card-in {
+  from { opacity: 0; transform: translateY(6px) scale(0.985); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes pop-check {
+  0% { transform: scale(0.4); opacity: 0; }
+  60% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(1); }
+}
+@keyframes live-dot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.45; transform: scale(1.4); } }
+
+/* Composer */
+.composer-shell { border-radius: 24px; border-color: rgb(var(--line)); background: rgb(var(--card)); }
+.composer-shell.is-focused { border-color: rgb(var(--accent) / 0.7); }
+
+/* Tool cards: status is carried by the icon and chip. */
+.tool-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 18px;
+  border: 1px solid rgb(var(--line) / 0.6);
+  background: rgb(var(--card));
+  animation: card-in 0.32s var(--ease-out-quint) both;
+  transition: border-color 0.2s ease;
+}
+.tool-card:hover { border-color: rgb(var(--ink) / 0.16); }
+.tool-card[data-status='running'] { border-color: rgb(var(--accent) / 0.45); }
+.tool-card[data-status='running']::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  width: 36%;
+  border-radius: 999px;
+  background: rgb(var(--accent));
+  animation: sweep 1.35s var(--ease-in-out-quint) infinite;
+  pointer-events: none;
+}
+.tool-card[data-status='awaiting'] { border-color: rgb(var(--warning) / 0.45); }
+.tool-card[data-status='error'] { border-color: rgb(var(--danger) / 0.4); }
+
+.tool-icon {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  color: rgb(var(--link));
+  background: rgb(98 160 234 / 0.16);
+}
+.tool-card[data-status='error'] .tool-icon { color: rgb(var(--danger)); background: rgb(var(--danger) / 0.13); }
+.tool-card[data-kind='file'] .tool-icon { color: rgb(var(--success)); background: rgb(var(--success) / 0.14); }
+
+.diff-pill {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.diff-pill-add { color: rgb(var(--success)); background: rgb(var(--success) / 0.13); }
+.diff-pill-del { color: rgb(var(--danger)); background: rgb(var(--danger) / 0.13); }
+.diff-bar { display: inline-flex; gap: 1.5px; }
+.diff-bar > i { display: block; width: 5px; height: 5px; border-radius: 2px; background: rgb(var(--ink) / 0.18); }
+.diff-bar > i.add { background: rgb(var(--success)); }
+.diff-bar > i.del { background: rgb(var(--danger)); }
+
+.tool-output { border-radius: 14px; background: rgb(var(--raised)); border: 1px solid transparent; color: rgb(var(--ink) / 0.92); }
+.tool-output .hljs { color: inherit; }
+.diff-view .hljs { background: transparent; }
+
+.tool-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  background: rgb(var(--ink) / 0.065);
+  color: rgb(var(--muted));
+}
+.tool-chip[data-tone='running'] { background: rgb(var(--accent) / 0.15); color: rgb(var(--link)); }
+.tool-chip[data-tone='done'] { background: rgb(var(--success) / 0.14); color: rgb(var(--success)); }
+.tool-chip[data-tone='error'] { background: rgb(var(--danger) / 0.14); color: rgb(var(--danger)); }
+.tool-chip[data-tone='awaiting'] { background: rgb(var(--warning) / 0.16); color: rgb(var(--warning)); }
+.tool-check { animation: pop-check 0.4s var(--ease-spring) both; }
+
+/* Sidebar workspace tree */
+.ws-chevron { transition: transform 0.22s var(--ease-out-quint); }
+.ws-chevron.is-open { transform: rotate(90deg); }
+.ws-children { position: relative; margin-left: 16px; padding-left: 6px; border-left: 2px solid rgb(var(--ink) / 0.07); }
+.ws-chat-row { position: relative; }
+.ws-live-dot { width: 7px; height: 7px; border-radius: 50%; background: rgb(var(--accent)); animation: live-dot 1.4s ease-in-out infinite; }
+.adw-nav-row > svg { transition: transform 0.2s var(--ease-spring); }
+.adw-nav-row:hover > svg { transform: scale(1.12); }
+
+/* Suggestion cards lift a little on hover. */
+.lift-card { transition: transform 0.25s var(--ease-out-quint), border-color 0.2s ease, background-color 0.2s ease; }
+.lift-card:hover { transform: translateY(-2px); border-color: rgb(var(--accent) / 0.35); }
+.lift-card:active { transform: translateY(0) scale(0.99); }
+
+html.theme-switching *,
+html.theme-switching *::before,
+html.theme-switching *::after {
+  transition: background-color 0.35s ease, border-color 0.35s ease, color 0.25s ease !important;
+}
+
+.sh-prompt { color: rgb(var(--accent)); font-weight: 600; }
+.sh-error { color: rgb(var(--danger)); }
+.sh-warn { color: rgb(var(--warning)); }
+.sh-ok { color: rgb(var(--success)); }
+.sh-path { color: rgb(var(--syn-attr)); }
+
+.agent-activity { animation: card-in 0.3s var(--ease-out-quint) both; }
+.ring-draw { stroke-dasharray: 1; animation: ring-draw 1.6s var(--ease-in-out-quint) infinite; }
+@keyframes ring-draw { from { stroke-dashoffset: 1; } 70%, to { stroke-dashoffset: 0; } }

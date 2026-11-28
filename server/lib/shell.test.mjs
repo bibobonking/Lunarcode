@@ -42,9 +42,9 @@ test('windows prefers pwsh, then Windows PowerShell, then cmd', () => {
   assert.equal(describeShell(legacy, { platform: 'win32' }), 'PowerShell on Windows')
 })
 
-test('OPENSOL_SHELL overrides detection', () => {
-  assert.equal(resolveShell({ platform: 'linux', env: { OPENSOL_SHELL: '/usr/bin/zsh' }, exists: () => false }).id, 'zsh')
-  assert.equal(resolveShell({ platform: 'linux', env: { OPENSOL_SHELL: 'pwsh' }, exists: () => false }).family, 'powershell')
+test('CREATECODE_SHELL overrides detection', () => {
+  assert.equal(resolveShell({ platform: 'linux', env: { CREATECODE_SHELL: '/usr/bin/zsh' }, exists: () => false }).id, 'zsh')
+  assert.equal(resolveShell({ platform: 'linux', env: { CREATECODE_SHELL: 'pwsh' }, exists: () => false }).family, 'powershell')
 })
 
 test('plan mode allows only read-only posix commands', () => {
@@ -82,7 +82,7 @@ test('mergePathLists keeps order and drops blanks and duplicates', () => {
 })
 
 test('parseProbedPath ignores banner noise around the markers', () => {
-  assert.equal(parseProbedPath('Welcome!\n__OPENSOL_PATH__/x/bin:/y/bin__OPENSOL_PATH__\n'), '/x/bin:/y/bin')
+  assert.equal(parseProbedPath('Welcome!\n__CREATECODE_PATH__/x/bin:/y/bin__CREATECODE_PATH__\n'), '/x/bin:/y/bin')
   assert.equal(parseProbedPath('no markers'), '')
 })
 

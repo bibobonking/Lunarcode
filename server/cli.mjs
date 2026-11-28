@@ -1,34 +1,34 @@
 #!/usr/bin/env node
-// Lunarcode desktop CLI. Desktop only: there is no npm package and no `lunarcode` bin any more.
-//   - `Lunarcode ext …` runs it inside the desktop binary (see desktop/electron/main.mjs)
-//   - resources/app/bin/lunarcode[.cmd] runs it with ELECTRON_RUN_AS_NODE (works headless, prints on Windows)
+// CreateCode desktop CLI. Desktop only: there is no npm package and no npm `bin` any more.
+//   - `CreateCode ext …` runs it inside the desktop binary (see desktop/electron/main.mjs)
+//   - resources/app/bin/createcode[.cmd] runs it with ELECTRON_RUN_AS_NODE (works headless, prints on Windows)
 import { mkdir, readdir, readFile, realpath, stat, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 
-const HELP = `Lunarcode CLI (desktop)
+const HELP = `CreateCode CLI (desktop)
 
 Usage:
-  lunarcode ext <command>     manage extensions (lunarcode ext help)
-  lunarcode version
-  lunarcode help
+  createcode ext <command>     manage extensions (createcode ext help)
+  createcode version
+  createcode help
 `
 
-const EXT_HELP = `Lunarcode extensions (.lce)
+const EXT_HELP = `CreateCode extensions (.cce)
 
-  lunarcode ext list                         installed extensions
-  lunarcode ext new <id> [--template=hello|theme|tool|patch|project] [--name="My Ext"]
+  createcode ext list                         installed extensions
+  createcode ext new <id> [--template=hello|theme|tool|patch|project] [--name="My Ext"]
                                              create an editable starter in the extensions folder
-  lunarcode ext pack <folder> [out.lce] [--name="My Ext"] [--version=1.0.0] [--desc="short description"]
-                                             zip any folder into an .lce. Without an extension.json one is
+  createcode ext pack <folder> [out.cce] [--name="My Ext"] [--version=1.0.0] [--desc="short description"]
+                                             zip any folder into an .cce. Without an extension.json one is
                                              generated from the flags (also: --id, --author); with one, the
-                                             flags override it. Output defaults to <id>-<version>.lce
-  lunarcode ext unpack <file.lce> [folder]   unzip an .lce to read or edit it
-  lunarcode ext install <file.lce|folder> [--enable]
-  lunarcode ext enable|disable|remove <id>   (remove: add --data to delete its data too)
-  lunarcode ext path                         where extensions live
+                                             flags override it. Output defaults to <id>-<version>.cce
+  createcode ext unpack <file.cce> [folder]   unzip an .cce to read or edit it
+  createcode ext install <file.cce|folder> [--enable]
+  createcode ext enable|disable|remove <id>   (remove: add --data to delete its data too)
+  createcode ext path                         where extensions live
 
 An extension runs with full access: it can change the app, run Node code in the daemon and use any file or
 network. Only install extensions you trust.`
@@ -102,7 +102,7 @@ function generateManifest(root, files, flags) {
 }
 
 async function packFolder(dir, out, flags) {
-  const { packExtension, MANIFEST_FILE } = await import('../shared/lce.mjs')
+  const { packExtension, MANIFEST_FILE } = await import('../shared/cce.mjs')
   const root = path.resolve(dir)
   if (!(await stat(root).catch(() => null))?.isDirectory()) throw new Error(`Not a folder: ${root}`)
   const target = out ? path.resolve(out) : null
@@ -127,7 +127,7 @@ async function packFolder(dir, out, flags) {
   if (description && description !== true) manifest.description = String(description)
 
   const { bytes, manifest: clean } = packExtension({ manifest, files })
-  const file = target ?? path.resolve(`${clean.id}-${clean.version}.lce`)
+  const file = target ?? path.resolve(`${clean.id}-${clean.version}.cce`)
   await mkdir(path.dirname(file), { recursive: true })
   await writeFile(file, bytes)
   console.log(`Packed ${clean.name} ${clean.version} (${clean.id}): ${Object.keys(files).length + 1} files → ${file} (${(bytes.length / 1024).toFixed(1)} KB)`)
@@ -144,7 +144,7 @@ async function commandExt(args) {
   // pack never touches the data folder, so it does not need the extension runtime.
   if (sub === 'pack') {
     const [dir, out] = positional
-    if (!dir) throw new Error('Usage: lunarcode ext pack <folder> [out.lce] [--name=…] [--version=…] [--desc=…]')
+    if (!dir) throw new Error('Usage: createcode ext pack <folder> [out.cce] [--name=…] [--version=…] [--desc=…]')
     await packFolder(dir, out, flags)
     return
   }
@@ -152,7 +152,7 @@ async function commandExt(args) {
   // Extension patches for the daemon's own modules are armed first, so everything imported below can be patched.
   await import('./lib/ext-boot.mjs')
   const ext = await import('./lib/extensions.mjs')
-  const { readExtensionArchive } = await import('../shared/lce.mjs')
+  const { readExtensionArchive } = await import('../shared/cce.mjs')
   ext.disableServerRuntime()
   const version = JSON.parse(await readFile(path.join(HERE, '..', 'package.json'), 'utf8')).version
   await ext.prepareExtensions(version)
@@ -172,15 +172,15 @@ async function commandExt(args) {
         break
       case 'new': {
         const [id] = positional
-        if (!id) throw new Error('Usage: lunarcode ext new <id> [--template=hello|theme|tool|patch|project] [--name="My Ext"]')
+        if (!id) throw new Error('Usage: createcode ext new <id> [--template=hello|theme|tool|patch|project] [--name="My Ext"]')
         await ext.createExtension({ id, name: typeof flags.name === 'string' ? flags.name : id, template: typeof flags.template === 'string' ? flags.template : 'hello' })
         console.log(`Created ${path.join(ext.EXTENSIONS_DIR, id)}`)
-        console.log(`Edit it, then: lunarcode ext enable ${id}  (the running app reloads on save)`)
+        console.log(`Edit it, then: createcode ext enable ${id}  (the running app reloads on save)`)
         break
       }
       case 'unpack': {
         const [file, dir] = positional
-        if (!file) throw new Error('Usage: lunarcode ext unpack <file.lce> [folder]')
+        if (!file) throw new Error('Usage: createcode ext unpack <file.cce> [folder]')
         const { manifest, files } = readExtensionArchive(await readFile(path.resolve(file)))
         const target = path.resolve(dir ?? manifest.id)
         for (const [name, data] of files) {
@@ -193,26 +193,26 @@ async function commandExt(args) {
       }
       case 'install': {
         const [source] = positional
-        if (!source) throw new Error('Usage: lunarcode ext install <file.lce|folder> [--enable]')
+        if (!source) throw new Error('Usage: createcode ext install <file.cce|folder> [--enable]')
         const absolute = path.resolve(source)
         const enable = flags.enable === true
         const info = await stat(absolute)
         const result = info.isDirectory() ? await ext.installDirectory(absolute, { enable }) : await ext.installArchive(await readFile(absolute), { enable })
         console.log(`${result.updated ? 'Updated' : 'Installed'} ${result.extension.name} ${result.extension.version} (${result.extension.enabled ? 'enabled' : 'disabled'}).`)
-        if (!result.extension.enabled) console.log(`Turn it on with: lunarcode ext enable ${result.extension.id}`)
+        if (!result.extension.enabled) console.log(`Turn it on with: createcode ext enable ${result.extension.id}`)
         break
       }
       case 'enable':
       case 'disable': {
         const [id] = positional
-        if (!id) throw new Error(`Usage: lunarcode ext ${sub} <id>`)
+        if (!id) throw new Error(`Usage: createcode ext ${sub} <id>`)
         await ext.setExtensionEnabled(id, sub === 'enable')
-        console.log(`${id} ${sub}d. A running Lunarcode picks this up on its own.`)
+        console.log(`${id} ${sub}d. A running CreateCode picks this up on its own.`)
         break
       }
       case 'remove': {
         const [id] = positional
-        if (!id) throw new Error('Usage: lunarcode ext remove <id> [--data]')
+        if (!id) throw new Error('Usage: createcode ext remove <id> [--data]')
         await ext.uninstallExtension(id, { removeData: flags.data === true })
         console.log(`Removed ${id}.`)
         break

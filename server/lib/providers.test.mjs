@@ -5,8 +5,8 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import test from 'node:test'
 
-const dataDir = mkdtempSync(join(tmpdir(), 'lunarcode-providers-'))
-process.env.LUNARCODE_DATA = dataDir
+const dataDir = mkdtempSync(join(tmpdir(), 'createcode-providers-'))
+process.env.CREATECODE_DATA = dataDir
 
 const { saveModelsCache } = await import('./store.mjs')
 const { listModels } = await import('./providers.mjs')

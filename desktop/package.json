@@ -1,13 +1,13 @@
 {
-  "name": "lunarcode-desktop",
+  "name": "createcode-desktop",
   "version": "4.0.0",
   "private": true,
   "type": "module",
-  "description": "Lunarcode Desktop \u2014 the Lunarcode coding agent in an Electron window.",
-  "author": "OpenSoftX <bibobonking@gmail.com>",
+  "description": "CreateCode Desktop \u2014 the CreateCode coding agent in an Electron window.",
+  "author": "Bibobonking <bibobonking@gmail.com>",
   "license": "MIT",
   "homepage": "https://github.com/bibobonking/OpenSol",
-  "desktopName": "lunarcode.desktop",
+  "desktopName": "createcode.desktop",
   "main": "electron/main.mjs",
   "scripts": {
     "start": "electron .",

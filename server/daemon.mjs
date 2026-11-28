@@ -109,8 +109,8 @@ import { mcp, sanitizeServerConfig } from './lib/mcp.mjs'
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const DIST = path.resolve(HERE, '..', 'dist')
 const VERSION = '4.0.0'
-const SESSION_COOKIE = 'maxcode_session'
-const CSRF_HEADER = 'x-maxcode-csrf'
+const SESSION_COOKIE = 'createcode_session'
+const CSRF_HEADER = 'x-createcode-csrf'
 const SESSION_TTL = 14 * 24 * 60 * 60 * 1000
 const sessions = new Map()
 /** Unguessable per-session tokens that let a sandboxed preview iframe fetch workspace files. */
@@ -149,7 +149,7 @@ function allowedOrigins() {
 function guardRequest(req) {
   const hostHeader = String(req.headers.host ?? '').toLowerCase()
   if (!hostHeader || !allowedHosts().has(hostHeader)) {
-    throw new HttpError(403, 'Lunarcode only answers requests addressed to localhost.', 'bad_host')
+    throw new HttpError(403, 'CreateCode only answers requests addressed to localhost.', 'bad_host')
   }
   const origin = String(req.headers.origin ?? '')
   if (origin && !allowedOrigins().has(origin.toLowerCase())) {
@@ -186,7 +186,7 @@ function sessionFrom(req) {
 
 function requireSession(req) {
   const session = sessionFrom(req)
-  if (!session) throw new HttpError(401, 'Open Lunarcode from its local address to start a session.', 'no_session')
+  if (!session) throw new HttpError(401, 'Open CreateCode from its local address to start a session.', 'no_session')
   return session
 }
 
@@ -455,7 +455,7 @@ async function handleLlm(req, res) {
   }
 
   streamHeaders(res)
-  res.write(': maxcode\n\n')
+  res.write(': createcode\n\n')
   const bodyStream = upstream.body
   if (!bodyStream) {
     res.end()
@@ -556,7 +556,7 @@ const PREVIEW_CSP = [
 
 function previewTokenFor(sessionToken) {
   const record = sessions.get(sessionToken)
-  if (!record) throw new HttpError(401, 'Open Lunarcode from its local address to start a session.', 'no_session')
+  if (!record) throw new HttpError(401, 'Open CreateCode from its local address to start a session.', 'no_session')
   if (!record.previewToken) {
     record.previewToken = randomBytes(24).toString('base64url')
     previewTokens.set(record.previewToken, sessionToken)
@@ -568,7 +568,7 @@ function previewTokenFor(sessionToken) {
 async function handlePreview(req, res, rawPath) {
   const hostHeader = String(req.headers.host ?? '').toLowerCase()
   if (!hostHeader || !allowedHosts().has(hostHeader)) {
-    throw new HttpError(403, 'Lunarcode only answers requests addressed to localhost.', 'bad_host')
+    throw new HttpError(403, 'CreateCode only answers requests addressed to localhost.', 'bad_host')
   }
   if (req.method !== 'GET' && req.method !== 'HEAD') {
     throw new HttpError(405, 'Method not allowed.', 'method_not_allowed')
@@ -579,7 +579,7 @@ async function handlePreview(req, res, rawPath) {
   const record = sessionToken ? sessions.get(sessionToken) : null
   if (!record || Date.now() - record.created > SESSION_TTL) {
     previewTokens.delete(match[1])
-    throw new HttpError(401, 'This preview link expired. Reopen the preview from Lunarcode.', 'preview_expired')
+    throw new HttpError(401, 'This preview link expired. Reopen the preview from CreateCode.', 'preview_expired')
   }
   let relative
   try {
@@ -602,13 +602,13 @@ async function handlePreview(req, res, rawPath) {
 
 function oauthResultPage(ok, message) {
   const safe = String(message).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c])
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Lunarcode · MCP sign-in</title><style>body{margin:0;min-height:100dvh;display:grid;place-items:center;font:15px system-ui,sans-serif;background:#faf9f5;color:#1f1e1d}main{max-width:360px;padding:32px;text-align:center}h1{font-size:20px;margin:0 0 8px}p{margin:0;color:#6b6a68;line-height:1.5}.dot{width:44px;height:44px;border-radius:50%;margin:0 auto 16px;display:grid;place-items:center;color:#fff;font-size:22px;background:${ok ? '#2f9e6b' : '#c4443a'}}@media(prefers-color-scheme:dark){body{background:#141413;color:#f2f1ee}p{color:#a5a39e}}</style></head><body><main><div class="dot">${ok ? '✓' : '!'}</div><h1>${ok ? 'Signed in' : 'Sign-in failed'}</h1><p>${safe}</p></main><script>try{var c=new BroadcastChannel('opensol-mcp-oauth');c.postMessage({ok:${ok ? 'true' : 'false'}});c.close()}catch(e){}${ok ? 'setTimeout(function(){window.close()},900)' : ''}</script></body></html>`
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CreateCode · MCP sign-in</title><style>body{margin:0;min-height:100dvh;display:grid;place-items:center;font:15px system-ui,sans-serif;background:#faf9f5;color:#1f1e1d}main{max-width:360px;padding:32px;text-align:center}h1{font-size:20px;margin:0 0 8px}p{margin:0;color:#6b6a68;line-height:1.5}.dot{width:44px;height:44px;border-radius:50%;margin:0 auto 16px;display:grid;place-items:center;color:#fff;font-size:22px;background:${ok ? '#2f9e6b' : '#c4443a'}}@media(prefers-color-scheme:dark){body{background:#141413;color:#f2f1ee}p{color:#a5a39e}}</style></head><body><main><div class="dot">${ok ? '✓' : '!'}</div><h1>${ok ? 'Signed in' : 'Sign-in failed'}</h1><p>${safe}</p></main><script>try{var c=new BroadcastChannel('createcode-mcp-oauth');c.postMessage({ok:${ok ? 'true' : 'false'}});c.close()}catch(e){}${ok ? 'setTimeout(function(){window.close()},900)' : ''}</script></body></html>`
 }
 
 async function handleMcpOAuthCallback(req, res, url) {
   const hostHeader = String(req.headers.host ?? '').toLowerCase()
   if (!hostHeader || !allowedHosts().has(hostHeader)) {
-    throw new HttpError(403, 'Lunarcode only answers requests addressed to localhost.', 'bad_host')
+    throw new HttpError(403, 'CreateCode only answers requests addressed to localhost.', 'bad_host')
   }
   const send = (status, ok, message) => {
     const body = Buffer.from(oauthResultPage(ok, message))
@@ -671,7 +671,7 @@ async function route(req, res) {
       .catch(() => false)
     json(res, 200, {
       ok: true,
-      app: 'maxcode',
+      app: 'createcode',
       version: VERSION,
       pid: process.pid,
       port,
@@ -780,17 +780,17 @@ async function route(req, res) {
       return
     }
 
-    // Install: { archive: <base64 .lce>, enable?: boolean }. Enabling is the person's explicit trust decision.
+    // Install: { archive: <base64 .cce>, enable?: boolean }. Enabling is the person's explicit trust decision.
     if (pathname === '/api/extensions' && method === 'POST') {
       const body = await readJson(req, 380 * 1024 * 1024)
       if (typeof body.archive !== 'string' || body.archive.length < 8) {
-        throw new HttpError(400, 'An .lce archive is required.', 'missing_extension_archive')
+        throw new HttpError(400, 'An .cce archive is required.', 'missing_extension_archive')
       }
       json(res, 201, await installArchive(Buffer.from(body.archive, 'base64'), { enable: body.enable === true }))
       return
     }
 
-    // Build an .lce from { manifest, files } without installing it (the in-app editor's "Download").
+    // Build an .cce from { manifest, files } without installing it (the in-app editor's "Download").
     if (pathname === '/api/extensions/build' && method === 'POST') {
       const body = await readJson(req, 64 * 1024 * 1024)
       const files = {}
@@ -1247,7 +1247,7 @@ async function route(req, res) {
     if (pathname === '/api/export' && method === 'GET') {
       const state = await loadState()
       json(res, 200, {
-        app: 'maxcode',
+        app: 'createcode',
         version: VERSION,
         exportedAt: new Date().toISOString(),
         settings: state.settings,
@@ -1271,7 +1271,7 @@ async function route(req, res) {
   }
   if (pathname === '/preview-host.html') {
     // Hosts model-written pages inside a sandboxed iframe (opaque origin: no cookies, no
-    // access to Lunarcode). It needs CDN scripts and inline code, so it gets its own CSP.
+    // access to CreateCode). It needs CDN scripts and inline code, so it gets its own CSP.
     res.removeHeader('X-Frame-Options')
     res.setHeader(
       'Content-Security-Policy',
@@ -1302,7 +1302,7 @@ async function handler(req, res) {
       return
     }
     if (!(error instanceof HttpError)) {
-      console.error(`[lunarcode] ${clientIp(req)} ${req.method} ${req.url}`)
+      console.error(`[createcode] ${clientIp(req)} ${req.method} ${req.url}`)
       console.error(error)
     }
     sendError(res, error)
@@ -1353,7 +1353,7 @@ function scheduleRestart() {
 export async function startServer({ port: requested = 4174 } = {}) {
   await mkdir(DATA_DIR, { recursive: true, mode: 0o700 })
   // Scan extensions before listening so the very first page is served with the right CSP and patches.
-  await prepareExtensions(VERSION).catch((error) => console.error('[lunarcode] extensions scan failed', error))
+  await prepareExtensions(VERSION).catch((error) => console.error('[createcode] extensions scan failed', error))
   mcp.getCwd = async () => (await workspaceRoot().catch(() => '')) || os.homedir()
   // OAuth clients and tokens live in the encrypted secrets file, never in state.json.
   mcp.authStore = {
@@ -1381,7 +1381,7 @@ export async function startServer({ port: requested = 4174 } = {}) {
   })
 
   const shutdown = async (signal) => {
-    console.log(`[lunarcode] ${signal} received, shutting down.`)
+    console.log(`[createcode] ${signal} received, shutting down.`)
     server.close()
     await extensionHooks.shutdown().catch(() => undefined)
     await mcp.shutdown().catch(() => undefined)
@@ -1389,31 +1389,31 @@ export async function startServer({ port: requested = 4174 } = {}) {
   }
   process.on('SIGTERM', () => void shutdown('SIGTERM'))
   process.on('SIGINT', () => void shutdown('SIGINT'))
-  process.on('uncaughtException', (error) => console.error('[lunarcode] uncaught exception', error))
-  process.on('unhandledRejection', (error) => console.error('[lunarcode] unhandled rejection', error))
+  process.on('uncaughtException', (error) => console.error('[createcode] uncaught exception', error))
+  process.on('unhandledRejection', (error) => console.error('[createcode] unhandled rejection', error))
 
   const url = `http://${host}:${port}`
-  console.log(`[lunarcode] daemon listening on ${url}`)
-  console.log(`[lunarcode] data: ${DATA_DIR}`)
-  console.log(`[lunarcode] dist: ${DIST}`)
+  console.log(`[createcode] daemon listening on ${url}`)
+  console.log(`[createcode] data: ${DATA_DIR}`)
+  console.log(`[createcode] dist: ${DIST}`)
   // Probe the user's shell only after the port is printed: a slow or hanging shell profile must never keep the app from loading.
   await repairProcessEnv()
   await mcp.setConfigs(await getMcpServers())
   void mcp.connectAll().catch(() => undefined)
-  await startExtensions(VERSION).catch((error) => console.error('[lunarcode] extensions failed to start', error))
+  await startExtensions(VERSION).catch((error) => console.error('[createcode] extensions failed to start', error))
   await extensionHooks.ready()
   return { server, url, port }
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const args = process.argv.slice(2)
-  if (!globalThis.__lunarcodeServerPatches && process.env.LUNARCODE_PRELOADED !== '1') {
+  if (!globalThis.__createcodeServerPatches && process.env.CREATECODE_PRELOADED !== '1') {
     // Started as `node server/daemon.mjs` without the preload: run again with it so extension patches can
     // reach the daemon's own modules. The desktop app already passes --import.
     const child = spawn(
       process.execPath,
       ['--import', pathToFileURL(path.join(HERE, 'lib', 'ext-boot.mjs')).href, fileURLToPath(import.meta.url), ...args],
-      { stdio: 'inherit', env: { ...process.env, LUNARCODE_PRELOADED: '1' } },
+      { stdio: 'inherit', env: { ...process.env, CREATECODE_PRELOADED: '1' } },
     )
     for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, () => child.kill(signal))
     child.on('exit', (code) => process.exit(code ?? 0))

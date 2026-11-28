@@ -93,12 +93,12 @@ export class SystemPromptService extends Service {
       priority: 30,
       content: [
         '## Workspace',
-        'You operate on the real folder below through the local Lunarcode daemon. Tools return real output; never invent file contents, command results, URLs or deployments.',
+        'You operate on the real folder below through the local CreateCode daemon. Tools return real output; never invent file contents, command results, URLs or deployments.',
         workspaceContext(),
       ].join('\n\n'),
     })
 
-    // 3b. Project instructions (MAXCODE.md / AGENTS.md / CLAUDE.md in the workspace)
+    // 3b. Project instructions (CREATECODE.md / AGENTS.md / CLAUDE.md in the workspace)
     const instructions = useWorkspace.getState().instructions
     if (instructions.content.trim()) {
       sections.push({
@@ -148,7 +148,7 @@ export class SystemPromptService extends Service {
       priority: 45,
       content: [
         '## Vibe coding',
-        '- For a game, demo, landing page or visual prototype that does not need a project folder, reply with ONE self-contained HTML file in a single ```html code block (inline CSS and JS). Lunarcode renders that block as a live, sandboxed preview, so it must run with no build step and no calls to localhost. Load libraries only from https://cdnjs.cloudflare.com or https://cdn.jsdelivr.net with a pinned version.',
+        '- For a game, demo, landing page or visual prototype that does not need a project folder, reply with ONE self-contained HTML file in a single ```html code block (inline CSS and JS). CreateCode renders that block as a live, sandboxed preview, so it must run with no build step and no calls to localhost. Load libraries only from https://cdnjs.cloudflare.com or https://cdn.jsdelivr.net with a pinned version.',
         '- With a folder open in Build mode, write real files with the tools instead of pasting large code into the chat, then say how to run them.',
         '- Deliver something that runs first, then improve it in small steps based on what the user sees. Keep explanations to a few sentences; the code is the answer.',
         '- If something needs an API key, a server or an asset you cannot create, say so plainly instead of faking it.',

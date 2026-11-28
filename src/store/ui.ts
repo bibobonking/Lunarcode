@@ -105,7 +105,7 @@ interface UiState {
 
 function sidebarWasCollapsed() {
   try {
-    return localStorage.getItem('maxcode.sidebar-collapsed') === '1'
+    return localStorage.getItem('createcode.sidebar-collapsed') === '1'
   } catch {
     return false
   }
@@ -113,7 +113,7 @@ function sidebarWasCollapsed() {
 
 function rememberSidebar(collapsed: boolean) {
   try {
-    localStorage.setItem('maxcode.sidebar-collapsed', collapsed ? '1' : '0')
+    localStorage.setItem('createcode.sidebar-collapsed', collapsed ? '1' : '0')
   } catch {
     // The preference is only a convenience; the session still works without it.
   }
@@ -168,7 +168,7 @@ export const useUi = create<UiState>()((set, get) => ({
   },
 }))
 
-window.addEventListener('maxcode:notice', (event) => {
+window.addEventListener('createcode:notice', (event) => {
   const detail = (event as CustomEvent<{ message: string; tone?: ToastTone }>).detail
   if (detail?.message) useUi.getState().notify(detail.message, detail.tone ?? 'info')
 })

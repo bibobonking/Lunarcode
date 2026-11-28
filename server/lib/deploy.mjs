@@ -14,7 +14,7 @@ const CLIS = {
   cloudflare: { bin: 'wrangler', pkg: 'wrangler@latest', label: 'Wrangler' },
 }
 
-function slugify(value, fallback = 'maxcode-site') {
+function slugify(value, fallback = 'createcode-site') {
   const slug = String(value ?? '')
     .toLowerCase()
     .replace(/[^a-z0-9-]+/g, '-')
@@ -300,8 +300,8 @@ export async function detectProject(raw) {
 
 async function runBuild(cwd, command, onLog, signal) {
   const result = IS_WINDOWS
-    ? await runStreaming(command, [], { cwd, onLog, signal, env: { MAXCODE_DEPLOY: '1' } })
-    : await runStreaming(currentShell().file, currentShell().args(command), { cwd, onLog, signal, env: { MAXCODE_DEPLOY: '1' } })
+    ? await runStreaming(command, [], { cwd, onLog, signal, env: { CREATECODE_DEPLOY: '1' } })
+    : await runStreaming(currentShell().file, currentShell().args(command), { cwd, onLog, signal, env: { CREATECODE_DEPLOY: '1' } })
   if (result.code !== 0) {
     throw new HttpError(500, `"${command}" failed with exit code ${result.code}. Fix the error in the log, then deploy again.`, 'build_failed')
   }
@@ -362,7 +362,7 @@ async function netlifyDeploy({ cwd, targetDir, projectName, siteId, onLog, signa
     }
   }
   if (!site) {
-    const name = slugify(projectName || path.basename(cwd), `maxcode-${suffix()}`)
+    const name = slugify(projectName || path.basename(cwd), `createcode-${suffix()}`)
     onLog({ stream: 'meta', text: `Creating Netlify site "${name}"…` })
     let created
     try {
@@ -406,7 +406,7 @@ async function netlifyDeploy({ cwd, targetDir, projectName, siteId, onLog, signa
       '--site',
       site,
       '--message',
-      `Lunarcode deploy ${new Date().toISOString()}`,
+      `CreateCode deploy ${new Date().toISOString()}`,
     ],
     { cwd, onLog, signal, env: { NETLIFY_AUTH_TOKEN: token } },
   )
@@ -460,7 +460,7 @@ async function cloudflareDeploy({ cwd, targetDir, projectName, onLog, signal }) 
       'missing_deploy_token',
     )
   }
-  const name = slugify(projectName || path.basename(cwd), `maxcode-${suffix()}`)
+  const name = slugify(projectName || path.basename(cwd), `createcode-${suffix()}`)
   let exists = false
   try {
     await fetchJson(

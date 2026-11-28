@@ -116,7 +116,7 @@ export function MenuOption({
       role="menuitemradio"
       aria-checked={selected}
       onClick={onClick}
-      className="flex w-full items-start gap-3 rounded-[9px] px-3 py-2 text-left transition-colors hover:bg-ink/[.08]"
+      className="flex w-full items-start gap-3 rounded-[12px] px-3 py-2 text-left transition-colors hover:bg-ink/[.08]"
     >
       <RadioMark checked={selected} className="mt-0.5" />
       <span className="min-w-0">

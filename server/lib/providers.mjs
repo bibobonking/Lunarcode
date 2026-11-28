@@ -631,7 +631,7 @@ async function authHeaders(providerId, { settings, key } = {}) {
       )
     }
     headers['HTTP-Referer'] = 'http://127.0.0.1'
-    headers['X-Title'] = 'Lunarcode'
+    headers['X-Title'] = 'CreateCode'
   }
   return headers
 }

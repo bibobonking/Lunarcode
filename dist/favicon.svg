@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <rect width="64" height="64" rx="15" fill="#0f0f11"/>
+  <rect width="64" height="61" rx="15" fill="#28282c"/>
+  <rect x=".5" y=".5" width="63" height="60" rx="14.5" stroke="#fff" stroke-opacity=".1"/>
+  <g transform="translate(0 -1.5)">
+    <path d="M51.32 26.82A20 20 0 1 1 37.18 12.68" stroke="#fff" stroke-width="5.6" stroke-linecap="round"/>
+    <path d="M44.57 13.43L44.93 11.58L47.35 11.58L47.71 13.43L48.16 13.62L49.73 12.56L51.44 14.27L50.38 15.84L50.57 16.29L52.42 16.65L52.42 19.07L50.57 19.43L50.38 19.88L51.44 21.45L49.73 23.16L48.16 22.10L47.71 22.29L47.35 24.14L44.93 24.14L44.57 22.29L44.12 22.10L42.55 23.16L40.84 21.45L41.90 19.88L41.71 19.43L39.86 19.07L39.86 16.65L41.71 16.29L41.90 15.84L40.84 14.27L42.55 12.56L44.12 13.62ZM43.94 17.86a2.2 2.2 0 1 0 4.4 0a2.2 2.2 0 1 0 -4.4 0Z" fill="#fff" fill-rule="evenodd" stroke="#fff" stroke-width=".7" stroke-linejoin="round"/>
+    <g stroke="#fff" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M25.2 25.6L34 32l-8.8 6.4"/>
+      <path d="M37.6 39.2h6" stroke="#9a9996"/>
+    </g>
+  </g>
+</svg>

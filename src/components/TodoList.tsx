@@ -10,7 +10,7 @@ function Row({ item }: { item: TodoItem }) {
     <li className="flex items-start gap-2.5 py-[3px]">
       <span
         className={cn(
-          'mt-[3px] flex h-[15px] w-[15px] shrink-0 items-center justify-center rounded-[5px] border transition-colors duration-300',
+          'mt-[3px] flex h-[15px] w-[15px] shrink-0 items-center justify-center rounded-[8px] border transition-colors duration-300',
           item.status === 'completed' && 'border-transparent bg-success text-on-accent',
           item.status === 'in_progress' && 'border-accent bg-accent/15',
           item.status === 'pending' && 'border-line',
@@ -18,7 +18,7 @@ function Row({ item }: { item: TodoItem }) {
         aria-hidden="true"
       >
         {item.status === 'completed' && <Check size={11} strokeWidth={3} className="tool-check" />}
-        {item.status === 'in_progress' && <span className="moon-spinner h-2.5 w-2.5" />}
+        {item.status === 'in_progress' && <span className="adw-spinner h-2.5 w-2.5" />}
       </span>
       <span
         className={cn(
@@ -41,7 +41,7 @@ export function TodoChecklist({ items }: { items: TodoItem[] }) {
       <div className="mb-2 flex items-center gap-2">
         <div className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-ink/10">
           <div
-            className="h-full rounded-full bg-gradient-to-r from-accent to-[rgb(var(--lunar-b))] transition-[width] duration-500 ease-out"
+            className="h-full rounded-full bg-accent transition-[width] duration-500 ease-out"
             style={{ width: `${total ? (done / total) * 100 : 0}%` }}
           />
         </div>

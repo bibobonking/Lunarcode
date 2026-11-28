@@ -3,7 +3,7 @@
   "configVersion": 0,
   "workspaces": {
     "": {
-      "name": "@bibobonking/opensol",
+      "name": "@bibobonking/createcode",
       "dependencies": {
         "clsx": "^2.1.1",
         "cordis": "^4.0.0-rc.12",

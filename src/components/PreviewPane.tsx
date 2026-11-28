@@ -62,7 +62,7 @@ export function PreviewPane() {
         <Monitor size={32} className="text-muted" />
         <p className="text-[16px] font-bold text-ink">Nothing to preview yet</p>
         <p className="max-w-[280px] text-[13px] leading-relaxed text-muted">
-          Ask Lunarcode to build a page or a game. The first HTML file it writes shows up here and reloads as it changes.
+          Ask CreateCode to build a page or a game. The first HTML file it writes shows up here and reloads as it changes.
         </p>
       </div>
     )
@@ -83,7 +83,7 @@ export function PreviewPane() {
             </option>
           ))}
         </select>
-        <div className="flex items-center rounded-[9px] bg-ink/[.07] p-0.5">
+        <div className="flex items-center rounded-[12px] bg-ink/[.07] p-0.5">
           {DEVICES.map((entry) => (
             <button
               key={entry.id}
@@ -93,7 +93,7 @@ export function PreviewPane() {
               title={entry.label}
               aria-label={entry.label}
               className={cn(
-                'flex h-7 w-7 items-center justify-center rounded-[6px] transition-colors',
+                'flex h-7 w-7 items-center justify-center rounded-[8px] transition-colors',
                 device === entry.id ? 'bg-panel text-ink' : 'text-muted hover:text-ink',
               )}
             >
@@ -127,7 +127,7 @@ export function PreviewPane() {
 
       <div className="relative min-h-0 flex-1 overflow-auto bg-raised p-2">
         {error && (
-          <div className="mx-auto mt-6 max-w-[300px] rounded-[12px] border border-danger/30 bg-danger/10 px-4 py-3 text-center">
+          <div className="mx-auto mt-6 max-w-[300px] rounded-[18px] border border-danger/30 bg-danger/10 px-4 py-3 text-center">
             <p className="text-[13px] font-semibold text-ink">The preview could not start</p>
             <p className="mt-1 text-[12px] leading-relaxed text-muted">{error}</p>
             <button
@@ -150,14 +150,14 @@ export function PreviewPane() {
             title={`Preview of ${page}`}
             src={src}
             sandbox="allow-scripts allow-forms allow-modals allow-popups allow-pointer-lock"
-            className="mx-auto block h-full min-h-[320px] max-w-full rounded-[9px] border border-line bg-white"
+            className="mx-auto block h-full min-h-[320px] max-w-full rounded-[12px] border border-line bg-white"
             style={{ width }}
           />
         )}
       </div>
 
       <p className="shrink-0 border-t border-line px-3 py-1.5 text-[12px] text-muted">
-        Runs in a sandbox: it can load your files and public CDNs, but cannot reach Lunarcode or your keys.
+        Runs in a sandbox: it can load your files and public CDNs, but cannot reach CreateCode or your keys.
       </p>
     </div>
   )

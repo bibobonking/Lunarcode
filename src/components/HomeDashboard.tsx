@@ -6,7 +6,7 @@ import { useWorkspace } from '../store/workspace'
 import { cn } from '../lib/utils'
 import { formatCredits } from '../lib/credits'
 import { computeUsage, formatTokens, shortModelName, type UsageRange } from '../lib/usage'
-import { PixelLogo } from './AgentActivity'
+import { ActivityMark } from './AgentActivity'
 import { BoxedList, ListRow, PageGroup, Segmented } from './ui'
 
 const RANGES: Array<{ value: UsageRange; label: string }> = [
@@ -32,10 +32,9 @@ export function HomeGreeting() {
   const name = home.split(/[\\/]/).filter(Boolean).pop() || workspace.name || 'there'
   return (
     <div className="home-greeting flex flex-col items-center gap-3 text-center">
-      <span className="lunar-stars" aria-hidden="true" style={{ inset: '-40px -80px' }} />
-      {showMascot && <PixelLogo mode="orbit" size={64} />}
+      {showMascot && <ActivityMark mode="orbit" size={64} />}
       <h1 className="text-[26px] font-bold leading-[1.2] text-ink">
-        What should we build, <span className="lunar-text">{name}</span>?
+        What should we build, <span className="accent-text">{name}</span>?
       </h1>
       <p className="text-[13px] text-muted">Local-first agent. Your folder, your keys, your machine.</p>
     </div>
@@ -137,7 +136,7 @@ export function HomeDashboard() {
               </div>
               <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-ink/[.1]">
                 <div
-                  className="usage-bar h-full rounded-full bg-gradient-to-r from-accent to-[rgb(var(--lunar-b))]"
+                  className="usage-bar h-full rounded-full bg-accent"
                   style={{ width: `${topModelTokens ? Math.max(4, (model.tokens / topModelTokens) * 100) : 4}%` }}
                 />
               </div>

@@ -63,7 +63,7 @@ function UserBubble({
   if (editing) {
     return (
       <div className="flex justify-end">
-        <div className="w-full max-w-[88%] rounded-[12px] border border-accent bg-panel p-2 sm:max-w-[82%]">
+        <div className="w-full max-w-[88%] rounded-[18px] border border-accent bg-panel p-2 sm:max-w-[82%]">
           <textarea
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
@@ -115,17 +115,17 @@ function UserBubble({
         {images.length > 0 && (
           <div className={cn('mb-2 grid gap-2', images.length > 1 ? 'grid-cols-2' : 'grid-cols-1')}>
             {images.map((image) => (
-              <img key={image.id} src={image.dataUrl} alt={image.name} className="max-h-52 w-full rounded-[12px] border border-line object-cover" />
+              <img key={image.id} src={image.dataUrl} alt={image.name} className="max-h-52 w-full rounded-[18px] border border-line object-cover" />
             ))}
           </div>
         )}
-        <div className="user-bubble rounded-[12px] bg-accent-soft px-4 py-2.5">
+        <div className="user-bubble rounded-[18px] bg-accent-soft px-4 py-2.5">
           {files.length > 0 && (
             <ul className="mb-2 flex flex-wrap gap-1.5">
               {files.map((file) => (
                 <li
                   key={file.id}
-                  className="inline-flex items-center gap-1.5 rounded-[6px] border border-line bg-panel px-2 py-1 text-[12px] text-muted"
+                  className="inline-flex items-center gap-1.5 rounded-[8px] border border-line bg-panel px-2 py-1 text-[12px] text-muted"
                 >
                   <FileText size={14} />
                   <span className="max-w-[180px] truncate">{file.name}</span>
@@ -220,7 +220,7 @@ function ThoughtToggle({ text }: { text: string }) {
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className="flex max-w-full items-center gap-1.5 rounded-[6px] py-0.5 text-left text-[13px] text-muted hover:text-ink"
+        className="flex max-w-full items-center gap-1.5 rounded-[8px] py-0.5 text-left text-[13px] text-muted hover:text-ink"
         aria-expanded={open}
       >
         <ChevronRight size={16} className={cn('shrink-0 transition-transform duration-150', open && 'rotate-90')} />
@@ -292,7 +292,7 @@ export function TaskCompletedBox({
   const StatusIcon = awaiting ? (
     <CircleAlert size={16} className="shrink-0 text-warning" />
   ) : active ? (
-    <span className="moon-spinner h-4 w-4 shrink-0" aria-hidden="true" />
+    <span className="adw-spinner h-4 w-4 shrink-0" aria-hidden="true" />
   ) : failed > 0 ? (
     <CircleAlert size={16} className="shrink-0 text-danger" />
   ) : (
@@ -440,7 +440,7 @@ export function AssistantBlock({
 
   const header = (
     <div className="flex min-h-[28px] items-center gap-2">
-      <span className="assistant-name text-[13px] font-bold">Lunarcode</span>
+      <span className="assistant-name text-[13px] font-bold">CreateCode</span>
       {message.stopped && (
         <span className="adw-badge gap-1">
           <Square size={8} fill="currentColor" />
@@ -473,7 +473,7 @@ export function AssistantBlock({
           <button
             type="button"
             onClick={() => setReasoningOpen((value) => !value)}
-            className="flex max-w-full items-center gap-1.5 rounded-[6px] py-0.5 text-left text-[13px] text-muted hover:text-ink"
+            className="flex max-w-full items-center gap-1.5 rounded-[8px] py-0.5 text-left text-[13px] text-muted hover:text-ink"
             aria-expanded={reasoningOpen}
           >
             <ChevronRight size={16} className={cn('shrink-0 transition-transform duration-150', reasoningOpen && 'rotate-90')} />
@@ -498,7 +498,7 @@ export function AssistantBlock({
       )}
 
       {message.error && (
-        <div className="mt-3 rounded-[12px] border border-danger/30 bg-danger/10 px-4 py-3">
+        <div className="mt-3 rounded-[18px] border border-danger/30 bg-danger/10 px-4 py-3">
           <div className="flex items-start gap-2.5">
             <AlertCircle size={16} className="mt-0.5 shrink-0 text-danger" />
             <div className="min-w-0 flex-1">

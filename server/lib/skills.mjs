@@ -305,9 +305,9 @@ export async function installSkillFromNpm(spec) {
   }
   const at = value.lastIndexOf('@')
   const packageName = at > 0 ? value.slice(0, at) : value
-  const work = await mkdtemp(path.join(tmpdir(), 'opensol-skill-'))
+  const work = await mkdtemp(path.join(tmpdir(), 'createcode-skill-'))
   try {
-    await writeFile(path.join(work, 'package.json'), '{"name":"opensol-skill-install","private":true}\n')
+    await writeFile(path.join(work, 'package.json'), '{"name":"createcode-skill-install","private":true}\n')
     const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm'
     try {
       await run(

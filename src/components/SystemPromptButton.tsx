@@ -33,7 +33,7 @@ function Choice({
       aria-checked={active}
       onClick={onClick}
       disabled={disabled}
-      className="flex w-full items-start gap-3 rounded-[9px] px-3 py-2 text-left transition-colors hover:bg-ink/[.08] disabled:cursor-not-allowed disabled:opacity-50"
+      className="flex w-full items-start gap-3 rounded-[12px] px-3 py-2 text-left transition-colors hover:bg-ink/[.08] disabled:cursor-not-allowed disabled:opacity-50"
     >
       <RadioMark checked={active} className="mt-0.5" />
       <span className="min-w-0">

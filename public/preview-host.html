@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Lunarcode preview</title>
+    <title>CreateCode preview</title>
     <style>
       html,
       body {
@@ -22,12 +22,12 @@
       window.addEventListener('message', function (event) {
         if (event.source !== window.parent) return
         var data = event.data
-        if (!data || data.type !== 'maxcode-preview' || typeof data.html !== 'string') return
+        if (!data || data.type !== 'createcode-preview' || typeof data.html !== 'string') return
         document.open()
         document.write(data.html)
         document.close()
       })
-      window.parent.postMessage({ type: 'maxcode-preview-ready' }, '*')
+      window.parent.postMessage({ type: 'createcode-preview-ready' }, '*')
     </script>
   </body>
 </html>

@@ -1,4 +1,4 @@
-// Starter extensions for `lunarcode ext new` and the in-app "New extension" button.
+// Starter extensions for `createcode ext new` and the in-app "New extension" button.
 
 const slug = (text) => text.replace(/[^a-z0-9_-]/gi, '-').toLowerCase()
 
@@ -47,7 +47,7 @@ export function scaffold(id, name, template = 'hello') {
             scope: 'web',
             target: 'index.html',
             find: '</head>',
-            insertBefore: '<style id="lce-patch-demo">:root{--lce-patch:1}</style>',
+            insertBefore: '<style id="cce-patch-demo">:root{--cce-patch:1}</style>',
             note: 'Adds a style tag to the page head: edit or remove this patch',
           },
           {
@@ -74,29 +74,29 @@ export function scaffold(id, name, template = 'hello') {
 import { registerHello } from './commands/hello.js'
 import { registerPanel } from './ui/panel.js'
 
-export default function activate(lunarcode) {
-  registerHello(lunarcode)
-  registerPanel(lunarcode)
+export default function activate(createcode) {
+  registerHello(createcode)
+  registerPanel(createcode)
 }
 `,
         'src/commands/hello.js': `import { greeting } from '../lib/format.js'
 
-export function registerHello(lunarcode) {
-  lunarcode.registerCommand('hello', 'Say hello from ${name.replace(/'/g, '')}', async () => {
-    const info = await lunarcode.server.call('now')
-    lunarcode.notify(greeting(${q}, info.iso), 'success')
+export function registerHello(createcode) {
+  createcode.registerCommand('hello', 'Say hello from ${name.replace(/'/g, '')}', async () => {
+    const info = await createcode.server.call('now')
+    createcode.notify(greeting(${q}, info.iso), 'success')
   })
 }
 `,
         'src/ui/panel.js': `import { greeting } from '../lib/format.js'
 
-export function registerPanel(lunarcode) {
-  lunarcode.registerPanel('project-panel', ${q}, (host) => {
-    host.innerHTML = '<div class="lce-project"><h3></h3><p></p><button>Ask the daemon</button></div>'
+export function registerPanel(createcode) {
+  createcode.registerPanel('project-panel', ${q}, (host) => {
+    host.innerHTML = '<div class="cce-project"><h3></h3><p></p><button>Ask the daemon</button></div>'
     host.querySelector('h3').textContent = ${q}
     host.querySelector('p').textContent = greeting(${q}, new Date().toISOString())
     const button = host.querySelector('button')
-    const click = async () => lunarcode.notify(JSON.stringify(await lunarcode.server.call('now')), 'info')
+    const click = async () => createcode.notify(JSON.stringify(await createcode.server.call('now')), 'info')
     button.addEventListener('click', click)
     return () => button.removeEventListener('click', click)
   })
@@ -115,12 +115,12 @@ export default function activate(host) {
 `,
         'server/handlers/now.mjs': `export const now = () => ({ iso: new Date().toISOString(), pid: process.pid, node: process.version })
 `,
-        'styles/base.css': `.lce-project { padding: 16px; display: grid; gap: 8px; }
-.lce-project h3 { font-weight: 700; }
+        'styles/base.css': `.cce-project { padding: 16px; display: grid; gap: 8px; }
+.cce-project h3 { font-weight: 700; }
 `,
-        'styles/panel.css': `.lce-project button { justify-self: start; padding: 6px 12px; border-radius: 8px; background: rgb(var(--accent)); color: rgb(var(--on-accent)); }
+        'styles/panel.css': `.cce-project button { justify-self: start; padding: 6px 12px; border-radius: 8px; background: rgb(var(--accent)); color: rgb(var(--on-accent)); }
 `,
-        'README.md': `# ${name}\n\nMulti-file extension layout:\n\n\`\`\`\nextension.json   main: src/main.js, server: server/index.mjs, styles: [...]\nsrc/             window code (ES modules, import each other with relative paths)\nserver/          daemon code (Node ESM, same rule)\nstyles/          any number of .css files, list each in "styles"\nassets/          anything else, served at /ext/${id}/<path>\n\`\`\`\n\nEvery file is part of the package: \`lunarcode ext pack\` zips the whole folder.\n`,
+        'README.md': `# ${name}\n\nMulti-file extension layout:\n\n\`\`\`\nextension.json   main: src/main.js, server: server/index.mjs, styles: [...]\nsrc/             window code (ES modules, import each other with relative paths)\nserver/          daemon code (Node ESM, same rule)\nstyles/          any number of .css files, list each in "styles"\nassets/          anything else, served at /ext/${id}/<path>\n\`\`\`\n\nEvery file is part of the package: \`createcode ext pack\` zips the whole folder.\n`,
       },
     }
   }
@@ -129,11 +129,11 @@ export default function activate(host) {
     return {
       manifest: { ...base, main: 'main.js', server: 'server.mjs' },
       files: {
-        'server.mjs': `// Runs inside the Lunarcode daemon with full Node access: fs, child_process, net, any npm package you ship.
+        'server.mjs': `// Runs inside the CreateCode daemon with full Node access: fs, child_process, net, any npm package you ship.
 export default function activate(host) {
   host.log('server part started')
 
-  // Callable from the window: await lunarcode.server.call('now')
+  // Callable from the window: await createcode.server.call('now')
   host.rpc('now', () => ({ iso: new Date().toISOString(), pid: process.pid, node: process.version }))
 
   // Plain HTTP route: GET /api/extensions/${id}/x/ping
@@ -143,22 +143,22 @@ export default function activate(host) {
   host.interval(() => host.emit('tick', { at: Date.now() }), 30_000)
 }
 `,
-        'main.js': `// Runs in the Lunarcode window. \`lunarcode\` is the live app: no sandbox, no permission list.
-export default function activate(lunarcode) {
-  lunarcode.registerTool({
+        'main.js': `// Runs in the CreateCode window. \`createcode\` is the live app: no sandbox, no permission list.
+export default function activate(createcode) {
+  createcode.registerTool({
     name: 'daemon_time',
-    description: 'Returns the current time and Node version of the Lunarcode daemon.',
+    description: 'Returns the current time and Node version of the CreateCode daemon.',
     parameters: { type: 'object', properties: {}, additionalProperties: false },
     allowedInMode: () => true,
     async execute() {
-      const info = await lunarcode.server.call('now')
+      const info = await createcode.server.call('now')
       return { output: JSON.stringify(info), isError: false }
     },
   })
 
-  lunarcode.server.on('tick', () => lunarcode.log('server tick'))
-  lunarcode.registerCommand('daemon-time', 'Show daemon time', async () => {
-    lunarcode.notify((await lunarcode.server.call('now')).iso, 'info')
+  createcode.server.on('tick', () => createcode.log('server tick'))
+  createcode.registerCommand('daemon-time', 'Show daemon time', async () => {
+    createcode.notify((await createcode.server.call('now')).iso, 'info')
   })
 }
 `,
@@ -170,29 +170,29 @@ export default function activate(lunarcode) {
   return {
     manifest: { ...base, main: 'main.js', styles: ['style.css'] },
     files: {
-      'main.js': `// Runs in the Lunarcode window. \`lunarcode\` is the live app: no sandbox, no permission list.
-export default function activate(lunarcode) {
-  lunarcode.registerCommand('hello', 'Say hello from ${name.replace(/'/g, '')}', () => {
-    lunarcode.notify('Hello from ' + ${q} + '!', 'success')
+      'main.js': `// Runs in the CreateCode window. \`createcode\` is the live app: no sandbox, no permission list.
+export default function activate(createcode) {
+  createcode.registerCommand('hello', 'Say hello from ${name.replace(/'/g, '')}', () => {
+    createcode.notify('Hello from ' + ${q} + '!', 'success')
   })
 
-  lunarcode.registerPanel('hello-panel', ${q}, (host) => {
-    host.innerHTML = '<div class="lce-hello"><h3>' + ${q} + '</h3><p>This panel is plain DOM. Use lunarcode.React for components.</p><button>Click me</button></div>'
+  createcode.registerPanel('hello-panel', ${q}, (host) => {
+    host.innerHTML = '<div class="cce-hello"><h3>' + ${q} + '</h3><p>This panel is plain DOM. Use createcode.React for components.</p><button>Click me</button></div>'
     const button = host.querySelector('button')
-    const click = () => lunarcode.notify('Clicked!', 'info')
+    const click = () => createcode.notify('Clicked!', 'info')
     button.addEventListener('click', click)
     return () => button.removeEventListener('click', click)
   })
 
-  // Anything else: lunarcode.ctx is the Cordis context with every service (tools, ui, sessions, llm, …).
-  lunarcode.on('agent/turn-finish', (turn) => lunarcode.log('turn finished after', turn.rounds, 'rounds'))
+  // Anything else: createcode.ctx is the Cordis context with every service (tools, ui, sessions, llm, …).
+  createcode.on('agent/turn-finish', (turn) => createcode.log('turn finished after', turn.rounds, 'rounds'))
 }
 `,
-      'style.css': `.lce-hello { padding: 16px; display: grid; gap: 8px; }
-.lce-hello h3 { font-weight: 700; }
-.lce-hello button { justify-self: start; padding: 6px 12px; border-radius: 8px; background: rgb(var(--accent)); color: rgb(var(--on-accent)); }
+      'style.css': `.cce-hello { padding: 16px; display: grid; gap: 8px; }
+.cce-hello h3 { font-weight: 700; }
+.cce-hello button { justify-self: start; padding: 6px 12px; border-radius: 8px; background: rgb(var(--accent)); color: rgb(var(--on-accent)); }
 `,
-      'README.md': `# ${name}\n\nStarter extension. Edit the files here and save: Lunarcode reloads the extension live.\n`,
+      'README.md': `# ${name}\n\nStarter extension. Edit the files here and save: CreateCode reloads the extension live.\n`,
     },
   }
 }

@@ -367,8 +367,8 @@ export function Composer({
         }}
         onDrop={onDrop}
         className={cn(
-          'composer-shell relative rounded-[12px] border bg-panel transition-colors duration-150',
-          focused || dragging ? 'border-accent ring-2 ring-accent/30' : 'border-line',
+          'composer-shell relative border transition-colors duration-150',
+          (focused || dragging) && 'is-focused',
         )}
       >
         {attachments.length > 0 && (
@@ -377,7 +377,7 @@ export function Composer({
               <li key={attachment.id} className="attach-in">
                 {attachment.kind === 'image' ? (
                   <div className="relative">
-                    <img src={attachment.dataUrl} alt={attachment.name} className="h-14 w-14 rounded-[9px] border border-line object-cover" />
+                    <img src={attachment.dataUrl} alt={attachment.name} className="h-14 w-14 rounded-[12px] border border-line object-cover" />
                     <button
                       type="button"
                       onClick={() => setAttachments((current) => current.filter((item) => item.id !== attachment.id))}
@@ -388,14 +388,14 @@ export function Composer({
                     </button>
                   </div>
                 ) : (
-                  <span className="inline-flex h-8 max-w-[240px] items-center gap-1.5 rounded-[6px] border border-line bg-raised pl-2 pr-1 text-[12px] text-ink">
+                  <span className="inline-flex h-8 max-w-[240px] items-center gap-1.5 rounded-[8px] border border-line bg-raised pl-2 pr-1 text-[12px] text-ink">
                     <FileText size={14} className="shrink-0 text-muted" />
                     <span className="min-w-0 flex-1 truncate">{attachment.name}</span>
                     <span className="shrink-0 text-muted">{formatBytes(attachment.size)}</span>
                     <button
                       type="button"
                       onClick={() => setAttachments((current) => current.filter((item) => item.id !== attachment.id))}
-                      className="flex h-6 w-6 shrink-0 items-center justify-center rounded-[6px] text-muted hover:bg-ink/[.1] hover:text-ink"
+                      className="flex h-6 w-6 shrink-0 items-center justify-center rounded-[8px] text-muted hover:bg-ink/[.1] hover:text-ink"
                       aria-label={`Remove ${attachment.name}`}
                     >
                       <X size={12} />
@@ -417,7 +417,7 @@ export function Composer({
           onBlur={() => setFocused(false)}
           placeholder={placeholder}
           rows={1}
-          aria-label="Message Lunarcode"
+          aria-label="Message CreateCode"
           className="block w-full resize-none bg-transparent px-4 pb-1 pt-3 text-[13px] leading-[1.5] text-ink outline-none placeholder:text-faint"
           style={{ minHeight: 44, maxHeight: 220 }}
         />
@@ -475,7 +475,7 @@ export function Composer({
                     setModeOpen(false)
                     setPermissionOpen((open) => !open)
                   }}
-                  title="Choose how much Lunarcode can do without asking"
+                  title="Choose how much CreateCode can do without asking"
                 >
                   {permissionLabel(permission)}
                 </TextButton>
@@ -585,7 +585,7 @@ export function Composer({
         </div>
 
         {dragging && (
-          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-1 rounded-[12px] border-2 border-dashed border-accent bg-panel">
+          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-1 rounded-[24px] border-2 border-dashed border-accent bg-panel">
             <Upload size={20} className="text-link" />
             <p className="text-[13px] font-semibold text-ink">Drop files to attach</p>
             <p className="text-[12px] text-muted">Images up to 5 MB · text up to 512 KB</p>

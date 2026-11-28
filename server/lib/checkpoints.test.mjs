@@ -6,9 +6,9 @@ import http from 'node:http'
 import path from 'node:path'
 
 // The data directory is read when store.mjs loads, so set it before any import.
-const dataDir = await mkdtemp(path.join(os.tmpdir(), 'maxcode-data-'))
-process.env.MAXCODE_DATA = dataDir
-const workspace = await mkdtemp(path.join(os.tmpdir(), 'maxcode-ws-'))
+const dataDir = await mkdtemp(path.join(os.tmpdir(), 'createcode-data-'))
+process.env.CREATECODE_DATA = dataDir
+const workspace = await mkdtemp(path.join(os.tmpdir(), 'createcode-ws-'))
 
 const store = await import('./store.mjs')
 const tools = await import('./tools.mjs')
@@ -52,9 +52,9 @@ test('project instructions load the first matching file', async () => {
   assert.equal((await tools.readProjectInstructions()).file, '')
   await writeFile(path.join(workspace, 'CLAUDE.md'), 'use tabs')
   assert.equal((await tools.readProjectInstructions()).file, 'CLAUDE.md')
-  await writeFile(path.join(workspace, 'MAXCODE.md'), 'use spaces')
+  await writeFile(path.join(workspace, 'CREATECODE.md'), 'use spaces')
   const found = await tools.readProjectInstructions()
-  assert.equal(found.file, 'MAXCODE.md')
+  assert.equal(found.file, 'CREATECODE.md')
   assert.equal(found.content, 'use spaces')
 })
 
@@ -71,7 +71,7 @@ test('the preview route serves workspace files in a sandbox and refuses everythi
     const { csrf } = await session.json()
     const open = await fetch(`${base}/api/workspaces`, {
       method: 'POST',
-      headers: { cookie, 'x-maxcode-csrf': csrf, 'content-type': 'application/json' },
+      headers: { cookie, 'x-createcode-csrf': csrf, 'content-type': 'application/json' },
       body: JSON.stringify({ path: workspace }),
     })
     assert.equal(open.status, 200)

@@ -1,7 +1,7 @@
 import type { Context } from 'cordis'
 import { kernel } from '../core/kernel'
 import { useExtensions } from '../store/extensions'
-import { SERVICES, createExtensionApi, stores, type LunarcodeExtension } from './api'
+import { SERVICES, createExtensionApi, stores, type CreateCodeExtension } from './api'
 import * as daemon from '../lib/daemon'
 import type { ExtensionInfo, ExtensionThemeSpec } from './types'
 
@@ -10,13 +10,13 @@ interface Running {
   fiber: { dispose(): Promise<void> }
   disposers: Array<() => void | Promise<void>>
   module?: { deactivate?: () => void | Promise<void> }
-  api?: LunarcodeExtension
+  api?: CreateCodeExtension
 }
 
 const running = new Map<string, Running>()
 let chain: Promise<unknown> = Promise.resolve()
 
-/** One extension at a time: the module body may read `globalThis.lunarcode` while it evaluates. */
+/** One extension at a time: the module body may read `globalThis.createcode` while it evaluates. */
 function exclusive<T>(task: () => Promise<T>): Promise<T> {
   const next = chain.then(task, task)
   chain = next.catch(() => undefined)
@@ -112,17 +112,17 @@ async function activate(info: ExtensionInfo, appVersion: string): Promise<void> 
 
     if (info.main) {
       const url = `/ext/${info.id}/${info.main}?v=${version}`
-      const scoped = globalThis as typeof globalThis & { lunarcode?: LunarcodeExtension }
-      scoped.lunarcode = api
+      const scoped = globalThis as typeof globalThis & { createcode?: CreateCodeExtension }
+      scoped.createcode = api
       let mod: Record<string, unknown>
       try {
         mod = (await import(/* @vite-ignore */ url)) as Record<string, unknown>
       } finally {
-        delete scoped.lunarcode
+        delete scoped.createcode
       }
       entry.module = mod as Running['module']
       const start = typeof mod.default === 'function' ? mod.default : mod.activate
-      if (typeof start === 'function') await (start as (api: LunarcodeExtension) => unknown)(api)
+      if (typeof start === 'function') await (start as (api: CreateCodeExtension) => unknown)(api)
     }
 
     // Safety net: tools registered through the raw service during activation are removed with the extension.
@@ -162,10 +162,10 @@ export function runningExtensionIds(): string[] {
   return [...running.keys()]
 }
 
-/** `window.Lunarcode`: the same live objects, for DevTools and for code that is not an extension entry. */
+/** `window.CreateCode`: the same live objects, for DevTools and for code that is not an extension entry. */
 export function installGlobal(appVersion: string): void {
   Object.assign(globalThis, {
-    Lunarcode: {
+    CreateCode: {
       version: appVersion,
       kernel,
       stores,

@@ -79,7 +79,7 @@ export function Sidebar() {
   }, [sessions, query])
   const [expanded, setExpanded] = useState<Record<string, boolean>>(() => {
     try {
-      return JSON.parse(localStorage.getItem('lunarcode.sidebar.open') || '{}') as Record<string, boolean>
+      return JSON.parse(localStorage.getItem('createcode.sidebar.open') || '{}') as Record<string, boolean>
     } catch {
       return {}
     }
@@ -119,7 +119,7 @@ export function Sidebar() {
 
   useEffect(() => {
     try {
-      localStorage.setItem('lunarcode.sidebar.open', JSON.stringify(expanded))
+      localStorage.setItem('createcode.sidebar.open', JSON.stringify(expanded))
     } catch {
       /* storage can be unavailable */
     }
@@ -193,7 +193,7 @@ export function Sidebar() {
   const deleteWorkspace = async (path: string, name: string) => {
     const confirmed = await askConfirm({
       title: 'Remove this workspace?',
-      body: `“${name}” is removed from Lunarcode's list. The folder and its files stay on your disk; conversations started there are kept.`,
+      body: `“${name}” is removed from CreateCode's list. The folder and its files stay on your disk; conversations started there are kept.`,
       confirmLabel: 'Remove workspace',
       tone: 'danger',
     })
@@ -245,12 +245,12 @@ export function Sidebar() {
     const body = session.messages
       .flatMap((message) => {
         if (message.role === 'user') return [`## You\n\n${message.content}`]
-        if (message.role === 'assistant' && message.content.trim()) return [`## Lunarcode\n\n${message.content.trim()}`]
+        if (message.role === 'assistant' && message.content.trim()) return [`## CreateCode\n\n${message.content.trim()}`]
         return []
       })
       .join('\n\n')
     downloadText(
-      `lunarcode-${session.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 40) || 'conversation'}.md`,
+      `createcode-${session.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 40) || 'conversation'}.md`,
       `# ${session.title}\n\n${body}\n`,
       'text/markdown',
     )
@@ -262,8 +262,8 @@ export function Sidebar() {
     if (!session) return
     setMenu(null)
     downloadText(
-      `lunarcode-${session.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 40) || 'conversation'}.json`,
-      JSON.stringify({ app: 'Lunarcode', exportedAt: new Date().toISOString(), session }, null, 2),
+      `createcode-${session.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 40) || 'conversation'}.json`,
+      JSON.stringify({ app: 'CreateCode', exportedAt: new Date().toISOString(), session }, null, 2),
       'application/json',
     )
     notify('Conversation exported.', 'success')
@@ -275,8 +275,8 @@ export function Sidebar() {
     <aside
       aria-label="Sidebar"
       className={cn(
-        'fixed inset-y-0 left-0 z-50 flex h-dvh w-[248px] shrink-0 flex-col border-r border-line bg-sidebar transition-transform duration-200 ease-out lg:static lg:z-auto lg:h-auto',
-        mobileOpen ? 'translate-x-0 shadow-popover' : '-translate-x-full lg:translate-x-0',
+        'fixed inset-y-0 left-0 z-50 flex h-dvh w-[256px] shrink-0 flex-col border-r border-transparent bg-sidebar transition-transform duration-200 ease-out lg:static lg:z-auto lg:h-auto',
+        mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
         sidebarCollapsed && 'lg:hidden',
       )}
     >
@@ -288,7 +288,7 @@ export function Sidebar() {
       </div>
 
       <div className="space-y-1 px-2 pt-2 lg:pt-3">
-        <button type="button" onClick={startNewChat} className="adw-btn mb-1 w-full justify-start">
+        <button type="button" onClick={startNewChat} className="adw-btn adw-btn-suggested mb-1.5 h-9 w-full">
           <Plus size={16} />
           New chat
         </button>
@@ -483,7 +483,7 @@ export function Sidebar() {
                                     <span className={cn('min-w-0 flex-1 truncate', titling[session.id] && 'shimmer-text')}>{session.title}</span>
                                     {streaming[session.id] ? (
                                       <span className="flex shrink-0 items-center gap-1.5 text-[11px] text-link group-hover/item:hidden" title="Agent is running">
-                                        <span className="moon-spinner h-3 w-3" aria-hidden="true" />
+                                        <span className="adw-spinner h-3 w-3" aria-hidden="true" />
                                       </span>
                                     ) : (
                                       <span className="shrink-0 text-[11px] tabular-nums text-faint group-hover/item:hidden">
@@ -532,8 +532,8 @@ export function Sidebar() {
         </section>
       </div>
 
-      <div className="shrink-0 border-t border-line p-2">
-        <div className="flex items-center gap-2 rounded-[9px] px-1 py-1">
+      <div className="shrink-0 p-2">
+        <div className="flex items-center gap-2 rounded-[12px] px-1 py-1">
           <span
             aria-hidden="true"
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ink/[.12] text-[13px] font-bold text-ink"
@@ -546,7 +546,7 @@ export function Sidebar() {
               closeMobile()
               openSettings('models')
             }}
-            className="min-w-0 flex-1 rounded-[6px] text-left"
+            className="min-w-0 flex-1 rounded-[8px] text-left"
           >
             <p className="truncate text-[13px] font-semibold leading-tight text-ink">{profileName}</p>
             <p className="truncate text-[12px] leading-tight text-muted">

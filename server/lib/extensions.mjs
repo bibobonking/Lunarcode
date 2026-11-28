@@ -1,6 +1,6 @@
-// Lunarcode Extensions — the daemon side.
+// CreateCode Extensions — the daemon side.
 //
-// An extension is a folder in ~/.lunarcode/extensions/<id>/ (an .lce is just that folder zipped).
+// An extension is a folder in ~/.createcode/extensions/<id>/ (an .cce is just that folder zipped).
 // Nothing here sandboxes it. What an extension can do:
 //
 //   renderer   `main` is an ES module the browser imports from /ext/<id>/…; it gets the live kernel.
@@ -20,13 +20,13 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import { applyPatches, fingerprintPatches, matchesTarget } from '../../shared/patches.mjs'
 import { versionRelativeImports } from '../../shared/esm-version.mjs'
 import {
-  LceError,
+  CceError,
   MANIFEST_FILE,
   packExtension,
   readExtensionArchive,
   summarizeManifest,
   validateManifest,
-} from '../../shared/lce.mjs'
+} from '../../shared/cce.mjs'
 import { scaffold } from './ext-templates.mjs'
 import { HttpError, mimeFor } from './http.mjs'
 import { DATA_DIR } from './store.mjs'
@@ -180,7 +180,7 @@ async function scanFolders() {
       const raw = await readFile(path.join(dir, MANIFEST_FILE), 'utf8')
       const manifest = validateManifest(JSON.parse(raw.replace(/^﻿/, '')), { appVersion })
       if (manifest.id !== entry.name) {
-        throw new LceError(`manifest.id "${manifest.id}" must match the folder name "${entry.name}"`)
+        throw new CceError(`manifest.id "${manifest.id}" must match the folder name "${entry.name}"`)
       }
       records.push({
         ...base,
@@ -290,7 +290,7 @@ export async function transformAppFile(relativePath, absolute) {
   if (patches.length === 0) return null
   const { source, results } = applyPatches((await readFile(absolute)).toString('utf8'), relativePath, patches, patchVars)
   for (const result of results) {
-    if (result.error) console.warn(`[lunarcode] extension ${result.owner}: patch for ${relativePath} skipped (${result.error})`)
+    if (result.error) console.warn(`[createcode] extension ${result.owner}: patch for ${relativePath} skipped (${result.error})`)
   }
   return Buffer.from(source, 'utf8')
 }
@@ -300,7 +300,7 @@ export async function transformAppFile(relativePath, absolute) {
 // ---------------------------------------------------------------------------------------------
 
 const hosts = new Map()
-const bootInfo = () => globalThis.__lunarcodeServerPatches ?? { hash: '', supported: false, preloaded: false, status: {}, results: [] }
+const bootInfo = () => globalThis.__createcodeServerPatches ?? { hash: '', supported: false, preloaded: false, status: {}, results: [] }
 
 class Disposables {
   #items = []
@@ -314,7 +314,7 @@ class Disposables {
       try {
         await fn()
       } catch (error) {
-        console.error('[lunarcode] extension cleanup failed', error)
+        console.error('[createcode] extension cleanup failed', error)
       }
     }
   }
@@ -350,7 +350,7 @@ function logLine(host, level, args) {
   host.logs.push({ at: Date.now(), level, text })
   if (host.logs.length > MAX_LOG_LINES) host.logs.splice(0, host.logs.length - MAX_LOG_LINES)
   const out = level === 'error' ? console.error : level === 'warn' ? console.warn : console.log
-  out(`[lunarcode:${host.id}]`, text)
+  out(`[createcode:${host.id}]`, text)
 }
 
 function safeInspect(value) {
@@ -411,7 +411,7 @@ function createHost(record) {
     warn: (...args) => logLine(host, 'warn', args),
     error: (...args) => logLine(host, 'error', args),
 
-    /** Registers a callable the renderer reaches with `lunarcode.server.call(name, args)`. */
+    /** Registers a callable the renderer reaches with `createcode.server.call(name, args)`. */
     rpc(name, handler) {
       if (!/^[A-Za-z0-9_.:-]{1,80}$/.test(name)) throw new Error(`Invalid rpc name "${name}"`)
       host.rpcs.set(name, handler)
@@ -451,7 +451,7 @@ function createHost(record) {
       })
     },
 
-    /** Pushes an event to every open Lunarcode window; the renderer listens with `lunarcode.server.on(name, fn)`. */
+    /** Pushes an event to every open CreateCode window; the renderer listens with `createcode.server.on(name, fn)`. */
     emit(name, data) {
       publish({ type: 'ext', ext: record.id, name: String(name), data })
     },
@@ -536,13 +536,13 @@ async function activateServer(record) {
   try {
     await ensureModuleType(record, entry)
     await mkdir(record.dataDir, { recursive: true, mode: 0o700 })
-    const url = `${pathToFileURL(path.join(record.dir, entry)).href}?lce-v=${record.hash}`
-    globalThis.LUNARCODE_HOST = host.api
+    const url = `${pathToFileURL(path.join(record.dir, entry)).href}?cce-v=${record.hash}`
+    globalThis.CREATECODE_HOST = host.api
     let mod
     try {
       mod = await import(url)
     } finally {
-      delete globalThis.LUNARCODE_HOST
+      delete globalThis.CREATECODE_HOST
     }
     host.module = mod
     const activate = typeof mod.default === 'function' ? mod.default : mod.activate
@@ -552,7 +552,7 @@ async function activateServer(record) {
   } catch (error) {
     host.state = 'error'
     host.error = error instanceof Error ? error.stack || error.message : String(error)
-    console.error(`[lunarcode] extension ${record.id} failed to start`, error)
+    console.error(`[createcode] extension ${record.id} failed to start`, error)
     await host.disposables.run()
   }
 }
@@ -564,7 +564,7 @@ async function deactivateServer(id) {
   try {
     if (typeof host.module?.deactivate === 'function') await host.module.deactivate()
   } catch (error) {
-    console.error(`[lunarcode] extension ${id} deactivate failed`, error)
+    console.error(`[createcode] extension ${id} deactivate failed`, error)
   }
   for (const entry of host.handlers.shutdown) {
     try {
@@ -739,7 +739,7 @@ function publicRecord(record, patchStatus) {
 function serverPatchStatus(key) {
   const boot = bootInfo()
   if (boot.supported === false) {
-    return { applied: false, matches: 0, error: boot.preloaded === false ? 'start Lunarcode with the lunarcode command or the desktop app' : 'needs Node 22.15+ (module hooks)' }
+    return { applied: false, matches: 0, error: boot.preloaded === false ? 'start CreateCode with the createcode command or the desktop app' : 'needs Node 22.15+ (module hooks)' }
   }
   return boot.status?.[key] ?? null
 }
@@ -792,7 +792,7 @@ let watcher = null
 let watchTimer = null
 
 /**
- * Edits on disk reload extensions live: save a file in ~/.lunarcode/extensions/<id>/ (or install from the CLI) and
+ * Edits on disk reload extensions live: save a file in ~/.createcode/extensions/<id>/ (or install from the CLI) and
  * the window picks the change up without a click. Debounced; our own temporary folders are ignored.
  */
 function startWatching() {
@@ -802,7 +802,7 @@ function startWatching() {
     if (/(^|[\\/])(\.staging-|\.old-)/.test(file) || file.endsWith('.tmp') || file.includes('node_modules')) return
     invalidateScan()
     clearTimeout(watchTimer)
-    watchTimer = setTimeout(() => void reloadExtensions().catch((error) => console.error('[lunarcode] extension reload failed', error)), 450)
+    watchTimer = setTimeout(() => void reloadExtensions().catch((error) => console.error('[createcode] extension reload failed', error)), 450)
   }
   try {
     watcher = watch(EXTENSIONS_DIR, { recursive: true }, onChange)
@@ -850,7 +850,7 @@ async function writeExtensionFiles(id, files) {
   try {
     for (const [name, data] of files) {
       const destination = path.join(staging, name)
-      if (!destination.startsWith(`${staging}${path.sep}`)) throw new LceError(`unsafe path "${name}"`)
+      if (!destination.startsWith(`${staging}${path.sep}`)) throw new CceError(`unsafe path "${name}"`)
       await mkdir(path.dirname(destination), { recursive: true })
       await writeFile(destination, data)
     }
@@ -869,8 +869,8 @@ async function writeExtensionFiles(id, files) {
   }
 }
 
-/** Installs the bytes of an .lce. `enable` turns it on straight away (the UI asks the person first). */
-export async function installArchive(bytes, { enable = false, source = 'lce' } = {}) {
+/** Installs the bytes of an .cce. `enable` turns it on straight away (the UI asks the person first). */
+export async function installArchive(bytes, { enable = false, source = 'cce' } = {}) {
   let parsed
   try {
     parsed = readExtensionArchive(bytes, { appVersion })
@@ -917,7 +917,7 @@ export async function createExtension({ id, name, template = 'hello' }) {
   return installParsed({ manifest: validateManifest(made.manifest), files }, { enable: false, source: 'folder' })
 }
 
-/** Installs a folder from disk (CLI `lunarcode ext install ./dir`). */
+/** Installs a folder from disk (CLI `createcode ext install ./dir`). */
 export async function installDirectory(dir, options = {}) {
   const absolute = path.resolve(dir)
   const found = new Map()
@@ -990,7 +990,7 @@ export async function reloadExtensions(id) {
   return { ...(await listExtensions()), reload: true }
 }
 
-/** The extension as .lce bytes, for "Export". */
+/** The extension as .cce bytes, for "Export". */
 export async function exportExtension(id) {
   const record = await recordFor(id)
   if (record.error) throw new HttpError(409, record.error, 'extension_broken')
@@ -1004,7 +1004,7 @@ export async function exportExtension(id) {
   return packExtension({ manifest, files }).bytes
 }
 
-/** Packs `{ manifest, files }` from the editor into .lce bytes without installing. */
+/** Packs `{ manifest, files }` from the editor into .cce bytes without installing. */
 export function buildArchive(manifest, files) {
   try {
     return packExtension({ manifest, files }).bytes

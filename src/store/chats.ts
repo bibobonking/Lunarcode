@@ -219,7 +219,7 @@ async function persistChats() {
     await saveChats({ sessions, activeId })
   } catch (error) {
     window.dispatchEvent(
-      new CustomEvent('maxcode:notice', {
+      new CustomEvent('createcode:notice', {
         detail: {
           message: error instanceof Error ? error.message : 'Could not save conversations to the local daemon.',
           tone: 'error',
@@ -242,7 +242,7 @@ if (typeof window !== 'undefined') {
       void fetch('/api/chats', {
         method: 'PUT',
         keepalive: true,
-        headers: { 'Content-Type': 'application/json', 'x-maxcode-csrf': csrfToken() },
+        headers: { 'Content-Type': 'application/json', 'x-createcode-csrf': csrfToken() },
         body,
       }).catch(() => undefined)
     } catch {
@@ -258,13 +258,13 @@ if (typeof window !== 'undefined') {
 export function exportChats() {
   const data = useChats.getState().sessions
   const blob = new Blob(
-    [JSON.stringify({ app: 'Lunarcode', exportedAt: new Date().toISOString(), sessions: data }, null, 2)],
+    [JSON.stringify({ app: 'CreateCode', exportedAt: new Date().toISOString(), sessions: data }, null, 2)],
     { type: 'application/json' },
   )
   const url = URL.createObjectURL(blob)
   const anchor = document.createElement('a')
   anchor.href = url
-  anchor.download = `maxcode-history-${new Date().toISOString().slice(0, 10)}.json`
+  anchor.download = `createcode-history-${new Date().toISOString().slice(0, 10)}.json`
   anchor.click()
   URL.revokeObjectURL(url)
 }
@@ -272,7 +272,7 @@ export function exportChats() {
 export function importChats(file: File): Promise<number> {
   return file.text().then((text) => {
     const parsed = JSON.parse(text) as { sessions?: unknown[] }
-    if (!Array.isArray(parsed.sessions)) throw new Error('This file does not contain a Lunarcode history.')
+    if (!Array.isArray(parsed.sessions)) throw new Error('This file does not contain a CreateCode history.')
     const sessions = parsed.sessions.filter(isSession).map(normalizeSession)
     if (sessions.length === 0) throw new Error('No valid conversations were found in this file.')
     const existing = new Set(useChats.getState().sessions.map((session) => session.id))

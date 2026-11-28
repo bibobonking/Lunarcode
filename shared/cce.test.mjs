@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { deflateRawSync } from 'node:zlib'
-import { LceError, packExtension, readExtensionArchive, readZip, satisfies, validateManifest, writeZip } from './lce.mjs'
+import { CceError, packExtension, readExtensionArchive, readZip, satisfies, validateManifest, writeZip } from './cce.mjs'
 
 const manifest = { id: 'demo-ext', name: 'Demo', version: '1.2.3', main: 'main.js', styles: ['a.css'] }
 
@@ -30,7 +30,7 @@ test('manifest problems are explained', () => {
   assert.throws(() => validateManifest({ id: 'ok-id', name: 'x', version: '1' }), /version/)
   assert.throws(() => validateManifest({ ...manifest, main: '../evil.js' }), /unsafe/)
   assert.throws(() => validateManifest({ ...manifest, main: 'x.txt' }), /\.js/)
-  assert.throws(() => validateManifest({ ...manifest, engine: '>=9.0.0' }, { appVersion: '4.0.0' }), /needs Lunarcode/)
+  assert.throws(() => validateManifest({ ...manifest, engine: '>=9.0.0' }, { appVersion: '4.0.0' }), /needs CreateCode/)
   assert.throws(() => validateManifest({ ...manifest, patches: [{ target: 'a', find: 'x' }] }), /exactly one/)
   assert.throws(() => validateManifest({ ...manifest, patches: [{ target: 'a', find: { regex: '(' }, replace: 'x' }] }), /compile/)
   assert.throws(() => validateManifest({ ...manifest, themes: [{ id: 't', label: 'T', tokens: { canvas: 'red' } }] }), /triplet/)
@@ -48,7 +48,7 @@ test('missing files named by the manifest are rejected at install time', () => {
 
 test('zip-slip, corruption and non-zips are refused', () => {
   const evil = writeZip({ 'extension.json': '{}' })
-  assert.throws(() => readZip(Buffer.from('not a zip at all, definitely not')), LceError)
+  assert.throws(() => readZip(Buffer.from('not a zip at all, definitely not')), CceError)
   const good = writeZip({ 'a.txt': 'hello hello hello hello' })
   const bad = Buffer.from(good)
   bad[40] ^= 0xff // flip a payload byte

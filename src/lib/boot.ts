@@ -8,9 +8,9 @@ import { useSkills } from '../store/skills'
 import { useMcp } from '../store/mcp'
 
 const LEGACY_KEYS = {
-  settings: 'maxcode-settings-v1',
-  chats: 'maxcode-chats-v1',
-  workspace: 'maxcode-workspace-v1',
+  settings: 'createcode-settings-v1',
+  chats: 'createcode-chats-v1',
+  workspace: 'createcode-workspace-v1',
 } as const
 
 type BootPhase = 'idle' | 'loading' | 'ready' | 'error'
@@ -51,7 +51,7 @@ export const useBoot = create<BootState>()((set, get) => ({
         error:
           error instanceof Error
             ? error.message
-            : 'Lunarcode could not reach its local daemon.',
+            : 'CreateCode could not reach its local daemon.',
       })
     }
   },

@@ -3,79 +3,49 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Lunarcode</title>
+<title>CreateCode</title>
 <style>
-  :root { color-scheme: light dark; --bg:#f8f8f6; --ink:#171715; --muted:#62625d; --accent:#5865f2; }
-  @media (prefers-color-scheme: dark) { :root { --bg:#0e0f17; --ink:#edede9; --muted:#a0a099; --accent:#8e96ff; } }
-  html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font:14px system-ui,-apple-system,"Segoe UI",sans-serif}
+  :root { color-scheme: light dark; --bg:#f6f6f8; --ink:#303038; --muted:#646471; --track:#e5e5eb; --accent:#3478d6; --danger:#be2834; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#222226; --ink:#eeeef2; --muted:#b6b6c1; --track:#3c3c43; --accent:#3e86e0; --danger:#ff9692; } }
+  html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font:14px "Adwaita Sans",Inter,Cantarell,system-ui,sans-serif}
   body{display:grid;place-items:center}
-  .box{text-align:center}
-  .logo{position:relative;width:176px;height:176px;margin:0 auto -6px}
-  .glow{position:absolute;inset:0;margin:auto;width:150px;height:150px;border-radius:50%;background:var(--accent);opacity:.13;filter:blur(42px)}
-  .shock{position:absolute;inset:0;margin:auto;width:104px;height:104px;border-radius:28%;border:2px solid var(--accent);opacity:0;animation:shock 1.3s cubic-bezier(.16,1,.3,1) forwards}
-  svg{position:absolute;inset:0;margin:auto;overflow:visible;filter:drop-shadow(0 14px 30px rgba(142,150,255,.4));animation:float 3.2s ease-in-out 2s infinite}
-  .tile{transform-origin:32px 32px;animation:pop .55s cubic-bezier(.34,1.56,.64,1) .05s both}
-  .ring{stroke-dasharray:1;stroke-dashoffset:1;animation:draw .9s cubic-bezier(.65,0,.35,1) .2s forwards}
-  .chev{stroke-dasharray:1;stroke-dashoffset:1;animation:draw .4s cubic-bezier(.16,1,.3,1) .75s forwards}
-  .under{opacity:.6;transform-origin:40px 39px;animation:under .4s cubic-bezier(.34,1.56,.64,1) 1.05s both}
-  .sun{transform-box:fill-box;transform-origin:center;animation:pop .6s cubic-bezier(.34,1.9,.5,1) .9s both}
-  h1{margin:0;font-size:26px;font-weight:600;letter-spacing:-.04em;line-height:1}
-  h1 span{display:inline-block;opacity:0;animation:rise .7s cubic-bezier(.16,1,.3,1) forwards}
-  h1 .a{color:var(--accent)}
-  p{margin:12px auto 0;color:var(--muted);max-width:360px;line-height:1.5;opacity:0;animation:fade .6s ease 1.6s forwards}
-  .err{color:#cf3830;white-space:pre-wrap}
-  .stopped svg{animation:none}
-  @keyframes draw{to{stroke-dashoffset:0}}
-  @keyframes pop{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
-  @keyframes under{from{transform:scaleX(0)}to{transform:scaleX(1)}}
-  @keyframes shock{0%{transform:scale(.8);opacity:.85}100%{transform:scale(2.6);opacity:0}}
-  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
-  @keyframes rise{from{opacity:0;transform:translateY(14px);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
-  @keyframes fade{to{opacity:1}}
-  @media (prefers-reduced-motion: reduce){*{animation-duration:.01s!important;animation-delay:0s!important;animation-iteration-count:1!important}}
+  .box{display:flex;flex-direction:column;align-items:center;text-align:center;padding:0 24px}
+  svg{animation:in .5s cubic-bezier(.16,1,.3,1) both}
+  .gear{transform-origin:46.14px 17.86px;animation:turn 4s linear infinite}
+  h1{margin:24px 0 0;font-size:24px;font-weight:800;line-height:1}
+  .by{margin:8px 0 0;font-size:12.5px;color:var(--muted)}
+  .bar{position:relative;overflow:hidden;width:176px;height:6px;margin-top:40px;border-radius:999px;background:var(--track)}
+  .bar::after{content:"";position:absolute;inset:0;width:40%;border-radius:999px;background:var(--accent);animation:sweep 1.4s cubic-bezier(.65,0,.35,1) infinite}
+  #msg{margin:14px 0 0;max-width:360px;font-size:12px;line-height:1.5;color:var(--muted)}
+  #msg.err{color:var(--danger);white-space:pre-wrap}
+  .stopped .gear{animation:none}
+  .stopped .bar{display:none}
+  @keyframes in{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:none}}
+  @keyframes turn{to{transform:rotate(360deg)}}
+  @keyframes sweep{from{transform:translateX(-100%)}to{transform:translateX(250%)}}
+  @media (prefers-reduced-motion: reduce){*,*::after{animation:none!important}}
 </style>
 </head>
 <body>
   <div class="box" id="box">
-    <div class="logo">
-      <div class="glow"></div>
-      <span class="shock" style="animation-delay:1s"></span>
-      <span class="shock" style="animation-delay:1.25s"></span>
-      <svg viewBox="0 0 64 64" width="104" height="104" fill="none" aria-hidden="true">
-        <defs>
-          <linearGradient id="bg" x1="8" y1="4" x2="56" y2="60" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#2a2d5e"/><stop offset="1" stop-color="#0a0b18"/></linearGradient>
-          <linearGradient id="rg" x1="14" y1="12" x2="50" y2="52" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#d8dbff"/><stop offset=".45" stop-color="#8e96ff"/><stop offset="1" stop-color="#4fc6ea"/></linearGradient>
-          <radialGradient id="sn" cx="46" cy="18" r="6" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff"/><stop offset=".6" stop-color="#dfe2ff"/><stop offset="1" stop-color="#a9b0ff"/></radialGradient>
-        </defs>
-        <g class="tile"><rect width="64" height="64" rx="15" fill="url(#bg)"/><rect x=".75" y=".75" width="62.5" height="62.5" rx="14.25" stroke="#fff" stroke-opacity=".09" stroke-width="1.5"/></g>
-        <path class="ring" d="M51.32 26.82A20 20 0 1 1 37.18 12.68" stroke="url(#rg)" stroke-width="5.6" stroke-linecap="round" pathLength="1"/>
-        <circle class="sun" cx="46.14" cy="17.86" r="5" fill="url(#sn)"/>
-        <g stroke="#e6e9ff" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round">
-          <path class="chev" d="M25.2 25.6L34 32l-8.8 6.4" pathLength="1"/>
-          <path class="under" d="M37.6 39.2h6"/>
-        </g>
-      </svg>
-    </div>
-    <h1 aria-label="Lunarcode" id="word"></h1>
+    <svg viewBox="0 0 64 64" width="96" height="96" fill="none" aria-hidden="true">
+      <rect width="64" height="64" rx="16" fill="#0f0f11"/><rect width="64" height="61" rx="16" fill="#2e2e33"/>
+      <g transform="translate(0 -1.5)">
+        <path d="M51.32 26.82A20 20 0 1 1 37.18 12.68" stroke="#fff" stroke-width="5.6" stroke-linecap="round"/>
+        <path class="gear" d="M44.57 13.43L44.93 11.58L47.35 11.58L47.71 13.43L48.16 13.62L49.73 12.56L51.44 14.27L50.38 15.84L50.57 16.29L52.42 16.65L52.42 19.07L50.57 19.43L50.38 19.88L51.44 21.45L49.73 23.16L48.16 22.10L47.71 22.29L47.35 24.14L44.93 24.14L44.57 22.29L44.12 22.10L42.55 23.16L40.84 21.45L41.90 19.88L41.71 19.43L39.86 19.07L39.86 16.65L41.71 16.29L41.90 15.84L40.84 14.27L42.55 12.56L44.12 13.62ZM43.94 17.86a2.2 2.2 0 1 0 4.4 0a2.2 2.2 0 1 0 -4.4 0Z" fill="#fff" fill-rule="evenodd" stroke="#fff" stroke-width=".7" stroke-linejoin="round"/>
+        <g stroke="#fff" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round"><path d="M25.2 25.6L34 32l-8.8 6.4"/><path d="M37.6 39.2h6" opacity=".55"/></g>
+      </g>
+    </svg>
+    <h1>CreateCode</h1>
+    <p class="by">by Bibobonking</p>
+    <div class="bar"></div>
     <p id="msg">Starting the local daemon…</p>
   </div>
 <script>
-  (function () {
-    var w = document.getElementById('word');
-    'Lunarcode'.split('').forEach(function (c, i) {
-      var s = document.createElement('span');
-      s.textContent = c;
-      s.style.animationDelay = (1.15 + i * 0.055) + 's';
-      if (i >= 4) s.className = 'a';
-      w.appendChild(s);
-    });
-  })();
-  window.__opensolError = function (message) {
+  window.__createcodeError = function (message) {
     document.getElementById('box').className = 'box stopped';
     var el = document.getElementById('msg');
     el.className = 'err';
-    el.style.animation = 'none';
-    el.style.opacity = '1';
     el.textContent = message;
   };
 </script>

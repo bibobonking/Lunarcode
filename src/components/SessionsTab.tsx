@@ -74,7 +74,7 @@ export function SessionsTab() {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex shrink-0 items-center gap-2 border-b border-line px-3 py-2.5">
-        <div className="flex rounded-[9px] bg-ink/[.07] p-0.5 text-[12px] font-semibold">
+        <div className="flex rounded-[12px] bg-ink/[.07] p-0.5 text-[12px] font-semibold">
           {(['workspace', 'all'] as const).map((item) => (
             <button
               key={item}
@@ -82,7 +82,7 @@ export function SessionsTab() {
               onClick={() => setScope(item)}
               aria-pressed={scope === item}
               className={cn(
-                'h-7 rounded-[6px] px-2.5 transition-colors',
+                'h-7 rounded-[8px] px-2.5 transition-colors',
                 scope === item ? 'bg-panel text-ink' : 'text-muted hover:text-ink',
               )}
             >

@@ -200,7 +200,7 @@ export function ModelDeck({ open, onClose }: { open: boolean; onClose: () => voi
         role="dialog"
         aria-modal="true"
         aria-label="Model"
-        className="adw-dialog relative flex h-[min(92dvh,800px)] w-full flex-col overflow-hidden rounded-b-none sm:w-[min(1180px,97vw)] sm:rounded-[15px]"
+        className="adw-dialog relative flex h-[min(92dvh,800px)] w-full flex-col overflow-hidden rounded-b-none sm:w-[min(1180px,97vw)] sm:rounded-[22px]"
       >
         <header className="adw-headerbar shrink-0 border-b border-line">
           <div className="min-w-0 flex-1">
@@ -302,7 +302,7 @@ export function ModelDeck({ open, onClose }: { open: boolean; onClose: () => voi
                     <kbd className="adw-kbd hidden sm:inline-flex">↑↓ ↵</kbd>
                   </div>
                   {error && (
-                    <div className="mt-2 flex items-start gap-2 rounded-[9px] border border-danger/30 bg-danger/10 px-3 py-2">
+                    <div className="mt-2 flex items-start gap-2 rounded-[12px] border border-danger/30 bg-danger/10 px-3 py-2">
                       <AlertCircle size={16} className="mt-0.5 shrink-0 text-danger" />
                       <p className="min-w-0 flex-1 text-[12px] leading-relaxed text-ink">{error}</p>
                       <button type="button" onClick={() => void fetchModels(provider, true)} className="adw-btn adw-btn-flat h-7 px-2 text-[12px]">

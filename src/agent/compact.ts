@@ -58,7 +58,7 @@ export function isCompacting(sessionId: string): boolean {
  * Runs the compaction for `sessionId`.
  *
  * Returns true if compaction succeeded, false if it was skipped or failed.
- * Never throws — errors are surfaced via the maxcode:notice event.
+ * Never throws — errors are surfaced via the createcode:notice event.
  */
 export async function compactSession(sessionId: string): Promise<boolean> {
   if (compacting.has(sessionId)) return false
@@ -111,7 +111,7 @@ export async function compactSession(sessionId: string): Promise<boolean> {
       if (result.content.trim()) summaryContent = result.content
     } catch (error) {
       window.dispatchEvent(
-        new CustomEvent('maxcode:notice', {
+        new CustomEvent('createcode:notice', {
           detail: {
             message: `Auto-compact failed: ${error instanceof Error ? error.message : 'Unknown error'}. Continuing with full context.`,
             tone: 'error',
@@ -166,7 +166,7 @@ export async function compactSession(sessionId: string): Promise<boolean> {
     })
 
     window.dispatchEvent(
-      new CustomEvent('maxcode:notice', {
+      new CustomEvent('createcode:notice', {
         detail: {
           message: '✦ Context compacted — session summary saved, continuing with fresh context.',
           tone: 'success',

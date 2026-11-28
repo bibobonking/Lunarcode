@@ -131,7 +131,7 @@ export function QuestionCard({ message }: { message: ToolMessage }) {
               aria-selected={index === step}
               onClick={() => go(index)}
               className={cn(
-                'flex h-8 shrink-0 items-center gap-1 rounded-[9px] px-3 text-[12px] font-semibold transition-colors',
+                'flex h-8 shrink-0 items-center gap-1 rounded-[12px] px-3 text-[12px] font-semibold transition-colors',
                 index === step ? 'bg-ink/[.11] text-ink' : 'text-muted hover:bg-ink/[.07] hover:text-ink',
               )}
             >
@@ -158,7 +158,7 @@ export function QuestionCard({ message }: { message: ToolMessage }) {
               aria-checked={checked}
               onClick={() => choose(option.label)}
               className={cn(
-                'flex min-h-[44px] w-full items-start gap-2.5 rounded-[9px] border px-3 py-2 text-left transition-colors',
+                'flex min-h-[44px] w-full items-start gap-2.5 rounded-[12px] border px-3 py-2 text-left transition-colors',
                 checked ? 'border-accent bg-accent-soft' : 'border-line hover:bg-ink/[.05]',
               )}
             >
@@ -175,7 +175,7 @@ export function QuestionCard({ message }: { message: ToolMessage }) {
         {/* Always the last row of every question: the person can answer in their own words. */}
         <label
           className={cn(
-            'flex min-h-[44px] items-start gap-2.5 rounded-[9px] border px-3 py-2 transition-colors focus-within:border-accent',
+            'flex min-h-[44px] items-start gap-2.5 rounded-[12px] border px-3 py-2 transition-colors focus-within:border-accent',
             answer.custom.trim() ? 'border-accent bg-accent-soft' : 'border-line',
           )}
         >

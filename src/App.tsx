@@ -20,7 +20,7 @@ import { useBoot } from './lib/boot'
 import { resolveTheme, themeIsDark } from './lib/themes'
 import { startExtensions } from './extensions'
 
-const MIN_SPLASH_MS = 2600
+const MIN_SPLASH_MS = 1200
 
 export default function App() {
   const phase = useBoot((state) => state.phase)
@@ -51,7 +51,7 @@ export default function App() {
   }, [phase, splash])
   useEffect(() => {
     if (splash !== 'leaving') return
-    const t2 = window.setTimeout(() => setSplash('gone'), 520)
+    const t2 = window.setTimeout(() => setSplash('gone'), 340)
     return () => window.clearTimeout(t2)
   }, [splash])
 
@@ -74,9 +74,9 @@ export default function App() {
       root.classList.toggle('dark', themeIsDark(theme, media.matches))
       document
         .querySelector('meta[name="theme-color"]')
-        ?.setAttribute('content', themeIsDark(theme, media.matches) ? '#121215' : '#e8eaf1')
+        ?.setAttribute('content', themeIsDark(theme, media.matches) ? '#222226' : '#f6f6f8')
       try {
-        localStorage.setItem('opensol.theme', theme)
+        localStorage.setItem('createcode.theme', theme)
       } catch {
         // Storage can be unavailable in private mode; the theme still applies.
       }
@@ -92,7 +92,7 @@ export default function App() {
     if (uiStyle === 'glass') root.dataset.style = 'glass'
     else delete root.dataset.style
     try {
-      localStorage.setItem('lunarcode.style', uiStyle)
+      localStorage.setItem('createcode.style', uiStyle)
     } catch {
       // Storage can be unavailable; the style still applies for this session.
     }

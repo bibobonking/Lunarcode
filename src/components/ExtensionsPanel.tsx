@@ -106,13 +106,13 @@ function ExtensionCard({ ext }: { ext: ExtensionInfo }) {
   const toggle = async (enabled: boolean) => {
     if (enabled) {
       const parts = [
-        ext.summary?.renderer && 'run code inside the Lunarcode window',
-        ext.summary?.server && 'run Node code in the Lunarcode daemon on your computer',
+        ext.summary?.renderer && 'run code inside the CreateCode window',
+        ext.summary?.server && 'run Node code in the CreateCode daemon on your computer',
         (ext.summary?.webPatches ?? 0) + (ext.summary?.serverPatches ?? 0) > 0 && 'edit the app itself with patches',
       ].filter(Boolean)
       const ok = await askConfirm({
         title: `Enable ${ext.name}?`,
-        body: `This extension can ${parts.length ? parts.join(', ') : 'change how Lunarcode looks'}. Extensions are not sandboxed: they can read your files, your chats and your provider keys' use, run commands and reach the network. Only enable extensions from people you trust.`,
+        body: `This extension can ${parts.length ? parts.join(', ') : 'change how CreateCode looks'}. Extensions are not sandboxed: they can read your files, your chats and your provider keys' use, run commands and reach the network. Only enable extensions from people you trust.`,
         confirmLabel: 'Enable',
       })
       if (!ok) return
@@ -121,7 +121,7 @@ function ExtensionCard({ ext }: { ext: ExtensionInfo }) {
       await setExtensionEnabled(ext.id, enabled)
       await refreshExtensions()
       if (useExtensions.getState().reloadNeeded) {
-        notify('Applying the extension: reloading Lunarcode…', 'info')
+        notify('Applying the extension: reloading CreateCode…', 'info')
         window.setTimeout(() => window.location.reload(), 700)
       }
     }, 'Could not change the extension.')
@@ -149,7 +149,7 @@ function ExtensionCard({ ext }: { ext: ExtensionInfo }) {
   return (
     <div className="adw-boxed overflow-hidden">
       <div className="flex items-start gap-3 p-3">
-        <span className="tool-icon mt-0.5 h-10 w-10 shrink-0 overflow-hidden rounded-[11px]" aria-hidden="true">
+        <span className="tool-icon mt-0.5 h-10 w-10 shrink-0 overflow-hidden rounded-[16px]" aria-hidden="true">
           {ext.hasIcon ? <img src={`/api/extensions/${ext.id}/icon`} alt="" className="h-full w-full object-cover" /> : <Package size={20} />}
         </span>
         <div className="min-w-0 flex-1">
@@ -227,13 +227,13 @@ function ExtensionCard({ ext }: { ext: ExtensionInfo }) {
             <code className="font-mono">{ext.dir}</code>
           </p>
           {settings.map((item) => (
-            <div key={item.id} className="rounded-[10px] border border-line bg-card p-3">
+            <div key={item.id} className="rounded-[14px] border border-line bg-card p-3">
               <p className="mb-2 font-semibold text-ink">{item.label}</p>
               <Host render={item.render} />
             </div>
           ))}
           {logs && (
-            <div className="max-h-44 overflow-y-auto rounded-[8px] border border-line bg-panel p-2 font-mono text-[12px] leading-relaxed">
+            <div className="max-h-44 overflow-y-auto rounded-[10px] border border-line bg-panel p-2 font-mono text-[12px] leading-relaxed">
               {logs.length === 0 && <p className="text-faint">No log lines from the daemon part.</p>}
               {logs.map((line, index) => (
                 <p key={index} className={cn(line.level === 'error' ? 'text-danger' : line.level === 'warn' ? 'text-warning' : 'text-muted')}>
@@ -251,8 +251,8 @@ function ExtensionCard({ ext }: { ext: ExtensionInfo }) {
                 <Terminal size={13} /> Daemon log
               </button>
             )}
-            <button type="button" className="adw-btn" disabled={busy || Boolean(ext.error)} onClick={() => void run(async () => download(await exportExtension(ext.id), `${ext.id}-${ext.version}.lce`), 'Export failed.')}>
-              <Download size={13} /> Export .lce
+            <button type="button" className="adw-btn" disabled={busy || Boolean(ext.error)} onClick={() => void run(async () => download(await exportExtension(ext.id), `${ext.id}-${ext.version}.cce`), 'Export failed.')}>
+              <Download size={13} /> Export .cce
             </button>
             <button type="button" className="adw-btn text-danger" disabled={busy} onClick={() => void remove()}>
               <Trash2 size={13} /> Remove
@@ -302,7 +302,7 @@ function NewExtension({ onDone }: { onDone: () => void }) {
             key={item.value}
             type="button"
             onClick={() => setTemplate(item.value)}
-            className={cn('rounded-[10px] border px-3 py-2 text-left', template === item.value ? 'border-accent bg-accent/10' : 'border-line hover:bg-ink/[.05]')}
+            className={cn('rounded-[14px] border px-3 py-2 text-left', template === item.value ? 'border-accent bg-accent/10' : 'border-line hover:bg-ink/[.05]')}
           >
             <span className="block text-[13px] font-semibold text-ink">{item.label}</span>
             <span className="block text-[12px] text-muted">{item.hint}</span>
@@ -364,27 +364,27 @@ export function ExtensionsPanel() {
               <Plus size={14} /> New
             </button>
             <button type="button" className="adw-btn adw-btn-suggested" disabled={installing} onClick={() => fileRef.current?.click()}>
-              {installing ? <Spinner size={13} /> : <Upload size={14} />} Install .lce
+              {installing ? <Spinner size={13} /> : <Upload size={14} />} Install .cce
             </button>
-            <input ref={fileRef} type="file" accept=".lce,application/zip" hidden onChange={(event) => event.target.files?.[0] && void install(event.target.files[0])} />
+            <input ref={fileRef} type="file" accept=".cce,application/zip" hidden onChange={(event) => event.target.files?.[0] && void install(event.target.files[0])} />
           </>
         }
       />
       <div className="max-h-[calc(92dvh-44px)] space-y-3 overflow-y-auto p-4">
         <p className="text-[13px] leading-relaxed text-muted">
-          An extension is a folder (or an <code className="font-mono text-ink">.lce</code> file) that Lunarcode runs with full access: code in this window, Node code in the daemon and
+          An extension is a folder (or an <code className="font-mono text-ink">.cce</code> file) that CreateCode runs with full access: code in this window, Node code in the daemon and
           direct patches to the app, with no API to hold it back. Enable only what you trust.
         </p>
 
         {reloadNeeded && (
-          <div className="flex items-center justify-between gap-3 rounded-[10px] border border-accent/40 bg-accent/10 px-3 py-2 text-[13px]">
-            <span>Reload Lunarcode to apply the latest extension changes.</span>
+          <div className="flex items-center justify-between gap-3 rounded-[14px] border border-accent/40 bg-accent/10 px-3 py-2 text-[13px]">
+            <span>Reload CreateCode to apply the latest extension changes.</span>
             <button type="button" className="adw-btn adw-btn-suggested" onClick={() => window.location.reload()}>Reload now</button>
           </div>
         )}
         {listing?.restartRequired && (
-          <div className="flex items-center justify-between gap-3 rounded-[10px] border border-warning/40 bg-warning/10 px-3 py-2 text-[13px]">
-            <span>Daemon patches changed. Restart Lunarcode to apply them.</span>
+          <div className="flex items-center justify-between gap-3 rounded-[14px] border border-warning/40 bg-warning/10 px-3 py-2 text-[13px]">
+            <span>Daemon patches changed. Restart CreateCode to apply them.</span>
             <button
               type="button"
               className="adw-btn"
@@ -399,7 +399,7 @@ export function ExtensionsPanel() {
           </div>
         )}
         {listing && !listing.serverPatchesSupported && extensions.some((item) => item.summary?.serverPatches) && (
-          <p className="text-[12px] text-warning">Daemon patches need Node 22.15 or newer, or the lunarcode command / desktop app to start the daemon.</p>
+          <p className="text-[12px] text-warning">Daemon patches need Node 22.15 or newer, or the createcode command / desktop app to start the daemon.</p>
         )}
 
         {creating && <NewExtension onDone={() => setCreating(false)} />}
@@ -409,9 +409,9 @@ export function ExtensionsPanel() {
         )}
         {listing && extensions.length === 0 && !creating && (
           <div className="flex flex-col items-center gap-2 py-10 text-center">
-            <span className="tool-icon h-12 w-12 rounded-[14px]"><Package size={22} /></span>
+            <span className="tool-icon h-12 w-12 rounded-[18px]"><Package size={22} /></span>
             <p className="text-[14px] font-semibold text-ink">No extensions yet</p>
-            <p className="max-w-[380px] text-[13px] text-muted">Install an <code className="font-mono">.lce</code>, drop a folder into the extensions folder, or start from a template.</p>
+            <p className="max-w-[380px] text-[13px] text-muted">Install an <code className="font-mono">.cce</code>, drop a folder into the extensions folder, or start from a template.</p>
           </div>
         )}
         {extensions.map((ext) => (

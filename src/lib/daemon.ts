@@ -73,7 +73,7 @@ export async function ensureSession(force = false): Promise<void> {
       })
     } catch {
       throw new DaemonError(
-        'Lunarcode’s local daemon is not reachable. Start it with “npm start” in the Lunarcode folder, then reload this page.',
+        'CreateCode’s local daemon is not reachable. Start it with “npm start” in the CreateCode folder, then reload this page.',
         0,
         'daemon_unreachable',
       )
@@ -93,7 +93,7 @@ export async function api<T>(path: string, init: RequestInit = {}, retry = true)
   const method = (init.method ?? 'GET').toUpperCase()
   const headers = new Headers(init.headers)
   if (init.body && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json')
-  if (!['GET', 'HEAD'].includes(method)) headers.set('x-maxcode-csrf', csrf)
+  if (!['GET', 'HEAD'].includes(method)) headers.set('x-createcode-csrf', csrf)
   let response: Response
   try {
     response = await fetch(path, { ...init, method, headers, credentials: 'same-origin' })
@@ -442,7 +442,7 @@ export async function requestLLM(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-maxcode-csrf': csrf,
+        'x-createcode-csrf': csrf,
       },
       body: JSON.stringify({ provider, kind, model, body }),
       signal,
@@ -472,7 +472,7 @@ export async function* streamDeploy(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-maxcode-csrf': csrf,
+        'x-createcode-csrf': csrf,
       },
       body: JSON.stringify(request),
       signal,
@@ -575,7 +575,7 @@ export async function* streamTerminal(
   try {
     response = await fetch('/api/terminal/run', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-maxcode-csrf': csrf },
+      headers: { 'Content-Type': 'application/json', 'x-createcode-csrf': csrf },
       body: JSON.stringify({ command, cwd }),
       signal,
       credentials: 'same-origin',

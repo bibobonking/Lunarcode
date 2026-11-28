@@ -31,26 +31,26 @@ function durationLabel(ms?: number) {
 function approvalCopy(name: ToolName) {
   switch (name) {
     case 'shell':
-      return 'Lunarcode wants to run this command in the open workspace.'
+      return 'CreateCode wants to run this command in the open workspace.'
     case 'write_file':
-      return 'Lunarcode wants to create or overwrite this file on disk.'
+      return 'CreateCode wants to create or overwrite this file on disk.'
     case 'edit_file':
     case 'rewrite_file':
-      return 'Lunarcode wants to change this file on disk.'
+      return 'CreateCode wants to change this file on disk.'
     case 'git':
-      return 'Lunarcode wants to change the Git state of this repository.'
+      return 'CreateCode wants to change the Git state of this repository.'
     case 'subagent':
-      return 'Lunarcode wants to start a read-only subagent to investigate.'
+      return 'CreateCode wants to start a read-only subagent to investigate.'
     case 'skill':
-      return 'Lunarcode wants to load an installed skill.'
+      return 'CreateCode wants to load an installed skill.'
     case 'ask_question':
-      return 'Lunarcode wants to ask you a question.'
+      return 'CreateCode wants to ask you a question.'
     case 'web_search':
-      return 'Lunarcode wants to search the web.'
+      return 'CreateCode wants to search the web.'
     case 'read_url':
-      return 'Lunarcode wants to read this public page.'
+      return 'CreateCode wants to read this public page.'
     default:
-      return 'Lunarcode wants to use this tool.'
+      return 'CreateCode wants to use this tool.'
   }
 }
 
@@ -80,7 +80,7 @@ function ToolMediaView({ item, index }: { item: ToolMedia; index: number }) {
           }
         }}
       >
-        <img src={src} alt={`Tool image ${index + 1}`} className="max-h-64 max-w-full rounded-[9px] border border-line object-contain" />
+        <img src={src} alt={`Tool image ${index + 1}`} className="max-h-64 max-w-full rounded-[12px] border border-line object-contain" />
       </button>
     )
   }
@@ -247,7 +247,7 @@ function GenericToolCard({ message, compact = false }: { message: ToolMessage; c
         )}
         {message.status === 'running' && (
           <span className="tool-chip shrink-0" data-tone="running">
-            <span className="moon-spinner h-3 w-3" aria-hidden="true" />
+            <span className="adw-spinner h-3 w-3" aria-hidden="true" />
             Running
           </span>
         )}
@@ -272,7 +272,7 @@ function GenericToolCard({ message, compact = false }: { message: ToolMessage; c
       </button>
 
       {message.status === 'awaiting' && !decided && (
-        <div className="mx-3 mb-2.5 ml-3.5 rounded-[8px] border border-warning/30 bg-warning/10 px-3 py-2">
+        <div className="mx-3 mb-2.5 ml-3.5 rounded-[10px] border border-warning/30 bg-warning/10 px-3 py-2">
           <p className="text-[12px] leading-relaxed text-ink">{approvalCopy(message.call.name)}</p>
           <div className="mt-2 flex items-center gap-2">
             <button

@@ -1,13 +1,13 @@
-// Lunarcode Extension (.lce) package contract.
+// CreateCode Extension (.cce) package contract.
 //
-// An .lce file is a plain ZIP archive. There is no capability list, no API version and no
-// sandbox: an extension is a folder of files that Lunarcode runs with full privileges, the way a
+// An .cce file is a plain ZIP archive. There is no capability list, no API version and no
+// sandbox: an extension is a folder of files that CreateCode runs with full privileges, the way a
 // userscript or a BepInEx mod does. This module is the one place that knows the archive layout:
 // a Node-only, zero-dependency ZIP reader/writer (node:zlib) plus manifest validation.
 //
-//   my-extension.lce
+//   my-extension.cce
 //   ├── extension.json     manifest (required)
-//   ├── main.js            renderer ES module, runs inside the Lunarcode window   (optional)
+//   ├── main.js            renderer ES module, runs inside the CreateCode window   (optional)
 //   ├── server.mjs         Node module, runs inside the daemon with full Node      (optional)
 //   ├── style.css          stylesheets                                              (optional)
 //   └── …                  any other files: more modules, images, wasm, data
@@ -25,15 +25,15 @@ export const LIMITS = Object.freeze({
   manifestBytes: 256 * 1024,
 })
 
-export class LceError extends Error {
+export class CceError extends Error {
   constructor(message) {
     super(message)
-    this.name = 'LceError'
+    this.name = 'CceError'
   }
 }
 
 function fail(message) {
-  throw new LceError(message)
+  throw new CceError(message)
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -246,7 +246,7 @@ export function validateManifest(value, { appVersion } = {}) {
   }
 
   if (manifest.engine && appVersion && !satisfies(appVersion, manifest.engine)) {
-    fail(`needs Lunarcode ${manifest.engine}, this is ${appVersion}`)
+    fail(`needs CreateCode ${manifest.engine}, this is ${appVersion}`)
   }
   for (const key of Object.keys(manifest)) if (manifest[key] === undefined) delete manifest[key]
   return manifest
@@ -361,7 +361,7 @@ export function writeZip(files) {
 /** Reads a ZIP into `Map<path, Buffer>`. Rejects traversal, zip bombs, encryption and zip64. */
 export function readZip(input) {
   const zip = toBuffer(input)
-  if (zip.length < 22) fail('the file is not a valid .lce archive (too small)')
+  if (zip.length < 22) fail('the file is not a valid .cce archive (too small)')
   if (zip.length > LIMITS.archiveBytes) fail('the archive is too large')
 
   let eocd = -1
@@ -371,7 +371,7 @@ export function readZip(input) {
       break
     }
   }
-  if (eocd < 0) fail('the file is not a valid .lce archive (it is not a ZIP)')
+  if (eocd < 0) fail('the file is not a valid .cce archive (it is not a ZIP)')
   if (eocd >= 20 && zip.readUInt32LE(eocd - 20) === SIG_ZIP64_EOCD_LOCATOR) fail('zip64 archives are not supported')
 
   const count = zip.readUInt16LE(eocd + 10)
@@ -432,7 +432,7 @@ export function readZip(input) {
 // ---------------------------------------------------------------------------------------------
 
 /**
- * Reads an .lce (or a zipped extension folder: a single top-level directory is unwrapped).
+ * Reads an .cce (or a zipped extension folder: a single top-level directory is unwrapped).
  * Returns `{ manifest, files }` where `files` is a Map of every file including extension.json.
  */
 export function readExtensionArchive(input, { appVersion } = {}) {
@@ -446,7 +446,7 @@ export function readExtensionArchive(input, { appVersion } = {}) {
     }
   }
   const manifestBytes = files.get(MANIFEST_FILE)
-  if (!manifestBytes) fail(`${MANIFEST_FILE} is missing: this is not a Lunarcode extension`)
+  if (!manifestBytes) fail(`${MANIFEST_FILE} is missing: this is not a CreateCode extension`)
   if (manifestBytes.length > LIMITS.manifestBytes) fail('extension.json is too large')
   let parsed
   try {
@@ -464,7 +464,7 @@ export function readExtensionArchive(input, { appVersion } = {}) {
   return { manifest, files }
 }
 
-/** Packs `{ manifest, files }` (files: path → string | bytes) into .lce bytes. */
+/** Packs `{ manifest, files }` (files: path → string | bytes) into .cce bytes. */
 export function packExtension({ manifest, files }) {
   const clean = validateManifest(manifest)
   const all = { ...files, [MANIFEST_FILE]: `${JSON.stringify(manifest, null, 2)}\n` }

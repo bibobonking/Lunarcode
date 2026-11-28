@@ -1,5 +1,13 @@
 # Changelog
 
+## 4.1.0
+
+- The app is now CreateCode by Bibobonking. Data folder, app id, environment variables, extension global and CSRF header use the new name; no migration from older names.
+- Extension packages are now `.cce`.
+- Light and Dark redesigned as soft flat Adwaita. The Lunar theme is removed; Liquid Glass stays.
+- New black-and-white icon with a gear, and a new start screen.
+- The desktop executable and CLI command are `createcode`.
+
 ## 4.0.0
 
 **Extensions replace plugins**

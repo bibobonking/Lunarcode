@@ -1,17 +1,17 @@
-# Lunarcode extensions (`.lce`)
+# CreateCode extensions (`.cce`)
 
-An extension changes Lunarcode directly. There is no permission model and no API version to stay inside: it can run code in the app window, run Node code in the daemon, and rewrite the app's own files with patches. Enabling an extension is a full-trust decision, the same as installing a userscript or a game mod. Lunarcode is made by one independent developer and nothing is reviewed or audited, including the extensions in `examples/`: read an extension's code before you enable it. If you install one without checking, the risk is yours (see the [disclaimer](../README.md#disclaimer)).
+An extension changes CreateCode directly. There is no permission model and no API version to stay inside: it can run code in the app window, run Node code in the daemon, and rewrite the app's own files with patches. Enabling an extension is a full-trust decision, the same as installing a userscript or a game mod. CreateCode is made by one independent developer and nothing is reviewed or audited, including the extensions in `examples/`: read an extension's code before you enable it. If you install one without checking, the risk is yours (see the [disclaimer](../README.md#disclaimer)).
 
 ## Install and manage
 
-- Extensions panel (top bar / sidebar): **Install .lce**, **New** (templates, including a multi-file project), enable, logs, export, remove.
-- CLI (desktop only): `lunarcode ext list | new <id> [--template=hello|theme|tool|patch] | pack <dir> [out.lce] [--name --version --desc --id --author] | unpack <file> | install <file|dir> | enable <id> | disable <id> | remove <id> | path`. Run it as `Lunarcode ext …` on the app binary or with the `lunarcode` launcher in `resources/app/bin/`.
-- Drop-in: put a folder in `~/.lunarcode/extensions/<id>/` (it reloads live). Data for an extension lives in `~/.lunarcode/extension-data/<id>/`.
+- Extensions panel (top bar / sidebar): **Install .cce**, **New** (templates, including a multi-file project), enable, logs, export, remove.
+- CLI (desktop only): `createcode ext list | new <id> [--template=hello|theme|tool|patch] | pack <dir> [out.cce] [--name --version --desc --id --author] | unpack <file> | install <file|dir> | enable <id> | disable <id> | remove <id> | path`. Run it as `CreateCode ext …` on the app binary or with the `createcode` launcher in `resources/app/bin/`.
+- Drop-in: put a folder in `~/.createcode/extensions/<id>/` (it reloads live). Data for an extension lives in `~/.createcode/extension-data/<id>/`.
 
 ## Layout
 
 ```
-my-ext.lce  (zip)
+my-ext.cce  (zip)
 ├── extension.json
 ├── main.js          renderer ES module (runs in the app window)
 ├── server.mjs       daemon module (runs in Node)
@@ -19,7 +19,7 @@ my-ext.lce  (zip)
 └── anything else    served at /ext/<id>/<path>
 ```
 
-Three files are only the minimum. An extension can be a whole project with any folder structure (`lunarcode ext new my-ext --template=project`):
+Three files are only the minimum. An extension can be a whole project with any folder structure (`createcode ext new my-ext --template=project`):
 
 ```
 my-ext/
@@ -38,7 +38,7 @@ my-ext/
 
 - Icons: `"icon"` in `extension.json` takes `.png`, `.svg`, `.jpg`, `.webp`, `.gif`, `.ico` or `.avif`. `registerPanel`/`registerAction` `icon` takes an emoji, an `<svg>` string, or the path of an image inside the extension (`"assets/icon.png"`); data: and http(s) image URLs also work.
 - `main`, `server`, `styles`, `themes[].css`, `icon` and patch `file` accept any relative path with subfolders (no `..`, no absolute paths).
-- Relative imports are served from the extension and carry its version, so saving **any** file reloads the whole module graph live (renderer and daemon alike). Bare specifiers (`import x from 'react'`) are not resolved: use `lunarcode.React`, or bundle dependencies into your own files.
+- Relative imports are served from the extension and carry its version, so saving **any** file reloads the whole module graph live (renderer and daemon alike). Bare specifiers (`import x from 'react'`) are not resolved: use `createcode.React`, or bundle dependencies into your own files.
 - `pack`, `install`, Export and the live folder watcher all include the full folder tree. For a build step (TypeScript, a bundler), point `main` at the compiled file and pack the output.
 
 ## `extension.json`
@@ -62,19 +62,19 @@ Unknown fields are kept. Only `id` (`[a-z0-9-]`), `name` and `version` are requi
 
 ## Renderer (`main`)
 
-Export `activate(lunarcode)` (and optionally `deactivate`), or just run code at import time and use `globalThis.lunarcode`. Everything is reachable: `lunarcode.ctx` (Cordis context), `services`, `stores`, `React`, `kernel`, plus helpers:
+Export `activate(createcode)` (and optionally `deactivate`), or just run code at import time and use `globalThis.createcode`. Everything is reachable: `createcode.ctx` (Cordis context), `services`, `stores`, `React`, `kernel`, plus helpers:
 
-`registerTool`, `registerCommand`, `registerPanel`, `registerAction`, `registerSettings`, `registerTheme`, `addStyle`, `on`, `dispose`, `notify`, `confirm`, `log`, `url(path)`, `render`, `storage`, `server.call/fetch/on`, `http` (daemon-side fetch, no CORS). `window.Lunarcode` exposes the same internals. Anything registered through the context is removed automatically when the extension is disabled or reloaded. Tools are named `ext__<id>__<name>`.
+`registerTool`, `registerCommand`, `registerPanel`, `registerAction`, `registerSettings`, `registerTheme`, `addStyle`, `on`, `dispose`, `notify`, `confirm`, `log`, `url(path)`, `render`, `storage`, `server.call/fetch/on`, `http` (daemon-side fetch, no CORS). `window.CreateCode` exposes the same internals. Anything registered through the context is removed automatically when the extension is disabled or reloaded. Tools are named `ext__<id>__<name>`.
 
 ## Daemon (`server`)
 
 ```js
 export default function activate(host) {
-  host.rpc('ping', (data) => ({ pong: data }))           // lunarcode.server.call('ping', ...)
+  host.rpc('ping', (data) => ({ pong: data }))           // createcode.server.call('ping', ...)
   host.route('GET', '/hello', (req, res) => res.end('hi')) // /api/extensions/<id>/x/hello
   host.on('tool:before', (e) => { /* inspect or change a tool call */ })
   host.on('llm:before' | 'tool:after' | 'request' | 'ready' | 'shutdown', ...)
-  host.emit('changed', {})                                // lunarcode.server.on('changed', ...)
+  host.emit('changed', {})                                // createcode.server.on('changed', ...)
   host.storage.get/set, host.interval, host.timeout, host.spawn, host.onDispose
   const tools = await host.app('lib/tools.mjs')            // import any daemon module
 }

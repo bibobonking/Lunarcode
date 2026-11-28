@@ -53,9 +53,9 @@ function findOnPath(name, env, platform, exists) {
   return ''
 }
 
-/** Picks the shell used to run agent commands. OPENSOL_SHELL (path or name) overrides detection. */
+/** Picks the shell used to run agent commands. CREATECODE_SHELL (path or name) overrides detection. */
 export function resolveShell({ platform = process.platform, env = process.env, exists = existsSync } = {}) {
-  const override = String(env.OPENSOL_SHELL ?? '').trim()
+  const override = String(env.CREATECODE_SHELL ?? '').trim()
   if (override) {
     const base = path.basename(override.replace(/\\/g, '/')).toLowerCase().replace(/\.exe$/, '')
     if (base === 'pwsh' || base === 'powershell') return powershell(base, override)
@@ -106,7 +106,7 @@ export function currentShell() {
 // never reads ~/.bashrc / ~/.zshrc, which is where nvm, fnm, volta and friends are set up. The result:
 // `node -v` works in the user's terminal but "command not found" for the agent.
 
-const PATH_MARK = '__OPENSOL_PATH__'
+const PATH_MARK = '__CREATECODE_PATH__'
 
 /** Joins PATH lists, keeping first-seen order and dropping blanks and duplicates. */
 export function mergePathLists(lists, sep = ':') {

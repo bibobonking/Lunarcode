@@ -1,4 +1,4 @@
-// Lunarcode Desktop: starts (or reuses) the Lunarcode daemon and shows its UI in an
+// CreateCode Desktop: starts (or reuses) the CreateCode daemon and shows its UI in an
 // Electron window. The daemon runs on Electron's own Node runtime, so no
 // separate Node binary is shipped.
 import { app, BrowserWindow, Menu, shell } from 'electron'
@@ -12,7 +12,7 @@ const HERE = path.dirname(fileURLToPath(import.meta.url))
 const DEFAULT_PORT = 4174
 const START_TIMEOUT_MS = 25_000
 const HEALTH_TIMEOUT_MS = 15_000
-const OAUTH_WINDOW = 'opensol-mcp-oauth'
+const OAUTH_WINDOW = 'createcode-mcp-oauth'
 
 let mainWindow = null
 let daemonChild = null
@@ -27,7 +27,7 @@ function openExternal(url) {
 
 function appDirCandidates() {
   const candidates = []
-  if (process.env.OPENSOL_APP_DIR) candidates.push(path.resolve(process.env.OPENSOL_APP_DIR))
+  if (process.env.CREATECODE_APP_DIR) candidates.push(path.resolve(process.env.CREATECODE_APP_DIR))
   if (app.isPackaged) candidates.push(path.join(process.resourcesPath, 'app'))
   candidates.push(path.resolve(HERE, '../..'))
   return candidates
@@ -41,12 +41,12 @@ function resolveAppDir() {
   )
 }
 
-/** `Lunarcode ext …`: run the CLI in this process and exit, without a window or a daemon. */
+/** `CreateCode ext …`: run the CLI in this process and exit, without a window or a daemon. */
 async function runCliAndExit(args) {
   let code = 1
   try {
     const dir = appDirCandidates().find((candidate) => existsSync(path.join(candidate, 'server', 'cli.mjs')))
-    if (!dir) throw new Error('Lunarcode’s CLI files were not found.')
+    if (!dir) throw new Error('CreateCode’s CLI files were not found.')
     const { runCli } = await import(pathToFileURL(path.join(dir, 'server', 'cli.mjs')).href)
     code = await runCli(args)
   } catch (error) {
@@ -93,7 +93,7 @@ function spawnDaemon(appDir) {
       () =>
         fail(
           new Error(
-            `The Lunarcode daemon did not start within ${START_TIMEOUT_MS / 1000} seconds.${stderr.trim() ? ` ${stderr.trim()}` : ''}`,
+            `The CreateCode daemon did not start within ${START_TIMEOUT_MS / 1000} seconds.${stderr.trim() ? ` ${stderr.trim()}` : ''}`,
           ),
         ),
       START_TIMEOUT_MS,
@@ -129,10 +129,10 @@ function spawnDaemon(appDir) {
         return
       }
     })
-    child.on('error', (error) => fail(new Error(`Could not start the Lunarcode daemon: ${error.message}`)))
+    child.on('error', (error) => fail(new Error(`Could not start the CreateCode daemon: ${error.message}`)))
     child.on('exit', (code) => {
       const detail = stderr.trim() ? ` ${stderr.trim()}` : ''
-      fail(new Error(`The Lunarcode daemon exited (code ${code ?? 'signal'}).${detail}`))
+      fail(new Error(`The CreateCode daemon exited (code ${code ?? 'signal'}).${detail}`))
     })
   })
 }
@@ -157,7 +157,7 @@ function ensureDaemon() {
 async function startDaemonOnce() {
   const appDir = resolveAppDir()
   if (!appDir) {
-    throw new Error('Lunarcode’s app files were not found. Run “npm run build” before starting the desktop app.')
+    throw new Error('CreateCode’s app files were not found. Run “npm run build” before starting the desktop app.')
   }
   const version = readAppVersion(appDir)
 
@@ -181,7 +181,7 @@ async function startDaemonOnce() {
   if (!(await waitForHealth(port, version))) {
     daemonChild = null
     killTree(child)
-    throw new Error('The Lunarcode daemon started but is not answering.')
+    throw new Error('The CreateCode daemon started but is not answering.')
   }
   daemonUrl = `http://127.0.0.1:${port}/`
   return daemonUrl
@@ -212,7 +212,7 @@ function onDaemonExit(child) {
   const now = Date.now()
   restarts = restarts.filter((time) => now - time < 60_000)
   if (restarts.length >= 3) {
-    void showError(mainWindow, 'The Lunarcode daemon keeps stopping. Close and reopen Lunarcode; check ~/.lunarcode for logs.')
+    void showError(mainWindow, 'The CreateCode daemon keeps stopping. Close and reopen CreateCode; check ~/.createcode for logs.')
     return
   }
   restarts.push(now)
@@ -225,7 +225,7 @@ function loadingPage() {
 
 async function showError(win, message) {
   if (win.isDestroyed()) return
-  await win.webContents.executeJavaScript(`window.__opensolError?.(${JSON.stringify(message)})`).catch(() => undefined)
+  await win.webContents.executeJavaScript(`window.__createcodeError?.(${JSON.stringify(message)})`).catch(() => undefined)
   win.show()
 }
 
@@ -234,7 +234,7 @@ async function loadApp(win) {
     await win.loadFile(loadingPage())
     await win.loadURL(await ensureDaemon())
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Lunarcode could not start.'
+    const message = error instanceof Error ? error.message : 'CreateCode could not start.'
     await win.loadFile(loadingPage()).catch(() => undefined)
     await showError(win, message)
   }
@@ -242,13 +242,13 @@ async function loadApp(win) {
 
 function createWindow() {
   const win = new BrowserWindow({
-    title: 'Lunarcode',
+    title: 'CreateCode',
     width: 1360,
     height: 860,
     minWidth: 920,
     minHeight: 600,
     show: false,
-    backgroundColor: '#f8f8f6',
+    backgroundColor: '#f6f6f8',
     autoHideMenuBar: process.platform !== 'darwin',
     icon: path.join(app.getAppPath(), 'build', 'icon.png'),
     webPreferences: {
@@ -274,7 +274,7 @@ function createWindow() {
     event.preventDefault()
     openExternal(url)
   })
-  if (!app.isPackaged && process.env.OPENSOL_DEVTOOLS === '1') win.webContents.openDevTools({ mode: 'detach' })
+  if (!app.isPackaged && process.env.CREATECODE_DEVTOOLS === '1') win.webContents.openDevTools({ mode: 'detach' })
   return win
 }
 
@@ -312,7 +312,7 @@ if (cliArgs) {
           overrideBrowserWindowOptions: {
             width: 520,
             height: 720,
-            title: 'Lunarcode sign-in',
+            title: 'CreateCode sign-in',
             autoHideMenuBar: true,
             webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true },
           },
@@ -326,7 +326,7 @@ if (cliArgs) {
   })
 
   app.whenReady().then(() => {
-    app.setAppUserModelId('dev.opensoft.opensol')
+    app.setAppUserModelId('dev.bibobonking.createcode')
     installMenu()
     void loadApp(createWindow())
     app.on('activate', () => {

@@ -18,7 +18,7 @@ readline.createInterface({ input: process.stdin }).on('line', (line) => {
 })`
 
 test('an stdio MCP server connects, lists tools and answers a call', async () => {
-  const dir = await mkdtemp(path.join(os.tmpdir(), 'opensol-mcp-'))
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'createcode-mcp-'))
   const file = path.join(dir, 'server.mjs')
   await writeFile(file, SERVER)
   const manager = new McpManager()
@@ -68,7 +68,7 @@ readline.createInterface({ input: process.stdin }).on('line', (line) => {
 })`
 
 async function startStdio(source, extra = {}) {
-  const dir = await mkdtemp(path.join(os.tmpdir(), 'opensol-mcp-'))
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'createcode-mcp-'))
   const file = path.join(dir, 'server.mjs')
   await writeFile(file, source)
   const manager = new McpManager()

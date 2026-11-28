@@ -15,7 +15,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, State> {
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    console.error('[maxcode] render error', error, info.componentStack)
+    console.error('[createcode] render error', error, info.componentStack)
   }
 
   private details() {
@@ -42,7 +42,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, State> {
           <p className="mt-2 text-[13px] leading-relaxed text-muted">
             Your conversations are saved on this computer. Try the screen again, or reload the app.
           </p>
-          <pre className="thin-scroll mt-4 max-h-40 overflow-auto rounded-[12px] border border-line bg-canvas p-3 font-mono text-[12px] leading-relaxed text-muted">
+          <pre className="thin-scroll mt-4 max-h-40 overflow-auto rounded-[18px] border border-line bg-canvas p-3 font-mono text-[12px] leading-relaxed text-muted">
             {this.state.error.message}
           </pre>
           <div className="mt-5 flex flex-wrap items-center gap-2">

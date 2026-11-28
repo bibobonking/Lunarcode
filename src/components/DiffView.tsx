@@ -45,7 +45,7 @@ export function DiffView({
 
   const shown = rows.slice(0, MAX_ROWS)
   return (
-    <div className="diff-view thin-scroll max-h-72 overflow-auto rounded-[8px] border border-line bg-raised font-mono text-[12px] leading-[1.6]">
+    <div className="diff-view thin-scroll max-h-72 overflow-auto rounded-[10px] border border-line bg-raised font-mono text-[12px] leading-[1.6]">
       {shown.map((row) =>
         row.gap ? (
           <div key={row.key} className="px-2 text-center text-[12px] text-faint">⋯</div>

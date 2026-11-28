@@ -231,14 +231,14 @@ export function McpPanel() {
       <div className="flex min-h-0 flex-1">
         {/* Server list */}
         <aside className={cn('thin-scroll min-h-0 w-full shrink-0 overflow-y-auto bg-sidebar p-3 md:block md:w-[290px] md:border-r md:border-line', mobileDetail ? 'hidden' : 'block')}>
-          {error && <p className="mb-2 rounded-[12px] border border-danger/30 bg-danger/10 px-3 py-2 text-[12px] text-danger">{error}</p>}
+          {error && <p className="mb-2 rounded-[18px] border border-danger/30 bg-danger/10 px-3 py-2 text-[12px] text-danger">{error}</p>}
           {!loaded && (
             <p className="flex items-center gap-2 px-2 py-3 text-[12px] text-faint">
               <Spinner size={12} /> Loading servers…
             </p>
           )}
           {loaded && servers.length === 0 && (
-            <p className="rounded-[12px] border border-dashed border-line px-4 py-8 text-center text-[12px] text-muted">No servers yet.</p>
+            <p className="rounded-[18px] border border-dashed border-line px-4 py-8 text-center text-[12px] text-muted">No servers yet.</p>
           )}
           <ul className="space-y-1">
             {servers.map((server) => {
@@ -265,7 +265,7 @@ export function McpPanel() {
                         {statusText(server)}
                       </span>
                     </span>
-                    <span className="flex shrink-0 items-center gap-1 rounded-[9px] bg-raised px-2 py-0.5 font-mono text-[12px] text-faint">
+                    <span className="flex shrink-0 items-center gap-1 rounded-[12px] bg-raised px-2 py-0.5 font-mono text-[12px] text-faint">
                       <TransportIcon transport={server.transport} size={10} />
                       {TRANSPORT_LABEL[server.transport]}
                     </span>
@@ -390,11 +390,11 @@ function ServerDetail({
       {server.oauth?.enabled && (
         <div
           className={cn(
-            'flex flex-wrap items-center gap-3 rounded-[12px] border px-4 py-3.5',
+            'flex flex-wrap items-center gap-3 rounded-[18px] border px-4 py-3.5',
             server.oauth.authorized ? 'border-success/25 bg-success/[0.05]' : 'border-warning/30 bg-warning/[0.06]',
           )}
         >
-          <span className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-[12px]', server.oauth.authorized ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning')}>
+          <span className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-[18px]', server.oauth.authorized ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning')}>
             {server.oauth.authorized ? <ShieldCheck size={17} /> : <KeyRound size={17} />}
           </span>
           <div className="min-w-0 flex-1">
@@ -402,7 +402,7 @@ function ServerDetail({
             <p className="mt-0.5 text-[12px] leading-relaxed text-muted">
               {server.oauth.authorized
                 ? 'Tokens are stored encrypted by the local daemon and refreshed automatically.'
-                : 'Approve access in your browser. Lunarcode registers itself with the server and keeps the tokens encrypted on this machine.'}
+                : 'Approve access in your browser. CreateCode registers itself with the server and keeps the tokens encrypted on this machine.'}
             </p>
           </div>
           {server.oauth.authorized ? (
@@ -423,10 +423,10 @@ function ServerDetail({
       )}
 
       {server.status === 'error' && server.error && (
-        <p className="rounded-[12px] border border-danger/30 bg-danger/10 px-3 py-2 text-[12px] leading-relaxed text-danger">{server.error}</p>
+        <p className="rounded-[18px] border border-danger/30 bg-danger/10 px-3 py-2 text-[12px] leading-relaxed text-danger">{server.error}</p>
       )}
 
-      <div className="grid gap-3 rounded-[12px] border border-line p-4 sm:grid-cols-[1fr_auto] sm:items-center">
+      <div className="grid gap-3 rounded-[18px] border border-line p-4 sm:grid-cols-[1fr_auto] sm:items-center">
         <div className="min-w-0">
           <p className="flex items-center gap-1.5 text-[12px] font-medium text-muted">
             <TransportIcon transport={server.transport} /> {TRANSPORTS.find((item) => item.value === server.transport)?.label}
@@ -464,7 +464,7 @@ function ServerDetail({
               <input className={cn(field, 'pl-8')} placeholder="Filter tools" value={query} onChange={(event) => setQuery(event.target.value)} />
             </div>
           )}
-          <ul className="divide-y divide-line rounded-[12px] border border-line">
+          <ul className="divide-y divide-line rounded-[18px] border border-line">
             {tools.map((tool) => {
               const off = server.disabledTools.includes(tool.name)
               return (
@@ -474,7 +474,7 @@ function ServerDetail({
                     <p className={cn('truncate font-mono text-[12px]', off ? 'text-faint line-through' : 'text-ink')}>{tool.name}</p>
                     {tool.description && <p className="truncate text-[12px] text-muted">{tool.description}</p>}
                   </div>
-                  {tool.readOnly && <span className="rounded-[9px] bg-success/10 px-1.5 py-px text-[12px] text-success">read-only</span>}
+                  {tool.readOnly && <span className="rounded-[12px] bg-success/10 px-1.5 py-px text-[12px] text-success">read-only</span>}
                   <Switch
                     checked={!off}
                     label={`Enable ${tool.name}`}
@@ -538,7 +538,7 @@ function ServerForm({
                 key={preset.label}
                 type="button"
                 onClick={() => setDraft({ ...EMPTY_DRAFT, ...preset.draft })}
-                className="lift-card min-w-0 rounded-[10px] border border-line px-2.5 py-2 text-left hover:bg-raised/60"
+                className="lift-card min-w-0 rounded-[14px] border border-line px-2.5 py-2 text-left hover:bg-raised/60"
               >
                 <span className="block text-[12px] font-medium text-ink">{preset.label}</span>
                 <span className="mt-0.5 line-clamp-2 block text-[11.5px] leading-snug text-muted">{preset.description}</span>
@@ -568,9 +568,9 @@ function ServerForm({
       ) : (
         <>
           <input className={cn(field, 'font-mono')} placeholder={draft.transport === 'sse' ? 'https://example.com/sse' : 'https://example.com/mcp'} value={draft.url} onChange={(event) => set({ url: event.target.value })} />
-          <div className="rounded-[12px] border border-line p-3.5">
+          <div className="rounded-[18px] border border-line p-3.5">
             <div className="flex items-center gap-3">
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[9px] bg-accent-soft text-accent">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[12px] bg-accent-soft text-accent">
                 <KeyRound size={14} />
               </span>
               <div className="min-w-0 flex-1">
@@ -646,9 +646,9 @@ function ImportView({ busy, onCancel, onImport }: { busy: boolean; onCancel: () 
         onChange={(event) => setText(event.target.value)}
         spellCheck={false}
       />
-      {result?.error && <p className="rounded-[12px] border border-danger/30 bg-danger/10 px-3 py-2 text-[12px] text-danger">{result.error}</p>}
+      {result?.error && <p className="rounded-[18px] border border-danger/30 bg-danger/10 px-3 py-2 text-[12px] text-danger">{result.error}</p>}
       {result && result.servers.length > 0 && (
-        <ul className="divide-y divide-line rounded-[12px] border border-line">
+        <ul className="divide-y divide-line rounded-[18px] border border-line">
           {result.servers.map((server) => (
             <li key={server.name} className="flex items-center gap-3 px-3 py-2">
               <span className="text-faint">
@@ -658,7 +658,7 @@ function ImportView({ busy, onCancel, onImport }: { busy: boolean; onCancel: () 
                 <span className="block truncate text-[12px] font-medium text-ink">{server.name}</span>
                 <span className="block truncate font-mono text-[12px] text-muted">{server.transport === 'stdio' ? `${server.command} ${(server.args ?? []).join(' ')}` : server.url}</span>
               </span>
-              {server.oauth?.enabled && <span className="rounded-[9px] bg-accent-soft px-2 py-px text-[12px] text-accent">OAuth</span>}
+              {server.oauth?.enabled && <span className="rounded-[12px] bg-accent-soft px-2 py-px text-[12px] text-accent">OAuth</span>}
             </li>
           ))}
         </ul>

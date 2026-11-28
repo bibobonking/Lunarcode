@@ -54,7 +54,7 @@ interface WorkspaceStore {
   openingFile: boolean
   git: GitState
   gitLoading: boolean
-  /** The project instruction file (MAXCODE.md, AGENTS.md, CLAUDE.md) the agent reads each turn. */
+  /** The project instruction file (CREATECODE.md, AGENTS.md, CLAUDE.md) the agent reads each turn. */
   instructions: { file: string; content: string; truncated: boolean }
   hydrate: (info: WorkspaceInfo) => Promise<void>
   loadTree: () => Promise<void>

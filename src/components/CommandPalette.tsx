@@ -114,7 +114,7 @@ export function CommandPalette() {
         group: 'Actions',
         icon: themeIsDark ? Sun : Moon,
         action: () => {
-          useSettings.getState().update({ theme: themeIsDark ? 'light' : 'lunar' })
+          useSettings.getState().update({ theme: themeIsDark ? 'light' : 'dark' })
           close()
         },
       },
@@ -197,7 +197,7 @@ export function CommandPalette() {
       },
       {
         id: 'action-about',
-        label: 'About Lunarcode',
+        label: 'About CreateCode',
         hint: 'Local storage and reset controls',
         group: 'Settings',
         icon: Info,
@@ -395,7 +395,7 @@ export function CommandPalette() {
                   onMouseMove={() => setActiveIndex(index)}
                   onClick={() => run(index)}
                   className={cn(
-                    'flex w-full items-center gap-2.5 rounded-[9px] px-2 py-2 text-left transition-colors',
+                    'flex w-full items-center gap-2.5 rounded-[12px] px-2 py-2 text-left transition-colors',
                     activeIndex === index ? 'bg-ink/[.09]' : 'hover:bg-ink/[.05]',
                   )}
                 >
@@ -436,7 +436,7 @@ export function CommandPalette() {
               <kbd className="adw-kbd !h-4 !min-w-0 px-1">↵</kbd> open
             </span>
           </span>
-          <span>Lunarcode</span>
+          <span>CreateCode</span>
         </div>
       </div>
     </div>,

@@ -2,7 +2,7 @@
 //
 // It installs Node module hooks so extensions can change the daemon itself, like a BepInEx/Harmony mod:
 //
-//   • resolve hook   — relative imports inside an extension's folder inherit the `?lce-v=` version of the
+//   • resolve hook   — relative imports inside an extension's folder inherit the `?cce-v=` version of the
 //                      entry that imported them, so editing a multi-file server extension and reloading it
 //                      really reloads every file.
 //   • load hook      — `scope: "server"` patches from enabled extensions are applied to the source of
@@ -18,16 +18,16 @@ import module from 'node:module'
 import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import { validateManifest } from '../../shared/lce.mjs'
+import { validateManifest } from '../../shared/cce.mjs'
 import { applyPatches, fingerprintPatches, matchesTarget } from '../../shared/patches.mjs'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const APP_ROOT = path.resolve(HERE, '..', '..')
 
 function dataDir() {
-  const env = process.env.LUNARCODE_DATA || process.env.OPENSOL_DATA || process.env.MAXCODE_DATA
+  const env = process.env.CREATECODE_DATA
   if (env) return path.resolve(env)
-  return path.join(os.homedir(), '.lunarcode')
+  return path.join(os.homedir(), '.createcode')
 }
 
 const EXTENSIONS_DIR = path.join(dataDir(), 'extensions')
@@ -85,12 +85,12 @@ const info = {
   results: [],
   preloaded: true,
 }
-globalThis.__lunarcodeServerPatches = info
+globalThis.__createcodeServerPatches = info
 
 const EXTENSIONS_URL = pathToFileURL(`${EXTENSIONS_DIR}${path.sep}`).href
 
 function versionOf(url) {
-  const match = /[?&]lce-v=([A-Za-z0-9]+)/.exec(url ?? '')
+  const match = /[?&]cce-v=([A-Za-z0-9]+)/.exec(url ?? '')
   return match ? match[1] : ''
 }
 
@@ -99,8 +99,8 @@ if (info.supported) {
     resolve(specifier, context, nextResolve) {
       const result = nextResolve(specifier, context)
       const version = versionOf(context.parentURL)
-      if (version && result.url.startsWith(EXTENSIONS_URL) && !result.url.includes('lce-v=')) {
-        return { ...result, url: `${result.url}${result.url.includes('?') ? '&' : '?'}lce-v=${version}` }
+      if (version && result.url.startsWith(EXTENSIONS_URL) && !result.url.includes('cce-v=')) {
+        return { ...result, url: `${result.url}${result.url.includes('?') ? '&' : '?'}cce-v=${version}` }
       }
       return result
     },
@@ -134,16 +134,16 @@ if (info.supported) {
         } else if (!entry.applied) entry.error = patch.optional ? undefined : result.error
         info.results.push({ owner: patch.__owner, target: relative, ...result })
         if (result.error && !patch.optional) {
-          console.warn(`[lunarcode] extension ${patch.__owner}: server patch for ${relative} skipped (${result.error})`)
+          console.warn(`[createcode] extension ${patch.__owner}: server patch for ${relative} skipped (${result.error})`)
         }
       }
       return { ...loaded, source }
     },
   })
   if (patches.length && /daemon\.mjs$/.test(process.argv[1] ?? '')) {
-    console.log(`[lunarcode] ${patches.length} server patch${patches.length === 1 ? '' : 'es'} armed`)
+    console.log(`[createcode] ${patches.length} server patch${patches.length === 1 ? '' : 'es'} armed`)
   }
 } else if (patches.length) {
-  console.warn('[lunarcode] server patches need Node 22.15 or newer; they are inactive on this runtime.')
+  console.warn('[createcode] server patches need Node 22.15 or newer; they are inactive on this runtime.')
 }
 

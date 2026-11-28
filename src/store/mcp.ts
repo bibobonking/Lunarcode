@@ -119,8 +119,8 @@ export const useMcp = create<McpState>()((set, get) => {
     },
     authorize: async (id) => {
       const { url } = await mcpAuthorize(id)
-      const popup = window.open(url, 'opensol-mcp-oauth', 'popup=yes,width=520,height=720')
-      if (!popup) throw new Error('The browser blocked the sign-in window. Allow pop-ups for Lunarcode and try again.')
+      const popup = window.open(url, 'createcode-mcp-oauth', 'popup=yes,width=520,height=720')
+      if (!popup) throw new Error('The browser blocked the sign-in window. Allow pop-ups for CreateCode and try again.')
       // The callback page broadcasts and the daemon pushes the new status; this only covers the gap
       // when neither reaches the page (no live stream, no BroadcastChannel).
       const started = Date.now()
@@ -160,7 +160,7 @@ export function mcpServerUsable(server: McpServer): boolean {
 }
 
 try {
-  new BroadcastChannel('opensol-mcp-oauth').onmessage = () => void useMcp.getState().load()
+  new BroadcastChannel('createcode-mcp-oauth').onmessage = () => void useMcp.getState().load()
 } catch {
   // BroadcastChannel is optional; the daemon's event stream still refreshes the list.
 }

@@ -84,7 +84,7 @@ export function Modal({
         aria-labelledby={labelledBy}
         tabIndex={-1}
         className={cn(
-          'adw-dialog max-h-[92dvh] w-full rounded-b-none sm:max-h-[92dvh] sm:rounded-b-[15px]',
+          'adw-dialog max-h-[92dvh] w-full rounded-b-none sm:max-h-[92dvh] sm:rounded-b-[22px]',
           wide ? 'sm:w-[min(1180px,97vw)]' : 'sm:w-[min(780px,96vw)]',
           className,
         )}
@@ -160,7 +160,7 @@ export function Switch({
     >
       <span
         className={cn(
-          'pointer-events-none block h-[22px] w-[22px] rounded-full bg-white shadow-[0_1px_2px_rgba(0,0,0,.3)] transition-transform duration-200 ease-out',
+          'pointer-events-none block h-[22px] w-[22px] rounded-full bg-white transition-transform duration-200 ease-out',
           checked ? 'translate-x-[24px]' : 'translate-x-[2px]',
         )}
       />
@@ -189,7 +189,7 @@ export function CheckMark({ checked, className }: { checked: boolean; className?
     <span
       aria-hidden="true"
       className={cn(
-        'flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-[6px] border-2 transition-colors',
+        'flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-[8px] border-2 transition-colors',
         checked ? 'is-checked border-accent bg-accent text-on-accent' : 'border-ink/30',
         className,
       )}
@@ -222,7 +222,7 @@ export function Segmented<T extends string>({
   return (
     <div
       role="group"
-      className={cn('inline-flex items-center gap-0.5 rounded-[9px] bg-ink/[.06] p-0.5', disabled && 'opacity-50', className)}
+      className={cn('inline-flex items-center gap-0.5 rounded-full bg-ink/[.065] p-[3px]', disabled && 'opacity-50', className)}
     >
       {options.map((option) => (
         <button
@@ -233,9 +233,9 @@ export function Segmented<T extends string>({
           disabled={disabled}
           onClick={() => onChange(option.value)}
           className={cn(
-            'rounded-[7px] font-semibold transition-colors duration-150 disabled:cursor-not-allowed',
+            'rounded-full font-semibold transition-colors duration-150 disabled:cursor-not-allowed',
             size === 'md' ? 'h-8 px-3 text-[13px]' : 'h-[26px] px-2.5 text-[13px]',
-            value === option.value ? 'bg-panel text-ink shadow-[0_0_0_1px_rgb(var(--line))]' : 'text-muted hover:bg-ink/[.06] hover:text-ink',
+            value === option.value ? 'bg-card text-ink dark:bg-ink/[.14]' : 'text-muted hover:bg-ink/[.06] hover:text-ink',
           )}
         >
           {option.label}
@@ -374,7 +374,7 @@ export function ToastHost() {
         <p className="min-w-0 flex-1 text-[13px] leading-snug">{toast.message}</p>
         <button
           type="button"
-          className="-mr-1 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-[6px] text-white/70 hover:bg-white/10 hover:text-white"
+          className="-mr-1 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-[8px] text-white/70 hover:bg-white/10 hover:text-white"
           onClick={() => dismiss(toast.id)}
           aria-label="Dismiss"
         >
