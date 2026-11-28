@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 4.1.0
 
 **Extension security: Sandbox and Trusted**
 - **New extensions start in Sandbox mode.** Window code runs in an isolated iframe (opaque origin, no network, no eval) and talks to the app through a small message API: tools, commands, actions, panels, settings, themes, styles, notifications, confirmations, storage and assets. Daemon (`server`) code and patches do not run. Existing extensions also start in the sandbox after this update.
