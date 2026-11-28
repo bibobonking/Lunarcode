@@ -28,10 +28,13 @@ const EXT_HELP = `CreateCode extensions (.cce)
   createcode ext unpack <file.cce> [folder]   unzip an .cce to read or edit it
   createcode ext install <file.cce|folder> [--enable]
   createcode ext enable|disable|remove <id>   (remove: add --data to delete its data too)
+  createcode ext trust <id> [--yes]           take it out of the sandbox (shows what it asks for; --yes confirms)
+  createcode ext sandbox <id>                 put it back in the sandbox
   createcode ext path                         where extensions live
 
-An extension runs with full access: it can change the app, run Node code in the daemon and use any file or
-network. Only install extensions you trust.`
+New extensions start in Sandbox mode: window code only, isolated, no network; daemon code and patches stay off.
+A Trusted extension has full access: it can change the app, run Node code in the daemon and use any file or
+network. Only trust extensions you have read or whose author you trust.`
 
 const VALUE_FLAGS = new Set(['template', 'name', 'version', 'desc', 'description', 'id', 'author'])
 const MAIN_FILES = ['main.js', 'main.mjs', 'index.js', 'index.mjs']
@@ -163,7 +166,7 @@ async function commandExt(args) {
         if (extensions.length === 0) console.log(`No extensions. Folder: ${ext.EXTENSIONS_DIR}`)
         for (const item of extensions) {
           const parts = [item.summary?.renderer && 'window', item.summary?.server && 'daemon', item.patches.length && `${item.patches.length} patch`, item.themes.length && 'theme'].filter(Boolean)
-          console.log(`${item.enabled ? '●' : '○'} ${item.id}  ${item.version}  ${item.name}${parts.length ? `  [${parts.join(', ')}]` : ''}${item.error ? `  ERROR: ${item.error}` : ''}`)
+          console.log(`${item.enabled ? '●' : '○'} ${item.id}  ${item.version}  ${item.name}  (${item.trust}${item.risk.level === 'high' || item.risk.level === 'medium' ? `, ${item.risk.level} risk` : ''})${parts.length ? `  [${parts.join(', ')}]` : ''}${item.error ? `  ERROR: ${item.error}` : ''}`)
         }
         break
       }
@@ -208,6 +211,28 @@ async function commandExt(args) {
         if (!id) throw new Error(`Usage: createcode ext ${sub} <id>`)
         await ext.setExtensionEnabled(id, sub === 'enable')
         console.log(`${id} ${sub}d. A running CreateCode picks this up on its own.`)
+        break
+      }
+      case 'trust': {
+        const [id] = positional
+        if (!id) throw new Error('Usage: createcode ext trust <id> [--yes]')
+        const item = (await ext.listExtensions()).extensions.find((entry) => entry.id === id)
+        if (!item) throw new Error(`No extension "${id}".`)
+        console.log(`${item.name} ${item.version}: scan level ${item.risk.level}`)
+        for (const finding of item.risk.findings.slice(0, 12)) console.log(`  [${finding.level}] ${finding.message}  ${finding.file}${finding.line ? `:${finding.line}` : ''}`)
+        if (flags.yes !== true) {
+          console.log(`\nLast warning: a Trusted extension has full access to your files, chats, network and the app itself.\nRun again with --yes to trust it: createcode ext trust ${id} --yes`)
+          break
+        }
+        await ext.setExtensionTrust(id, 'trusted', { confirm: id })
+        console.log(`${id} is now Trusted.`)
+        break
+      }
+      case 'sandbox': {
+        const [id] = positional
+        if (!id) throw new Error('Usage: createcode ext sandbox <id>')
+        await ext.setExtensionTrust(id, 'sandbox')
+        console.log(`${id} is back in the sandbox.`)
         break
       }
       case 'remove': {

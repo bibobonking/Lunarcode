@@ -25,3 +25,23 @@ export function versionRelativeImports(source, version) {
   const rewrite = (_match, head, quote, specifier) => `${head}${quote}${withVersion(specifier, encodeURIComponent(version))}${quote}`
   return source.replace(FROM, rewrite).replace(BARE, rewrite).replace(DYNAMIC, rewrite)
 }
+
+/** Lists the relative specifiers of a module (`from`, side-effect and literal dynamic imports), in order of appearance. */
+export function relativeImports(source) {
+  const found = []
+  const collect = (_match, _head, _quote, specifier) => {
+    found.push(specifier)
+    return _match
+  }
+  source.replace(FROM, collect).replace(BARE, collect).replace(DYNAMIC, collect)
+  return found
+}
+
+/** Rewrites every relative specifier through `map(specifier)`; a falsy result keeps the original. */
+export function mapRelativeImports(source, map) {
+  const rewrite = (match, head, quote, specifier) => {
+    const next = map(specifier)
+    return next ? `${head}${quote}${next}${quote}` : match
+  }
+  return source.replace(FROM, rewrite).replace(BARE, rewrite).replace(DYNAMIC, rewrite)
+}

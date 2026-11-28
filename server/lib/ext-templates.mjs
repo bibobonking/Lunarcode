@@ -143,7 +143,7 @@ export default function activate(host) {
   host.interval(() => host.emit('tick', { at: Date.now() }), 30_000)
 }
 `,
-        'main.js': `// Runs in the CreateCode window. \`createcode\` is the live app: no sandbox, no permission list.
+        'main.js': `// Runs in the CreateCode window. Sandbox mode (default) gives you a small API: commands, tools, panels, storage, notify.\n// Trusted mode gives the live app (createcode.ctx, stores, React, server). Daemon code and patches need Trusted.
 export default function activate(createcode) {
   createcode.registerTool({
     name: 'daemon_time',
@@ -170,21 +170,21 @@ export default function activate(createcode) {
   return {
     manifest: { ...base, main: 'main.js', styles: ['style.css'] },
     files: {
-      'main.js': `// Runs in the CreateCode window. \`createcode\` is the live app: no sandbox, no permission list.
+      'main.js': `// Runs in the CreateCode window. Sandbox mode (default) gives you a small API: commands, tools, panels, storage, notify.\n// Trusted mode gives the live app (createcode.ctx, stores, React, server). Daemon code and patches need Trusted.
 export default function activate(createcode) {
   createcode.registerCommand('hello', 'Say hello from ${name.replace(/'/g, '')}', () => {
     createcode.notify('Hello from ' + ${q} + '!', 'success')
   })
 
   createcode.registerPanel('hello-panel', ${q}, (host) => {
-    host.innerHTML = '<div class="cce-hello"><h3>' + ${q} + '</h3><p>This panel is plain DOM. Use createcode.React for components.</p><button>Click me</button></div>'
+    host.innerHTML = '<div class="cce-hello"><h3>' + ${q} + '</h3><p>This panel is plain DOM (createcode.React exists only in Trusted mode).</p><button>Click me</button></div>'
     const button = host.querySelector('button')
     const click = () => createcode.notify('Clicked!', 'info')
     button.addEventListener('click', click)
     return () => button.removeEventListener('click', click)
   })
 
-  // Anything else: createcode.ctx is the Cordis context with every service (tools, ui, sessions, llm, …).
+  // Trusted mode only: createcode.ctx is the Cordis context with every service (tools, ui, sessions, llm, …).
   createcode.on('agent/turn-finish', (turn) => createcode.log('turn finished after', turn.rounds, 'rounds'))
 }
 `,

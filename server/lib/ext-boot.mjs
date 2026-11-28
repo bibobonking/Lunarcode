@@ -51,7 +51,8 @@ function enabledServerPatches() {
     return patches
   }
   for (const entry of names) {
-    if (enabled[entry.name]?.enabled !== true) continue
+    // Only Trusted extensions may patch the daemon; Sandbox mode never applies patches.
+    if (enabled[entry.name]?.enabled !== true || enabled[entry.name]?.trust !== 'trusted') continue
     const dir = path.join(EXTENSIONS_DIR, entry.name)
     let manifest = readJson(path.join(dir, 'extension.json'))
     try {

@@ -1,6 +1,13 @@
 # Changelog
 
-## 4.1.0
+## Unreleased
+
+**Extension security: Sandbox and Trusted**
+- **New extensions start in Sandbox mode.** Window code runs in an isolated iframe (opaque origin, no network, no eval) and talks to the app through a small message API: tools, commands, actions, panels, settings, themes, styles, notifications, confirmations, storage and assets. Daemon (`server`) code and patches do not run. Existing extensions also start in the sandbox after this update.
+- **Mark as Trusted** lifts the sandbox: full access as before. It shows the scan findings and a last warning first, and asks you to type the extension id when the scan is serious or the extension already tried to break out. Also `createcode ext trust <id> --yes` and `createcode ext sandbox <id>`.
+- **Anomaly detection.** Every extension is scanned for suspicious code (commands, `eval`, credential paths, obfuscation, network and storage access, patches to sensitive daemon files). While sandboxed, blocked attempts (network, privileged API, popups, flooding) are recorded and shown; a message flood suspends the extension.
+- Updating an extension from a `.cce` sends it back to the sandbox. The page CSP is relaxed only while a Trusted extension is enabled.
+- Extension guide rewritten (clearer, step by step, with a call to build unusual extensions) and README rewritten.
 
 - The app is now CreateCode by Bibobonking. Data folder, app id, environment variables, extension global and CSRF header use the new name; no migration from older names.
 - Extension packages are now `.cce`.

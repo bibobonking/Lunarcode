@@ -89,6 +89,10 @@ import {
   reloadExtensions,
   serveExtensionFile,
   setExtensionEnabled,
+  setExtensionTrust,
+  reportAnomaly,
+  clearAnomalies,
+  serveSandboxFrame,
   setStorage,
   prepareExtensions,
   startExtensions,
@@ -823,7 +827,7 @@ async function route(req, res) {
       return
     }
 
-    const extensionRoute = /^\/api\/extensions\/([a-z0-9][a-z0-9_-]{1,63})(?:\/(enabled|export|icon|storage|logs|reload|rpc|x)(?:\/(.*))?)?$/.exec(pathname)
+    const extensionRoute = /^\/api\/extensions\/([a-z0-9][a-z0-9_-]{1,63})(?:\/(enabled|trust|anomaly|sandbox|export|icon|storage|logs|reload|rpc|x)(?:\/(.*))?)?$/.exec(pathname)
     if (extensionRoute) {
       const [, extensionId, action, rest = ''] = extensionRoute
       if (!action && method === 'DELETE') {
@@ -833,6 +837,24 @@ async function route(req, res) {
       if (action === 'enabled' && method === 'PUT') {
         const body = await readJson(req, 64 * 1024)
         json(res, 200, await setExtensionEnabled(extensionId, body.enabled))
+        return
+      }
+      if (action === 'trust' && method === 'PUT') {
+        const body = await readJson(req, 64 * 1024)
+        json(res, 200, await setExtensionTrust(extensionId, body.trust, { confirm: typeof body.confirm === 'string' ? body.confirm : undefined }))
+        return
+      }
+      if (action === 'anomaly' && method === 'POST') {
+        json(res, 200, await reportAnomaly(extensionId, await readJson(req, 16 * 1024)))
+        return
+      }
+      if (action === 'anomaly' && method === 'DELETE') {
+        clearAnomalies(extensionId)
+        json(res, 200, { ok: true })
+        return
+      }
+      if (action === 'sandbox' && method === 'GET') {
+        await serveSandboxFrame(req, res, extensionId, url.searchParams)
         return
       }
       if (action === 'export' && method === 'GET') {

@@ -1,6 +1,6 @@
 # CreateCode extensions (`.cce`)
 
-An extension changes CreateCode directly. There is no permission model and no API version to stay inside: it can run code in the app window, run Node code in the daemon, and rewrite the app's own files with patches. Enabling an extension is a full-trust decision, the same as installing a userscript or a game mod. CreateCode is made by one independent developer and nothing is reviewed or audited, including the extensions in `examples/`: read an extension's code before you enable it. If you install one without checking, the risk is yours (see the [disclaimer](../README.md#disclaimer)).
+An extension adds to CreateCode: agent tools, commands, panels, themes, daemon routes and hooks, even patches to the app's own files. Every extension starts in **Sandbox** mode (isolated window code only); the person can mark it **Trusted** for full access (see [Sandbox and Trusted](#sandbox-and-trusted)). CreateCode is made by one independent developer and nothing is reviewed or audited, including the extensions in `examples/`: read an extension's code before you trust it. If you install or trust one without checking, the risk is yours (see the [disclaimer](../README.md#disclaimer)).
 
 ## Install and manage
 
@@ -62,7 +62,7 @@ Unknown fields are kept. Only `id` (`[a-z0-9-]`), `name` and `version` are requi
 
 ## Renderer (`main`)
 
-Export `activate(createcode)` (and optionally `deactivate`), or just run code at import time and use `globalThis.createcode`. Everything is reachable: `createcode.ctx` (Cordis context), `services`, `stores`, `React`, `kernel`, plus helpers:
+Export `activate(createcode)` (and optionally `deactivate`), or just run code at import time and use `globalThis.createcode`. In Trusted mode everything is reachable (in Sandbox only the smaller API above): `createcode.ctx` (Cordis context), `services`, `stores`, `React`, `kernel`, plus helpers:
 
 `registerTool`, `registerCommand`, `registerPanel`, `registerAction`, `registerSettings`, `registerTheme`, `addStyle`, `on`, `dispose`, `notify`, `confirm`, `log`, `url(path)`, `render`, `storage`, `server.call/fetch/on`, `http` (daemon-side fetch, no CORS). `window.CreateCode` exposes the same internals. Anything registered through the context is removed automatically when the extension is disabled or reloaded. Tools are named `ext__<id>__<name>`.
 
@@ -88,6 +88,30 @@ Edit the app itself. Each patch has `scope` (`web` or `server`), a glob `target`
 - Server patches are applied when the daemon loads a module (Node 22.15+), so they need a restart; the manager shows a banner and a Restart button.
 - A patch that no longer matches (the app updated) is reported as `pattern not found` and skipped. It never breaks startup.
 
+## Sandbox and Trusted
+
+Each extension has a mode, stored in `~/.createcode/extensions/state.json` (`trust`). New, dropped-in and updated extensions are in **Sandbox**.
+
+**Sandbox**
+- `main` runs in an `<iframe sandbox="allow-scripts">` served by the daemon (`GET /api/extensions/<id>/sandbox`) with `Content-Security-Policy: sandbox allow-scripts; default-src 'none'; connect-src 'none'; …`. The page has an opaque origin: no access to the app's DOM, stores, cookies or storage, no network, no `eval`, no workers. The extension's modules are inlined (relative imports are resolved at build time).
+- The window talks to it by `postMessage` only (`src/extensions/sandbox.ts`). Messages are validated and size-capped. Available: `registerTool/Command/Action/Panel/Settings/Theme`, `addStyle`, `notify`, `confirm`, `storage` (1 MB), `asset`, `emit/on`, `log`, `dispose`. Tools return text only. Panels and settings blocks are their own sandboxed frames (they run `main` again with the role `panel` or `settings`).
+- Stylesheets and theme CSS are sanitised: remote `@import`/`url()` removed. Icons are emoji, extension images or `data:image/…`; no inline SVG markup.
+- `server` code does not start, patches (web and server) are not applied, and the page CSP is not relaxed.
+- Reading `createcode.ctx`, `services`, `stores`, `React`, `kernel`, `server`, `http`, `url`, … throws and records an anomaly.
+
+**Trusted**
+- Everything described in the sections below: the live `createcode` object, daemon code with full Node access, patches. While at least one Trusted extension is enabled the page CSP is relaxed.
+
+**Changing mode**
+- UI: Extensions → the extension → Security → **Mark as Trusted…** (scan findings, last warning, type-the-id when the scan is high or anomalies exist) / **Back to sandbox**.
+- CLI: `createcode ext trust <id> --yes`, `createcode ext sandbox <id>`.
+- HTTP: `PUT /api/extensions/<id>/trust` with `{ "trust": "trusted", "confirm": "<id>" }` (or `"sandbox"`).
+- Installing a new package over an existing extension resets it to Sandbox (`trustRevoked: "updated"` is shown in its card).
+
+**Detection**
+- *Static scan* (`shared/ext-scan.mjs`): line-based rules for commands, `eval`, secrets and credential files, provider keys, network, file writes, environment, cookies and storage, key listeners, clipboard, obfuscation, minified code, remote CSS, plus the manifest itself (`server`, patches; server patches on sensitive files are *high*). Results are `low`, `medium`, `high` and shown before trusting. It is a hint, not proof.
+- *Runtime anomalies*: blocked network or privileged-API attempts, CSP violations, invalid registrations and flooding are recorded (`anomalies` in the extension listing, `POST /api/extensions/<id>/anomaly`). More than 600 messages in a second suspends the extension.
+
 ## Security note
 
-Enabled extensions run with the privileges of the app and the daemon, and while any extension is enabled the page CSP is relaxed. Install only what you trust.
+Trusted extensions run with the privileges of the app and the daemon. Sandbox narrows what window code can reach, but it is not an audit: install only what you are willing to read. Enabled Trusted extensions relax the page CSP.

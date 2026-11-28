@@ -161,6 +161,18 @@ export function setExtensionEnabled(id: string, enabled: boolean): Promise<{ ext
   return api(`/api/extensions/${encodeURIComponent(id)}/enabled`, { method: 'PUT', body: JSON.stringify({ enabled }) })
 }
 
+export function setExtensionTrust(id: string, trust: 'trusted' | 'sandbox', confirm?: string): Promise<{ extension: ExtensionInfo }> {
+  return api(`/api/extensions/${encodeURIComponent(id)}/trust`, { method: 'PUT', body: JSON.stringify({ trust, confirm }) })
+}
+
+export function reportExtensionAnomaly(id: string, anomaly: { kind: string; level: 'low' | 'medium' | 'high'; message: string }): Promise<{ ok: boolean }> {
+  return api(`/api/extensions/${encodeURIComponent(id)}/anomaly`, { method: 'POST', body: JSON.stringify(anomaly) })
+}
+
+export function clearExtensionAnomalies(id: string): Promise<{ ok: boolean }> {
+  return api(`/api/extensions/${encodeURIComponent(id)}/anomaly`, { method: 'DELETE' })
+}
+
 export function removeExtension(id: string, removeData: boolean): Promise<{ id: string; removed: boolean }> {
   return api(`/api/extensions/${encodeURIComponent(id)}${removeData ? '?data=1' : ''}`, { method: 'DELETE' })
 }

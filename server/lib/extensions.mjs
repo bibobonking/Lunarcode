@@ -1,15 +1,17 @@
 // CreateCode Extensions — the daemon side.
 //
 // An extension is a folder in ~/.createcode/extensions/<id>/ (an .cce is just that folder zipped).
-// Nothing here sandboxes it. What an extension can do:
+// There are two modes, chosen per extension and stored in state.json (`trust`):
 //
-//   renderer   `main` is an ES module the browser imports from /ext/<id>/…; it gets the live kernel.
-//   server     `server` is a Node module imported into THIS process with full Node access.
-//   patches    find/replace on the served app (web) or on daemon modules as they load (server).
-//   styles / themes   plain CSS and declarative palettes.
+//   sandbox   (default for everything new) `main` runs in an isolated iframe with a small message-based API,
+//             no network and no access to the app. `server` code and patches do NOT run.
+//   trusted   the person marked it Trusted after a final warning. Full access, no API contract:
+//     renderer   `main` is an ES module the browser imports from /ext/<id>/…; it gets the live kernel.
+//     server     `server` is a Node module imported into THIS process with full Node access.
+//     patches    find/replace on the served app (web) or on daemon modules as they load (server).
 //
-// There is no permission list, no API allowlist and no manifest capability. Enabling an extension is
-// the one explicit trust decision, and the UI says so.
+// Every extension is also scanned for suspicious code (shared/ext-scan.mjs) and sandbox attempts to break
+// out are recorded as anomalies. Trusted is the one explicit trust decision, and the UI says so.
 
 import { createHash, randomBytes } from 'node:crypto'
 import { spawn } from 'node:child_process'
@@ -19,6 +21,7 @@ import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { applyPatches, fingerprintPatches, matchesTarget } from '../../shared/patches.mjs'
 import { versionRelativeImports } from '../../shared/esm-version.mjs'
+import { scanExtension } from '../../shared/ext-scan.mjs'
 import {
   CceError,
   MANIFEST_FILE,
@@ -28,6 +31,7 @@ import {
   validateManifest,
 } from '../../shared/cce.mjs'
 import { scaffold } from './ext-templates.mjs'
+import { renderSandboxFrame, SANDBOX_CSP } from './ext-sandbox.mjs'
 import { HttpError, mimeFor } from './http.mjs'
 import { DATA_DIR } from './store.mjs'
 
@@ -44,7 +48,7 @@ const MAX_LOG_LINES = 300
 let appVersion = '0.0.0'
 let stateWrites = Promise.resolve()
 
-/** Whether any extension is enabled; the daemon relaxes the page CSP while true (see http.mjs). */
+/** Whether any TRUSTED extension is enabled; the daemon relaxes the page CSP while true (see http.mjs). Sandboxed ones never need it. */
 let anyEnabled = false
 export const extensionsActive = () => anyEnabled
 
@@ -173,6 +177,8 @@ async function scanFolders() {
       dir,
       dataDir: path.join(EXTENSION_DATA_DIR, entry.name),
       enabled: false,
+      trusted: false,
+      trustRevoked: saved.trustRevoked ?? null,
       source: saved.source ?? 'folder',
       installedAt: saved.installedAt ?? null,
     }
@@ -186,6 +192,7 @@ async function scanFolders() {
         ...base,
         manifest,
         enabled: saved.enabled === true,
+        trusted: saved.trust === 'trusted',
         hash: await directoryFingerprint(dir),
         summary: summarizeManifest(manifest),
       })
@@ -200,7 +207,7 @@ async function scanFolders() {
     }
   }
   records.sort((a, b) => a.id.localeCompare(b.id))
-  anyEnabled = records.some((record) => record.enabled && !record.error)
+  anyEnabled = records.some((record) => record.enabled && record.trusted && !record.error)
   return records
 }
 
@@ -213,7 +220,7 @@ const patchCache = { key: '', value: null }
 async function collectPatches(records, scope) {
   const out = []
   for (const record of records) {
-    if (!record.enabled || record.error) continue
+    if (!record.enabled || !record.trusted || record.error) continue
     for (const [index, patch] of (record.manifest.patches ?? []).entries()) {
       if (patch.scope !== scope) continue
       let text
@@ -528,7 +535,7 @@ async function ensureModuleType(record, entry) {
 async function activateServer(record) {
   await deactivateServer(record.id)
   const entry = record.manifest.server
-  if (!serverRuntime || !entry || !record.enabled || record.error) return
+  if (!serverRuntime || !entry || !record.enabled || !record.trusted || record.error) return
   const host = createHost(record)
   hosts.set(record.id, host)
   host.state = 'starting'
@@ -693,7 +700,7 @@ export async function handleExtensionRoute(req, res, id, kind, rest, { readJson,
 // Public records
 // ---------------------------------------------------------------------------------------------
 
-function publicRecord(record, patchStatus) {
+function publicRecord(record, patchStatus, risk = { level: 'none', findings: [] }) {
   const host = hosts.get(record.id)
   const manifest = record.manifest
   return {
@@ -707,6 +714,10 @@ function publicRecord(record, patchStatus) {
     engine: manifest?.engine ?? '',
     hasIcon: Boolean(manifest?.icon),
     enabled: record.enabled && !record.error,
+    trust: record.trusted ? 'trusted' : 'sandbox',
+    trustRevoked: record.trustRevoked ?? null,
+    risk,
+    anomalies: anomaliesFor(record.id),
     source: record.source,
     installedAt: record.installedAt,
     dir: record.dir,
@@ -731,7 +742,7 @@ function publicRecord(record, patchStatus) {
       }
     }),
     server: manifest?.server
-      ? { state: host?.state ?? (record.enabled ? 'stopped' : 'off'), error: host?.error ?? null, routes: host?.routes.length ?? 0, rpcs: host ? [...host.rpcs.keys()] : [] }
+      ? { state: host?.state ?? (record.enabled ? (record.trusted ? 'stopped' : 'sandboxed') : 'off'), error: host?.error ?? null, routes: host?.routes.length ?? 0, rpcs: host ? [...host.rpcs.keys()] : [] }
       : null,
   }
 }
@@ -750,7 +761,7 @@ async function serverPatchHash(records) {
 
 async function serverCodeHash(records) {
   return records
-    .filter((record) => record.enabled && !record.error && record.manifest.server)
+    .filter((record) => record.enabled && record.trusted && !record.error && record.manifest.server)
     .map((record) => `${record.id}:${record.hash}`)
     .join('|')
 }
@@ -761,8 +772,9 @@ export async function listExtensions() {
   const wantServerPatches = await serverPatchHash(records)
   const boot = bootInfo()
   const restartRequired = boot.supported !== false && (boot.hash ?? '') !== wantServerPatches
+  const risks = await Promise.all(records.map((record) => riskFor(record)))
   return {
-    extensions: records.map((record) => publicRecord(record, status)),
+    extensions: records.map((record, index) => publicRecord(record, status, risks[index])),
     dir: EXTENSIONS_DIR,
     appVersion,
     serverPatchesSupported: boot.supported !== false,
@@ -770,6 +782,136 @@ export async function listExtensions() {
     restartRequired,
     pageReloadRequired: false,
   }
+}
+
+// ---------------------------------------------------------------------------------------------
+// Sandbox / Trusted: risk scan, anomalies, trust changes
+// ---------------------------------------------------------------------------------------------
+
+const riskCache = new Map()
+
+/** Static scan of the extension's files (cached per content hash). Never throws. */
+async function riskFor(record) {
+  if (record.error || !record.manifest) return { level: 'none', findings: [] }
+  const cached = riskCache.get(record.id)
+  if (cached?.hash === record.hash) return cached.value
+  const files = {}
+  try {
+    for (const file of await walk(record.dir)) {
+      const relative = path.relative(record.dir, file).replaceAll(path.sep, '/')
+      if (relative.startsWith('node_modules/') || relative.startsWith('.git/') || !/\.(?:m?js|cjs|jsx|ts|tsx|html?|css|json|svg)$/i.test(relative)) continue
+      const info = await stat(file).catch(() => null)
+      if (!info || info.size > 1_500_000) {
+        if (info) files[relative] = ''
+        continue
+      }
+      files[relative] = await readFile(file, 'utf8').catch(() => '')
+    }
+  } catch {
+    // A partly unreadable folder is scanned as far as it goes.
+  }
+  const value = scanExtension({ manifest: record.manifest, files })
+  riskCache.set(record.id, { hash: record.hash, value })
+  return value
+}
+
+const MAX_ANOMALIES = 40
+const anomalies = new Map()
+const anomalyAt = new Map()
+
+function anomaliesFor(id) {
+  return anomalies.get(id) ?? []
+}
+
+/** Called by the window when a sandboxed extension tries something it may not (blocked network, privileged API, flooding…). */
+export async function reportAnomaly(id, input) {
+  const record = await recordFor(id)
+  const level = ['low', 'medium', 'high'].includes(input?.level) ? input.level : 'medium'
+  const kind = String(input?.kind ?? 'unknown').replace(/[^a-z0-9-]/gi, '').slice(0, 40) || 'unknown'
+  const message = String(input?.message ?? '').slice(0, 300)
+  const list = anomalies.get(id) ?? []
+  const last = list[list.length - 1]
+  if (last && last.kind === kind && last.message === message) {
+    last.count += 1
+    last.at = Date.now()
+  } else {
+    list.push({ at: Date.now(), kind, level, message, count: 1 })
+    if (list.length > MAX_ANOMALIES) list.shift()
+  }
+  anomalies.set(id, list)
+  // Do not flood the event stream: one refresh per extension per second at most.
+  if (Date.now() - (anomalyAt.get(id) ?? 0) > 1000) {
+    anomalyAt.set(id, Date.now())
+    publish({ type: 'extensions' })
+  }
+  return { ok: true, trusted: record.trusted }
+}
+
+export function clearAnomalies(id) {
+  anomalies.delete(id)
+  publish({ type: 'extensions' })
+}
+
+/**
+ * Moves an extension out of (or back into) the sandbox. Trusting needs `confirm` to be the extension's id: the
+ * UI asks for it after the final warning, the CLI after `--yes`. Going back to the sandbox never needs it.
+ */
+export async function setExtensionTrust(id, trust, { confirm } = {}) {
+  if (trust !== 'trusted' && trust !== 'sandbox') throw new HttpError(400, 'trust must be "trusted" or "sandbox".', 'invalid_trust')
+  const record = await recordFor(id)
+  if (record.error) throw new HttpError(409, `This extension is broken: ${record.error}`, 'extension_broken')
+  if (trust === 'trusted' && confirm !== id) {
+    throw new HttpError(409, 'Trusting an extension needs an explicit confirmation of its id.', 'trust_not_confirmed')
+  }
+  await mutateState((extensions) => {
+    const current = { ...(extensions[id] ?? {}) }
+    if (trust === 'trusted') {
+      current.trust = 'trusted'
+      current.trustedAt = new Date().toISOString()
+      delete current.trustRevoked
+    } else {
+      delete current.trust
+      delete current.trustedAt
+    }
+    extensions[id] = { installedAt: new Date().toISOString(), source: record.source, ...current }
+  })
+  if (trust === 'trusted') anomalies.delete(id)
+  patchCache.key = ''
+  const next = await recordFor(id)
+  if (next.enabled && next.trusted) await exclusive(() => activateServer(next))
+  else await exclusive(() => deactivateServer(id))
+  publish({ type: 'extensions' })
+  return { extension: await describe(id), reload: true }
+}
+
+// ---------------------------------------------------------------------------------------------
+// Sandbox frame (the page an untrusted extension's window code runs in)
+// ---------------------------------------------------------------------------------------------
+
+export async function serveSandboxFrame(req, res, id, query) {
+  if (req.method !== 'GET') throw new HttpError(405, 'Method not allowed.', 'method_not_allowed')
+  const record = await recordFor(id)
+  if (record.error || !record.enabled) throw new HttpError(404, 'That extension is not running.', 'extension_not_running')
+  if (record.trusted) throw new HttpError(409, 'Trusted extensions run in the app window, not in the sandbox.', 'extension_trusted')
+  const role = ['logic', 'panel', 'settings'].includes(query.get('role')) ? query.get('role') : 'logic'
+  const panel = role === 'panel' ? String(query.get('panel') ?? '').slice(0, 80) : null
+  const nonce = String(query.get('nonce') ?? '').replace(/[^a-z0-9]/gi, '').slice(0, 40)
+  let body
+  try {
+    body = Buffer.from(await renderSandboxFrame({ record, role, panel, nonce }), 'utf8')
+  } catch (error) {
+    throw new HttpError(500, error instanceof Error ? error.message : 'Could not build the sandbox page.', 'sandbox_failed')
+  }
+  res.writeHead(200, {
+    'Content-Type': 'text/html; charset=utf-8',
+    'Content-Length': body.length,
+    'Cache-Control': 'no-store',
+    // securityHeaders() already ran with DENY / frame-ancestors 'none'; this page is the one thing meant to be framed.
+    'X-Frame-Options': 'SAMEORIGIN',
+    'Content-Security-Policy': SANDBOX_CSP,
+    'Referrer-Policy': 'no-referrer',
+  })
+  res.end(body)
 }
 
 async function recordFor(id) {
@@ -837,7 +979,7 @@ export async function startExtensions(version) {
   await prepareExtensions(version)
   const records = await scan()
   for (const record of records) {
-    if (record.enabled && !record.error) await exclusive(() => activateServer(record))
+    if (record.enabled && record.trusted && !record.error) await exclusive(() => activateServer(record))
   }
   startWatching()
 }
@@ -884,6 +1026,7 @@ async function installParsed({ manifest, files }, { enable, source }) {
   await ensureDirs()
   const previous = (await readState()).extensions[manifest.id]
   const wasEnabled = previous?.enabled === true
+  const wasTrusted = previous?.trust === 'trusted'
   if (wasEnabled) await exclusive(() => deactivateServer(manifest.id))
   await writeExtensionFiles(manifest.id, files)
   invalidateScan()
@@ -894,8 +1037,11 @@ async function installParsed({ manifest, files }, { enable, source }) {
       installedAt: previous?.installedAt ?? new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       source,
+      // New code is new code: an update goes back to the sandbox until the person trusts it again.
+      ...(wasTrusted ? { trustRevoked: 'updated' } : {}),
     }
   })
+  anomalies.delete(manifest.id)
   const record = await recordFor(manifest.id)
   if (record.enabled && !record.error) await exclusive(() => activateServer(record))
   publish({ type: 'extensions' })
@@ -964,6 +1110,8 @@ export async function uninstallExtension(id, { removeData = false } = {}) {
     throw new HttpError(404, 'Extension not found.', 'extension_not_found')
   })
   await exclusive(() => deactivateServer(id))
+  anomalies.delete(id)
+  riskCache.delete(id)
   await rm(path.join(EXTENSIONS_DIR, id), { recursive: true, force: true })
   invalidateScan()
   if (removeData) await rm(path.join(EXTENSION_DATA_DIR, id), { recursive: true, force: true })

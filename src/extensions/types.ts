@@ -16,6 +16,28 @@ export interface ExtensionThemeSpec {
   css?: string
 }
 
+export type RiskLevel = 'none' | 'low' | 'medium' | 'high'
+
+export interface ExtensionFinding {
+  id: string
+  level: Exclude<RiskLevel, 'none'>
+  message: string
+  file: string
+  line: number
+  snippet: string
+}
+
+export interface ExtensionAnomaly {
+  at: number
+  kind: string
+  level: 'low' | 'medium' | 'high'
+  message: string
+  count: number
+}
+
+/** `sandbox`: isolated window code only. `trusted`: the person lifted the sandbox; full access. */
+export type ExtensionTrust = 'sandbox' | 'trusted'
+
 export interface ExtensionInfo {
   id: string
   name: string
@@ -27,6 +49,11 @@ export interface ExtensionInfo {
   engine: string
   hasIcon: boolean
   enabled: boolean
+  trust: ExtensionTrust
+  /** Set when an update sent a Trusted extension back to the sandbox. */
+  trustRevoked: 'updated' | null
+  risk: { level: RiskLevel; findings: ExtensionFinding[] }
+  anomalies: ExtensionAnomaly[]
   source: 'cce' | 'folder' | string
   installedAt: string | null
   dir: string
@@ -46,7 +73,7 @@ export interface ExtensionInfo {
   styles: string[]
   themes: ExtensionThemeSpec[]
   patches: ExtensionPatchInfo[]
-  server: { state: 'off' | 'stopped' | 'starting' | 'running' | 'error'; error: string | null; routes: number; rpcs: string[] } | null
+  server: { state: 'off' | 'sandboxed' | 'stopped' | 'starting' | 'running' | 'error'; error: string | null; routes: number; rpcs: string[] } | null
 }
 
 export interface ExtensionListing {

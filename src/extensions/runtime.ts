@@ -2,6 +2,7 @@ import type { Context } from 'cordis'
 import { kernel } from '../core/kernel'
 import { useExtensions } from '../store/extensions'
 import { SERVICES, createExtensionApi, stores, type CreateCodeExtension } from './api'
+import { startSandbox } from './sandbox'
 import * as daemon from '../lib/daemon'
 import type { ExtensionInfo, ExtensionThemeSpec } from './types'
 
@@ -93,6 +94,19 @@ async function activate(info: ExtensionInfo, appVersion: string): Promise<void> 
 
   try {
     const ctx = await contextReady
+    // Sandbox mode (the default): window code runs in an isolated iframe behind a message bridge. Nothing below
+    // this block (the live kernel, stores, daemon access, the page's own modules) is reachable from it.
+    if (info.trust !== 'trusted') {
+      await startSandbox({
+        info,
+        appVersion,
+        ctx,
+        track,
+        onSuspend: (reason) => void suspend(info.id, info.hash, reason),
+      })
+      store.setRuntime(info.id, 'active')
+      return
+    }
     const version = encodeURIComponent(info.hash)
     for (const file of info.styles) track(addLink(info.id, `/ext/${info.id}/${file}?v=${version}`))
 
@@ -138,11 +152,21 @@ async function activate(info: ExtensionInfo, appVersion: string): Promise<void> 
   }
 }
 
+/** A sandboxed extension that kept breaking the rules is stopped until its files change or the person reloads it. */
+async function suspend(id: string, hash: string, reason: string): Promise<void> {
+  await exclusive(async () => {
+    lastFailedHash.set(id, hash)
+    await deactivate(id)
+    useExtensions.getState().setRuntime(id, 'error', `Suspended in Sandbox mode: ${reason}`)
+  })
+}
+
 /** Starts, reloads (when its files changed) or stops extensions so the window matches the daemon's list. */
 export function syncRuntime(extensions: ExtensionInfo[], appVersion: string): Promise<void> {
   return exclusive(async () => {
     const wanted = new Map(extensions.filter((item) => item.enabled && !item.error).map((item) => [item.id, item]))
     for (const id of [...running.keys()]) if (!wanted.has(id)) await deactivate(id)
+    for (const id of [...lastFailedHash.keys()]) if (!wanted.has(id)) lastFailedHash.delete(id)
     for (const info of wanted.values()) {
       const current = running.get(info.id)
       const failed = useExtensions.getState().runtime[info.id]?.state === 'error'
