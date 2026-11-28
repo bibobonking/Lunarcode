@@ -1,4 +1,4 @@
-name: Lunarcode Desktop
+name: CreateCode Desktop
 
 on:
   workflow_dispatch:
@@ -51,6 +51,7 @@ jobs:
 
   build:
     name: build (${{ matrix.label }})
+    needs: meta
     strategy:
       fail-fast: false
       matrix:
@@ -75,6 +76,20 @@ jobs:
           cache-dependency-path: |
             package-lock.json
             desktop/package-lock.json
+
+      # Installer names and the in-app version come from package.json, so both files must match the tag.
+      - name: Check that the tag matches the app version
+        shell: bash
+        env:
+          VERSION: ${{ needs.meta.outputs.version }}
+        run: |
+          for file in package.json desktop/package.json; do
+            found="$(node -p "require('./$file').version")"
+            if [ "$found" != "$VERSION" ]; then
+              echo "$file has version $found, but the tag says $VERSION" >&2
+              exit 1
+            fi
+          done
 
       - name: Build the app (dist)
         run: |
@@ -112,7 +127,7 @@ jobs:
         if: runner.os == 'Linux'
         uses: actions/upload-artifact@v7
         with:
-          name: lunarcode-linux-unpacked
+          name: createcode-linux-unpacked
           path: linux-unpacked.tar.gz
           if-no-files-found: error
           retention-days: 1
@@ -120,7 +135,7 @@ jobs:
       - name: Upload installers
         uses: actions/upload-artifact@v7
         with:
-          name: lunarcode-desktop-${{ matrix.label }}
+          name: createcode-desktop-${{ matrix.label }}
           path: |
             desktop/release/*.AppImage
             desktop/release/*.deb
@@ -150,7 +165,7 @@ jobs:
 
       - uses: actions/download-artifact@v8
         with:
-          name: lunarcode-linux-unpacked
+          name: createcode-linux-unpacked
           path: arch-input
 
       - name: Prepare the PKGBUILD
@@ -165,55 +180,51 @@ jobs:
           cp desktop/build/icon.png "$work/icon.png"
           cp LICENSE "$work/LICENSE"
 
-          # Name of the Electron executable inside the unpacked app.
-          exe=""
-          for name in Lunarcode lunarcode opensol-desktop; do
-            if [ -f "$work/linux-unpacked/$name" ]; then exe="$name"; break; fi
-          done
-          if [ -z "$exe" ]; then
-            echo "Could not find the app executable in linux-unpacked:" >&2
+          # Must match linux.executableName in desktop/electron-builder.yml.
+          if [ ! -f "$work/linux-unpacked/createcode" ]; then
+            echo "Could not find the app executable 'createcode' in linux-unpacked:" >&2
             ls -la "$work/linux-unpacked" >&2
             exit 1
           fi
 
-          cat > "$work/lunarcode.desktop" <<'EOF'
+          cat > "$work/createcode.desktop" <<'EOF'
           [Desktop Entry]
-          Name=Lunarcode
+          Name=CreateCode
           Comment=Local AI coding agent
-          Exec=lunarcode %U
-          Icon=lunarcode
+          Exec=createcode %U
+          Icon=createcode
           Terminal=false
           Type=Application
           Categories=Development;
-          StartupWMClass=Lunarcode
+          StartupWMClass=createcode
           EOF
 
           cat > "$work/PKGBUILD" <<'EOF'
-          pkgname=lunarcode
+          pkgname=createcode
           pkgver=@PKGVER@
           pkgrel=1
-          pkgdesc='Lunarcode local AI coding agent (desktop)'
+          pkgdesc='CreateCode local AI coding agent (desktop)'
           arch=('x86_64')
-          url='https://github.com/bibobonking/OpenSol'
+          url='https://github.com/bibobonking/CreateCode'
           license=('MIT')
           depends=('gtk3' 'nss' 'alsa-lib' 'libxss' 'libxtst' 'libnotify' 'at-spi2-core' 'xdg-utils')
           options=('!strip' '!debug')
 
           package() {
-            install -d "$pkgdir/opt/Lunarcode" "$pkgdir/usr/bin"
-            cp -a "$startdir/linux-unpacked/." "$pkgdir/opt/Lunarcode/"
-            [ -f "$pkgdir/opt/Lunarcode/chrome-sandbox" ] && chmod 4755 "$pkgdir/opt/Lunarcode/chrome-sandbox"
-            [ -f "$pkgdir/opt/Lunarcode/resources/app/bin/lunarcode" ] && chmod 755 "$pkgdir/opt/Lunarcode/resources/app/bin/lunarcode"
-            ln -s /opt/Lunarcode/@EXE@ "$pkgdir/usr/bin/lunarcode"
-            ln -s /opt/Lunarcode/resources/app/bin/lunarcode "$pkgdir/usr/bin/lunarcode-cli"
-            install -Dm644 "$startdir/lunarcode.desktop" "$pkgdir/usr/share/applications/lunarcode.desktop"
-            install -Dm644 "$startdir/icon.png" "$pkgdir/usr/share/icons/hicolor/512x512/apps/lunarcode.png"
-            install -Dm644 "$startdir/LICENSE" "$pkgdir/usr/share/licenses/lunarcode/LICENSE"
+            install -d "$pkgdir/opt/CreateCode" "$pkgdir/usr/bin"
+            cp -a "$startdir/linux-unpacked/." "$pkgdir/opt/CreateCode/"
+            [ -f "$pkgdir/opt/CreateCode/chrome-sandbox" ] && chmod 4755 "$pkgdir/opt/CreateCode/chrome-sandbox"
+            [ -f "$pkgdir/opt/CreateCode/resources/app/bin/createcode" ] && chmod 755 "$pkgdir/opt/CreateCode/resources/app/bin/createcode"
+            ln -s /opt/CreateCode/createcode "$pkgdir/usr/bin/createcode"
+            ln -s /opt/CreateCode/resources/app/bin/createcode "$pkgdir/usr/bin/createcode-cli"
+            install -Dm644 "$startdir/createcode.desktop" "$pkgdir/usr/share/applications/createcode.desktop"
+            install -Dm644 "$startdir/icon.png" "$pkgdir/usr/share/icons/hicolor/512x512/apps/createcode.png"
+            install -Dm644 "$startdir/LICENSE" "$pkgdir/usr/share/licenses/createcode/LICENSE"
           }
           EOF
 
           # pkgver cannot contain '-', so 1.2.3-beta.1 becomes 1.2.3_beta.1
-          sed -i "s/@PKGVER@/${VERSION//-/_}/; s/@EXE@/$exe/" "$work/PKGBUILD"
+          sed -i "s/@PKGVER@/${VERSION//-/_}/" "$work/PKGBUILD"
           chown -R builder:builder "$work"
 
       - name: Build and verify the package
@@ -231,7 +242,7 @@ jobs:
 
       - uses: actions/upload-artifact@v7
         with:
-          name: lunarcode-desktop-arch-x64
+          name: createcode-desktop-arch-x64
           path: out/*.pkg.tar.zst
           if-no-files-found: error
           retention-days: 1
@@ -252,7 +263,7 @@ jobs:
       - uses: actions/download-artifact@v8
         with:
           path: dist-desktop
-          pattern: lunarcode-desktop-*
+          pattern: createcode-desktop-*
           merge-multiple: true
 
       - name: Show files to release
